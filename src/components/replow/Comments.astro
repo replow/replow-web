@@ -1,0 +1,33 @@
+---
+import './comments.css';
+interface Props {
+  articleId: number;
+}
+const { articleId } = Astro.props;
+---
+<section class="index-surface shadow-box discussion" data-discussion data-article-id={articleId} aria-label="文章评论">
+  <header class="discussion-heading"><div><span class="discussion-eyebrow">MIRO · DISCUSSION</span><h2>一起聊聊 <span data-comment-count>0</span></h2><p>留下想法，也让对话继续。</p></div><a href="https://account.replow.org/?section=notifications" class="discussion-notifications">回复通知 ↗</a></header>
+  <div class="discussion-editor" data-editor>
+    <div class="discussion-identity"><span data-comment-identity>登录后加入讨论</span><a data-comment-login href="https://account.replow.org/">登录 / 注册 ↗</a></div>
+    <div class="discussion-replying" data-replying hidden><span data-reply-name></span><button type="button" data-cancel-reply aria-label="取消回复">取消回复 ×</button></div>
+    <div class="discussion-tools" role="toolbar" aria-label="Markdown 格式">
+      <button type="button" data-format="bold" title="加粗"><strong>B</strong></button><button type="button" data-format="italic" title="斜体"><em>I</em></button><button type="button" data-format="code" title="代码">&lt;/&gt;</button><button type="button" data-format="quote" title="引用">“</button>
+      <button type="button" data-upload-image title="上传图片">＋ 图片</button>
+      <input type="file" data-comment-file accept="image/jpeg,image/png,image/gif,image/webp,image/avif" hidden />
+      <button type="button" data-toggle-preview aria-pressed="false">预览</button>
+    </div>
+    <label class="sr-only" for={'comment-body-' + articleId}>评论内容（支持 Markdown）</label>
+    <textarea id={'comment-body-' + articleId} data-comment-body maxlength="10000" rows="5" placeholder="写下你的想法… 支持 Markdown，也可以粘贴或上传图片。" disabled></textarea>
+    <div class="discussion-markdown discussion-preview" data-comment-preview hidden></div>
+    <footer class="discussion-editor-footer"><span data-comment-help>Markdown · 图片 ≤ 5 MB · 回复会通知对方</span><button type="button" class="discussion-submit" data-comment-submit disabled>发表评论 ↗</button></footer>
+  </div>
+  <p data-comment-status class="discussion-status" role="status" aria-live="polite">正在加载评论…</p>
+  <div class="discussion-list" data-comment-list></div>
+  <button type="button" class="discussion-more" data-comment-more hidden>加载更多评论</button>
+</section>
+<script>
+  import { startComments } from '@/lib/replow/comments';
+  if (document.readyState !== 'loading') startComments();
+  else document.addEventListener('DOMContentLoaded', startComments, { once: true });
+  document.addEventListener('astro:page-load', startComments);
+</script>
