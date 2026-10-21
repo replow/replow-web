@@ -16,6 +16,7 @@ export interface DiscussionPage {
 export interface Identity {
   username: string;
   nickname?: string;
+  avatar?: string;
 }
 export const identity = () => (window as Window & { __replowAuthSession?: Identity | null }).__replowAuthSession;
 const messages: Record<string, string> = {

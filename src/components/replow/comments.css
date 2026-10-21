@@ -59,11 +59,43 @@
 .discussion-identity {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
   padding: 16px 18px;
   font-size: 0.82rem;
   color: hsl(var(--muted-foreground));
+}
+.discussion-current-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+}
+.discussion-identity-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+.discussion-identity-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+.discussion-identity-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .discussion-identity a {
   color: hsl(var(--primary));

@@ -52,9 +52,22 @@ function mount(root: HTMLElement) {
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-format]'))
       button.disabled = !user || sending || showingPreview;
     login.hidden = !!user;
-    find('[data-comment-identity]').textContent = user
-      ? '以 ' + (user.nickname || user.username) + ' 的身份评论'
-      : '登录后加入讨论';
+    const displayName = user?.nickname || user?.username || '';
+    find('[data-comment-identity]').textContent = user ? displayName : '登录后加入讨论';
+    find('[data-comment-avatar]').hidden = !user;
+    const avatarImage = find<HTMLImageElement>('[data-comment-avatar-image]');
+    const avatarInitial = find('[data-comment-avatar-initial]');
+    avatarInitial.textContent = Array.from(displayName)[0] || '用';
+    const avatarUrl = user ? safeUrl(user.avatar || '') : '';
+    if (avatarUrl && avatarImage.getAttribute('src') !== avatarUrl) {
+      avatarImage.src = avatarUrl;
+      avatarImage.hidden = false;
+      avatarInitial.hidden = true;
+    } else if (!avatarUrl) {
+      avatarImage.removeAttribute('src');
+      avatarImage.hidden = true;
+      avatarInitial.hidden = false;
+    }
     submit.textContent = sending ? '正在发布…' : replying ? '发送回复 ↗' : '发表评论 ↗';
     upload.textContent = uploading ? '上传中…' : '＋ 图片';
   }
@@ -132,7 +145,7 @@ function mount(root: HTMLElement) {
         if (!page.items.length) break;
       } while (target && !items.some((item) => item.id === target) && items.length < total);
       render();
-      notify(total ? '共 ' + total + ' 条评论 · 回复后会在个人中心通知对方' : '还没有评论，来留下第一条想法吧。');
+      notify(total ? '共 ' + total + ' 条评论' : '还没有评论，来留下第一条想法吧。');
       if (target) document.getElementById('comment-' + target)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     } catch (error) {
       if (!signal.aborted) {
@@ -145,17 +158,20 @@ function mount(root: HTMLElement) {
       more.disabled = false;
     }
   }
-  function insert(before: string, after = '') {
+  function insert(before: string, after = '', formatting = false) {
     if (!identity() || sending || uploading) return;
     showingPreview = false;
     preview.hidden = true;
     body.hidden = false;
     find('[data-toggle-preview]').setAttribute('aria-pressed', 'false');
-    const start = body.selectionStart,
-      end = body.selectionEnd,
-      selected = body.value.slice(start, end);
+    const useAll = formatting && body.selectionStart === body.selectionEnd;
+    const start = useAll ? 0 : body.selectionStart,
+      end = useAll ? body.value.length : body.selectionEnd;
+    let selected = body.value.slice(start, end);
+    if (formatting && before === '\n> ') selected = selected.replace(/\n/g, '\n> ');
     body.setRangeText(before + selected + after, start, end, 'end');
     body.focus();
+    if (formatting) body.setSelectionRange(start + before.length, start + before.length + selected.length);
     auth();
   }
   async function uploadFile(image: File) {
@@ -183,6 +199,14 @@ function mount(root: HTMLElement) {
       auth();
     }
   }
+  find<HTMLImageElement>('[data-comment-avatar-image]').addEventListener(
+    'error',
+    () => {
+      find('[data-comment-avatar-image]').hidden = true;
+      find('[data-comment-avatar-initial]').hidden = false;
+    },
+    { signal },
+  );
   body.addEventListener(
     'input',
     () => {
@@ -199,6 +223,14 @@ function mount(root: HTMLElement) {
         event.preventDefault();
         void uploadFile(image);
       }
+    },
+    { signal },
+  );
+  root.addEventListener(
+    'mousedown',
+    (event) => {
+      // Keep the textarea selection when a toolbar button is pressed with a mouse.
+      if ((event.target as HTMLElement).closest('[data-format]')) event.preventDefault();
     },
     { signal },
   );
@@ -230,7 +262,7 @@ function mount(root: HTMLElement) {
       };
       if (button.dataset.format) {
         const format = formats[button.dataset.format];
-        if (format) insert(...format);
+        if (format) insert(...format, true);
       }
       if (button.hasAttribute('data-upload-image')) file.click();
       if (button.hasAttribute('data-toggle-preview')) {

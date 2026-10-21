@@ -39,6 +39,8 @@ jobs:
         run: pnpm check
       - name: Astro production build
         run: pnpm build
+      - name: Guard comment editor against stale artifacts
+        run: node scripts/verify-comment-editor.mjs
       - name: Validate and package complete static site
         shell: bash
         run: |
