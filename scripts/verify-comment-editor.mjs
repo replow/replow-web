@@ -4,10 +4,14 @@ import path from 'node:path';
 
 async function pages(directory) {
   const entries = await fs.readdir(directory, { withFileTypes: true });
-  return (await Promise.all(entries.map(async (entry) => {
-    const name = path.join(directory, entry.name);
-    return entry.isDirectory() ? pages(name) : name.endsWith('.html') ? [name] : [];
-  }))).flat();
+  return (
+    await Promise.all(
+      entries.map(async (entry) => {
+        const name = path.join(directory, entry.name);
+        return entry.isDirectory() ? pages(name) : name.endsWith('.html') ? [name] : [];
+      }),
+    )
+  ).flat();
 }
 let verified = 0;
 for (const file of await pages('dist/post')) {
