@@ -3,6 +3,8 @@ import type { NavItem } from 'epubjs/types/navigation';
 import type { Location } from 'epubjs/types/rendition';
 import type { FqClient } from '../fanqie/api';
 import { button, el } from '../fanqie/view';
+import { inspectEpub } from './epub';
+import { waitForReading } from './loading';
 import { localProgress, saveProgress } from './storage';
 import { bindPageSwipe } from './swipe';
 import type { Progress, ShelfBook } from './types';
@@ -148,6 +150,7 @@ export async function openReader(
     flowLabel,
     el('p', 'reading-gesture-hint', '左右滑动翻页 · 底部按钮切换章节；手机选择文字请用上下滚动模式'),
   );
+  footer.append(status, sync);
   dialog.append(top, controls, settings, viewport, footer);
   document.body.append(dialog);
   const observer = new ResizeObserver(() => {
@@ -165,10 +168,13 @@ export async function openReader(
     void flush();
     cleanup();
   });
+  const waitFor = <T>(task: Promise<T>, stage: string) => waitForReading(task, listeners.signal, stage);
   dialog.showModal();
   try {
-    await epub.open(await blob.arrayBuffer(), 'binary');
-    await epub.ready;
+    const { buffer } = await waitFor(inspectEpub(blob), '解析 EPUB');
+    status.textContent = '正在加载目录与资源…';
+    await waitFor(epub.open(buffer, 'binary'), '读取 EPUB');
+    await waitFor(Promise.all([epub.ready, epub.opened]), '加载目录与资源');
     opening = false;
     if (closed) {
       epub.destroy();
@@ -205,6 +211,14 @@ export async function openReader(
       }
     }
     appendNav(navigation.toc);
+    if (!toc.options.length) {
+      epub.spine.each((section: { href: string; linear: boolean }) => {
+        if (!section.linear) return;
+        const option = el('option', '', `第 ${toc.options.length + 1} 章`);
+        option.value = section.href;
+        toc.append(option);
+      });
+    }
     if (!toc.options.length) {
       const option = el('option', '', '正文');
       option.value = '';
@@ -278,7 +292,8 @@ export async function openReader(
       const target = adjacentChapter(direction);
       if (target?.href) void navigate(() => rendition.display(target.href));
     }
-    footer.append(previousChapter, status, sync, nextChapter);
+    footer.prepend(previousChapter);
+    footer.append(nextChapter);
     const keys = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
       if (event.key === 'ArrowRight') {
@@ -332,12 +347,27 @@ export async function openReader(
         void flush();
       }, 900);
     });
-    const local = await localProgress(uid, item.id);
+    const local = await waitFor(localProgress(uid, item.id), '读取阅读进度');
     const position = local && local.updated > item.updated_at * 1000 ? local.cfi : item.cfi;
+    async function display(target?: string) {
+      // epub.js emits displayError but does not reject display() for a failed chapter load.
+      let rejectDisplay: (error: unknown) => void = () => {};
+      const failed = new Promise<never>((_resolve, reject) => {
+        rejectDisplay = reject;
+      });
+      rendition.on('displayError', rejectDisplay);
+      try {
+        await waitFor(Promise.race([rendition.display(target), failed]), '显示章节');
+      } finally {
+        rendition.off('displayError', rejectDisplay);
+      }
+    }
+    status.textContent = '正在显示章节…';
     try {
-      await rendition.display(position || undefined);
-    } catch {
-      await rendition.display();
+      await display(position || undefined);
+    } catch (error) {
+      if (!position || closed) throw error;
+      await display();
       status.textContent = '原阅读位置已失效，已从开头打开。';
     }
     if (closed) return;
@@ -353,7 +383,10 @@ export async function openReader(
     observer.observe(viewport);
   } catch (error) {
     opening = false;
-    if (closed) epub.destroy();
+    if (closed) {
+      epub.destroy();
+      return;
+    }
     cleanup();
     throw error;
   }

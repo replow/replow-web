@@ -5,6 +5,7 @@ import { bookCard, button, el, link, statusLine } from '../fanqie/view';
 import { chapterCounts } from './chapter-progress';
 import { prepareBook } from './download';
 import { inspectEpub } from './epub';
+import { waitForReading } from './loading';
 import { localFile, localProgress, localShelf, removeLocalBook, saveFile, saveShelf } from './storage';
 import type { LocalFile, ShelfBook } from './types';
 import './style.css';
@@ -298,8 +299,9 @@ function mount(root: HTMLElement) {
         message.textContent = text;
       });
       localController.signal.throwIfAborted();
-      const { openReader } = await import('./reader');
+      const { openReader } = await waitForReading(import('./reader'), localController.signal, '加载阅读器');
       const readerController = new AbortController();
+      localController.signal.addEventListener('abort', () => readerController.abort(), { once: true });
       controller.signal.addEventListener('abort', () => readerController.abort(), { once: true });
       closeReader = () => readerController.abort();
       await openReader(uid, item, blob, client, readerController.signal, () => {

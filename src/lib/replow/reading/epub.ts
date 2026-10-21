@@ -69,7 +69,7 @@ export async function packageEpub(book: ShelfBook, chapters: ChapterText[]) {
 }
 export async function inspectEpub(blob: Blob) {
   if (blob.size > 150 * 1024 * 1024) throw new Error('请选择小于 150 MB 的 EPUB。');
-  const buffer = await blob.arrayBuffer();
+  let buffer = await blob.arrayBuffer();
   const { default: JSZip } = await import('jszip');
   const zip = await JSZip.loadAsync(buffer);
   if (!zip.file('META-INF/container.xml') || Object.keys(zip.files).length > 10000)
@@ -89,6 +89,41 @@ export async function inspectEpub(blob: Blob) {
   const author =
     document.getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'creator')[0]?.textContent?.trim() || '作者未知';
   const manifest = new Map(Array.from(document.getElementsByTagName('item')).map((entry) => [entry.getAttribute('id'), entry]));
+  const directory = opfPath.slice(0, opfPath.lastIndexOf('/') + 1);
+  const resolveEntry = (href: string) => {
+    const url = new URL(href.split('#')[0], `https://epub.invalid/${directory}`);
+    return url.origin === 'https://epub.invalid' ? decodeURIComponent(url.pathname.slice(1)) : '';
+  };
+  const spineEntries = Array.from(document.getElementsByTagName('itemref'));
+  if (!spineEntries.length) throw new Error('EPUB 没有可阅读的章节，请重新导入完整书籍。');
+  for (const entry of spineEntries) {
+    const href = manifest.get(entry.getAttribute('idref'))?.getAttribute('href');
+    if (!href || !zip.file(resolveEntry(href))) throw new Error('EPUB 缺少章节文件，请重新导入完整书籍；本机副本已保留。');
+  }
+  // epub.js leaves book.ready pending when a declared navigation file cannot be read.
+  // Drop only the broken optional navigation reference in the in-memory copy.
+  let repaired = false;
+  for (const entry of manifest.values()) {
+    const properties = entry.getAttribute('properties')?.split(/\s+/) || [];
+    const isNav = properties.includes('nav');
+    const isNcx = entry.getAttribute('media-type') === 'application/x-dtbncx+xml';
+    if (!isNav && !isNcx) continue;
+    const file = zip.file(resolveEntry(entry.getAttribute('href') || ''));
+    const xml = file ? parser.parseFromString(await file.async('string'), 'application/xml') : undefined;
+    if (xml && !xml.querySelector('parsererror')) continue;
+    if (isNav) entry.setAttribute('properties', properties.filter((value) => value !== 'nav').join(' '));
+    if (isNcx) {
+      for (const spine of Array.from(document.getElementsByTagName('spine'))) {
+        if (spine.getAttribute('toc') === entry.getAttribute('id')) spine.removeAttribute('toc');
+      }
+      entry.remove();
+    }
+    repaired = true;
+  }
+  if (repaired) {
+    zip.file(opfPath, new XMLSerializer().serializeToString(document));
+    buffer = await zip.generateAsync({ type: 'arraybuffer', compression: 'STORE' });
+  }
   const chapterIndices = Array.from(document.getElementsByTagName('itemref')).flatMap((entry, index) =>
     entry.getAttribute('linear') === 'no' ||
     manifest.get(entry.getAttribute('idref'))?.getAttribute('properties')?.split(/\s+/).includes('nav')
