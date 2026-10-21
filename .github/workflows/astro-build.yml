@@ -1,11 +1,11 @@
-name: Astro build
+name: Astro build and publish
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: astro-build-${{ github.ref }}
@@ -39,6 +39,17 @@ jobs:
         run: pnpm check
       - name: Astro production build
         run: pnpm build
+      - name: Validate and package complete static site
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist/index.html
+          test -s dist/fanqie/index.html
+          test -s dist/reading/index.html
+          test -s dist/pagefind/pagefind.js
+          test -d dist/_astro
+          tar -C dist -czf replow-astro.tar.gz .
+          sha256sum replow-astro.tar.gz > replow-astro.tar.gz.sha256
       - name: Save Astro artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -46,3 +57,16 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
+      - name: Publish immutable release for Azure pull deploy
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="astro-build-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" replow-astro.tar.gz replow-astro.tar.gz.sha256 \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "Astro static build #${GITHUB_RUN_NUMBER}" \
+            --notes "Verified static Astro build from commit ${GITHUB_SHA}. Azure deployer validates SHA-256 and switches the web symlink after smoke tests." \
+            --latest
