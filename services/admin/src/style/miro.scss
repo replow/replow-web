@@ -1,0 +1,340 @@
+/* Miro shell: keep PureAdmin's layout and Element Plus interactions. */
+html[data-miro-brand] {
+  --miro-accent: #4f95bd;
+  --miro-canvas: #f7f6fb;
+  --miro-surface: #fff;
+  --miro-mark-border: #d4c8ef;
+  --miro-on-primary: #fff;
+  --el-bg-color: #fff;
+  --el-bg-color-page: #f7f6fb;
+  --el-bg-color-overlay: #fff;
+  --el-text-color-primary: #302d46;
+  --el-text-color-regular: #514d65;
+  --el-text-color-secondary: #777186;
+  --el-border-color: #ded8ec;
+  --el-border-color-light: #e8e3f2;
+  --el-border-color-lighter: #eeeaf6;
+  --el-fill-color: #f1edf8;
+  --el-fill-color-light: #f7f5fc;
+  --el-fill-color-lighter: #faf9fd;
+  --el-fill-color-blank: #fff;
+  --el-border-radius-base: 8px;
+  --pure-border-color: #e8e3f2;
+  --pure-theme-sub-menu-active-text: #302d46;
+  --pure-theme-menu-bg: #fff;
+  --pure-theme-sub-menu-bg: #fff;
+  --pure-theme-menu-hover: #f1edf8;
+  --pure-theme-menu-text: #69627c;
+  --pure-theme-sidebar-logo: #fff;
+  --pure-theme-menu-title-hover: #302d46;
+  --pure-theme-menu-active-before: var(--el-color-primary);
+
+  body {
+    font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-main,
+  .app-main-nofixed-header {
+    background: var(--miro-canvas) !important;
+  }
+
+  .navbar,
+  .tags-view,
+  .sidebar-container,
+  .horizontal-header,
+  .sidebar-logo-container {
+    background: var(--miro-surface) !important;
+  }
+
+  .navbar,
+  .sidebar-container,
+  .tags-view {
+    border-color: var(--el-border-color-light);
+    box-shadow: none;
+  }
+
+  .navbar {
+    border-bottom: 1px solid var(--el-border-color-light);
+  }
+
+  .sidebar-container {
+    border-right: 1px solid var(--el-border-color-light);
+  }
+
+  .sidebar-logo-link .sidebar-title {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .submenu-title-noDropdown,
+  .el-sub-menu__title,
+  .el-menu-item {
+    font-size: 13px;
+  }
+
+  .submenu-title-noDropdown::before,
+  .el-menu-item::before,
+  .el-sub-menu__title::before {
+    border-radius: 9px !important;
+  }
+
+  .submenu-title-noDropdown.is-active > *,
+  .el-menu-item.is-active > * {
+    color: var(--miro-on-primary) !important;
+  }
+
+  .navbar .vertical-header-right,
+  .navbar .el-dropdown-link {
+    color: var(--el-text-color-primary);
+  }
+
+  .navbar .el-dropdown-link img {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--miro-mark-border);
+  }
+
+  .el-card {
+    --el-card-border-radius: 14px;
+    --el-card-bg-color: var(--miro-surface);
+    border-color: var(--el-border-color-light);
+  }
+
+  .el-button--primary:not(.is-plain):not(.is-text):not(.is-link) {
+    --el-button-text-color: var(--miro-on-primary);
+    --el-button-hover-text-color: var(--miro-on-primary);
+    --el-button-active-text-color: var(--miro-on-primary);
+  }
+
+  .el-button--primary.is-text,
+  .el-button--primary.is-link {
+    --el-button-text-color: var(--el-color-primary);
+    --el-button-hover-text-color: var(--el-color-primary-light-3);
+    --el-button-active-text-color: var(--el-color-primary-dark-2);
+  }
+
+  .el-radio-button.is-active .el-radio-button__inner {
+    color: var(--miro-on-primary);
+  }
+
+  .el-radio-button__inner,
+  .el-button,
+  .el-input__wrapper,
+  .el-select__wrapper,
+  .el-textarea__inner {
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .el-input__wrapper.is-focus,
+  .el-select__wrapper.is-focused,
+  .el-textarea__inner:focus {
+    box-shadow:
+      0 0 0 1px var(--el-color-primary) inset,
+      0 0 0 3px var(--el-color-primary-light-9);
+  }
+
+  :focus-visible:not(input):not(textarea):not([contenteditable="true"]) {
+    outline: 2px solid var(--el-color-primary);
+    outline-offset: 3px;
+  }
+
+  /* Text controls draw focus on their own wrapper, never a second inner ring. */
+  .miro-login {
+    .floating-login-field {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+      background: var(--miro-canvas);
+      border-radius: 4px;
+
+      .el-input {
+        --el-input-height: 56px;
+      }
+
+      .el-input__wrapper {
+        min-height: 56px;
+        padding: 0 15px;
+        background: transparent;
+        border-radius: 4px;
+        box-shadow: 0 0 0 1px var(--el-border-color) inset;
+
+        &:hover {
+          box-shadow: 0 0 0 1px var(--el-text-color-regular) inset;
+        }
+
+        &.is-focus {
+          box-shadow: 0 0 0 2px var(--el-color-primary) inset;
+        }
+      }
+
+      .el-input__inner {
+        height: 54px;
+        font-size: 16px;
+        line-height: normal;
+      }
+
+      .el-input__inner:focus,
+      .el-input__inner:focus-visible {
+        outline: none;
+        box-shadow: none;
+      }
+
+      label {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        z-index: 1;
+        max-width: calc(100% - 28px);
+        padding: 0 4px;
+        overflow: hidden;
+        font-size: 16px;
+        line-height: 20px;
+        color: var(--el-text-color-secondary);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: text;
+        background: var(--miro-canvas);
+        transform: translateY(-50%);
+        transform-origin: left center;
+        transition:
+          top 0.15s,
+          font-size 0.15s,
+          color 0.15s;
+      }
+
+      &:focus-within label,
+      &.has-value label,
+      &:has(input:-webkit-autofill) label {
+        top: 0;
+        font-size: 12px;
+      }
+
+      &:focus-within label {
+        color: var(--el-color-primary);
+      }
+    }
+
+    .el-form-item.is-error .floating-login-field {
+      .el-input__wrapper {
+        box-shadow: 0 0 0 1px var(--el-color-danger) inset;
+
+        &.is-focus {
+          box-shadow: 0 0 0 2px var(--el-color-danger) inset;
+        }
+      }
+
+      label {
+        color: var(--el-color-danger);
+      }
+    }
+
+    .el-form-item {
+      margin-bottom: 28px;
+    }
+
+    .el-form-item__error {
+      padding-top: 5px;
+      text-align: left;
+    }
+
+    .login-mode {
+      margin-bottom: 24px;
+    }
+
+    .login-code-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      width: 100%;
+      align-items: start;
+
+      .el-button {
+        height: 56px;
+        margin: 0;
+        padding: 0 12px;
+      }
+    }
+  }
+
+  .el-table {
+    --el-table-header-bg-color: var(--el-fill-color-light);
+    --el-table-row-hover-bg-color: var(--el-fill-color-light);
+  }
+
+  .layout-footer {
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    padding-top: 12px;
+  }
+
+  .navbar-bg-hover:hover {
+    background: var(--el-fill-color-light) !important;
+  }
+
+  @media (max-width: 600px) {
+    .navbar .el-dropdown-link p {
+      display: none;
+    }
+    .navbar .el-dropdown-link img {
+      margin-right: 0 !important;
+    }
+    .navbar .vertical-header-right {
+      min-width: 0;
+    }
+  }
+}
+
+html.dark[data-miro-brand] {
+  --miro-canvas: #141427;
+  --miro-surface: #1c1b32;
+  --miro-mark-border: #66548f;
+  --el-bg-color: #1c1b32;
+  --el-bg-color-page: #141427;
+  --el-bg-color-overlay: #24223d;
+  --el-text-color-primary: #f0edf9;
+  --el-text-color-regular: #d1cbdf;
+  --el-text-color-secondary: #aaa1bc;
+  --el-border-color: #4a415f;
+  --el-border-color-light: #39324d;
+  --el-border-color-lighter: #312b43;
+  --el-fill-color: #302a46;
+  --el-fill-color-light: #28233b;
+  --el-fill-color-lighter: #242036;
+  --el-fill-color-blank: #1c1b32;
+  --pure-border-color: #39324d;
+  --pure-theme-sub-menu-active-text: #f0edf9;
+  --pure-theme-menu-bg: #1c1b32;
+  --pure-theme-sub-menu-bg: #1c1b32;
+  --pure-theme-menu-hover: #302a46;
+  --pure-theme-menu-text: #b4abc8;
+  --pure-theme-sidebar-logo: #1c1b32;
+  --pure-theme-menu-title-hover: #f0edf9;
+
+  .el-card {
+    --el-card-bg-color: var(--miro-surface);
+  }
+
+  .pure-segmented {
+    color: var(--el-text-color-regular);
+    background: var(--el-fill-color-light);
+  }
+
+  .pure-segmented-item-selected {
+    background: var(--miro-surface);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-miro-brand] *,
+  html[data-miro-brand] *::before,
+  html[data-miro-brand] *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

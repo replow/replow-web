@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>使用 Replow 账号继续</title>
+<style>
+  /* Structure mirrors Google's account consent screen:
+     centered card, app logo + "wants access" heading, an account chip that
+     identifies the signed-in user, a scope list where each row is
+     icon + bold scope name + description, and a bottom-right button pair.
+     Blue link-style "Cancel" on the left, filled "Continue" on the right. */
+  :root {
+    --surface: #ffffff;
+    --surface-sub: #f8f9fa;
+    --hover: #f1f3f4;
+    --border: #dadce0;
+    --text: #202124;
+    --text-sub: #5f6368;
+    --text-faint: #80868b;
+    --blue: #1a73e8;
+    --blue-hover: #1765cc;
+    --blue-soft: #e8f0fe;
+    --green: #188038;
+    --green-soft: #e6f4ea;
+    --red: #d93025;
+    --red-soft: #fce8e6;
+    --amber-soft: #fef7e0;
+    --amber-text: #b06000;
+    --radius: 28px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --font: "Google Sans", "Product Sans", Roboto, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+            "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--surface);
+    color: var(--text);
+    font: 14px/1.5 var(--font);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { width: 100%; max-width: 448px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 40px 28px;
+  }
+  @media (max-width: 520px) {
+    body { padding: 0; align-items: stretch; }
+    .wrap { max-width: none; }
+    .card {
+      border: 0; border-radius: 0; padding: 28px 24px;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    .card .grow { flex: 1; }
+  }
+
+  /* -- header: app logo + heading ------------------------------------ */
+  .head { margin-bottom: 24px; }
+  .mark {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; font-weight: 500; color: #fff;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #4285f4, #9b72cb);
+    overflow: hidden;
+  }
+  .mark img { width: 100%; height: 100%; object-fit: cover; }
+  h1 {
+    margin: 0; font-size: 24px; font-weight: 400; line-height: 1.33;
+    letter-spacing: -.2px;
+  }
+  h1 .appname { font-weight: 400; }
+  .sub {
+    margin: 10px 0 0; color: var(--text-sub); font-size: 14px; line-height: 1.5;
+  }
+
+  /* -- account chip -------------------------------------------------- */
+  .account {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    margin: 20px 0 6px;
+    min-width: 0;
+  }
+  .account img, .account .ball {
+    width: 32px; height: 32px; border-radius: 50%; flex: none;
+  }
+  .account img { object-fit: cover; }
+  .account .ball {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px; font-weight: 500;
+    background: linear-gradient(135deg, #4285f4, #9b72cb);
+  }
+  .account .who { min-width: 0; line-height: 1.25; }
+  .account .who .n { font-size: 13.5px; font-weight: 500; }
+  .account .who .e {
+    font-size: 12px; color: var(--text-sub);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* -- scope list ---------------------------------------------------- */
+  .scopes-intro {
+    margin: 18px 0 22px; color: var(--text-sub); font-size: 14px;
+  }
+  ul.scopes { list-style: none; margin: 0; padding: 0; }
+  ul.scopes > li {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding-bottom: 22px;
+  }
+  ul.scopes > li:last-child { padding-bottom: 0; }
+  .ico { flex: none; width: 20px; height: 20px; margin-top: 2px; }
+  .ico svg { display: block; width: 20px; height: 20px; }
+  .body { min-width: 0; }
+  .name { font-size: 14px; font-weight: 500; line-height: 1.4; }
+  .desc {
+    font-size: 13px; color: var(--text-sub); line-height: 1.5; margin-top: 1px;
+  }
+  .req {
+    display: inline-block; font-size: 11px; font-weight: 500;
+    padding: 1px 7px; border-radius: 4px; margin-left: 7px;
+    background: var(--blue-soft); color: var(--blue);
+    vertical-align: 1px;
+  }
+  details.more { margin-top: 6px; }
+  details.more summary {
+    cursor: pointer; color: var(--blue); font-size: 13px;
+    list-style: none; display: inline-flex; align-items: center; gap: 4px;
+  }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary:hover { text-decoration: underline; }
+  details.more .detail {
+    margin-top: 8px; padding: 10px 12px; border-radius: 8px;
+    background: var(--surface-sub); color: var(--text-sub);
+    font-size: 12.5px; line-height: 1.55;
+  }
+  details.more .detail code {
+    font-family: var(--mono); font-size: 11.5px; color: var(--text);
+  }
+
+  /* -- form ---------------------------------------------------------- */
+  .field { position: relative; margin-bottom: 16px; }
+  .field input {
+    width: 100%; padding: 21px 14px 7px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface); color: var(--text);
+    font-size: 15px; font-family: inherit;
+    transition: border-color .12s;
+  }
+  .field input:focus {
+    outline: none; border-color: var(--blue); border-width: 2px;
+    padding: 20px 13px 6px;
+  }
+  .field label {
+    position: absolute; left: 14px; top: 14px;
+    color: var(--text-sub); font-size: 15px; pointer-events: none;
+    transition: all .12s ease-out;
+  }
+  .field input:focus + label,
+  .field input:not(:placeholder-shown) + label {
+    top: 6px; font-size: 11.5px;
+  }
+  .field input:focus + label { color: var(--blue); }
+
+  /* -- buttons ------------------------------------------------------- */
+  .actions {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 8px; margin-top: 32px;
+  }
+  .actions.between { justify-content: space-between; }
+  button {
+    border: 0; background: none; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    border-radius: 999px; padding: 10px 24px; white-space: nowrap;
+    transition: background .12s, box-shadow .12s;
+  }
+  button:disabled { cursor: default; opacity: .6; }
+  button.primary { background: var(--blue); color: #fff; }
+  button.primary:hover:not(:disabled) {
+    background: var(--blue-hover);
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+  }
+  button.text { color: var(--blue); padding: 10px 16px; }
+  button.text:hover:not(:disabled) { background: var(--blue-soft); }
+  button.plain {
+    color: var(--text-sub); font-size: 13px; padding: 8px 12px;
+  }
+  button.plain:hover:not(:disabled) { background: var(--hover); color: var(--text); }
+
+  /* -- messages ------------------------------------------------------ */
+  .msg {
+    margin-top: 20px; padding: 12px 14px; border-radius: 10px;
+    font-size: 13px; line-height: 1.5; word-break: break-word;
+    display: none; align-items: flex-start; gap: 10px;
+  }
+  .msg.show { display: flex; }
+  .msg svg { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+  .msg.err  { background: var(--red-soft);   color: var(--red); }
+  .msg.ok   { background: var(--green-soft); color: var(--green); }
+  .msg.warn { background: var(--amber-soft); color: var(--amber-text); }
+  .msg code { font-family: var(--mono); font-size: 12px; }
+  .msg b { font-weight: 500; }
+
+  .hint { margin: 16px 0 0; color: var(--text-faint); font-size: 12px; line-height: 1.5; }
+  .hidden { display: none !important; }
+
+  .skeleton {
+    display: flex; align-items: center; gap: 12px;
+    color: var(--text-sub); font-size: 13.5px;
+  }
+  .spin {
+    width: 18px; height: 18px; flex: none; border-radius: 50%;
+    border: 2px solid #dadce0; border-top-color: var(--blue);
+    animation: sp .7s linear infinite;
+  }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  /* -- footer -------------------------------------------------------- */
+  .foot {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-top: 30px; padding-top: 18px;
+    border-top: 1px solid #f1f3f4;
+  }
+  .lang {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--text-sub); font-size: 12px;
+  }
+  .lang svg { width: 15px; height: 15px; }
+  .legal-links { display: flex; gap: 18px; }
+  .legal-links a {
+    color: var(--text-sub); font-size: 12px; text-decoration: none;
+  }
+  .legal-links a:hover { color: var(--text); text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="grow">
+
+      <!-- loading -->
+      <div id="loading" class="skeleton"><span class="spin"></span>正在确认授权请求…</div>
+
+      <!-- sign in -->
+      <div id="gate" class="hidden">
+        <div class="head">
+          <div class="mark">R</div>
+          <h1 id="gateTitle">登录 Replow</h1>
+          <p class="sub" id="gateSub">请使用你的 Replow 账号登录以继续。</p>
+        </div>
+        <div class="msg warn show" id="gateBanner">
+          授权操作必须由账号本人完成。
+        </div>
+        <div style="height:20px"></div>
+        <div class="field">
+          <input id="username" type="text" autocomplete="username" placeholder=" " />
+          <label for="username">用户名或邮箱</label>
+        </div>
+        <div class="field">
+          <input id="password" type="password" autocomplete="current-password" placeholder=" " />
+          <label for="password">密码</label>
+        </div>
+        <div class="actions">
+          <button class="text" id="btnForget">清除已保存的登录</button>
+          <button class="primary" id="btnSignIn">下一步</button>
+        </div>
+      </div>
+
+      <!-- consent -->
+      <div id="consent" class="hidden">
+        <div class="head">
+          <div class="mark" id="appMark">A</div>
+          <h1><span class="appname" id="appName">该应用</span> 想访问你的 Replow 账号</h1>
+        </div>
+
+        <div class="account" id="account"></div>
+
+        <p class="scopes-intro" id="scopesIntro">
+          该应用将获得以下权限。你可以随时在账号设置中撤销。
+        </p>
+
+        <ul class="scopes" id="scopeList"></ul>
+
+        <div class="actions between">
+          <button class="plain" id="btnDeny" style="margin-left:-12px">取消</button>
+          <button class="primary" id="btnApprove">继续</button>
+        </div>
+      </div>
+
+      <!-- terminal -->
+      <div id="done" class="hidden">
+        <div class="head">
+          <div class="mark">R</div>
+          <h1 id="doneTitle">已完成授权</h1>
+          <p class="sub">正在跳回应用，请稍候…</p>
+        </div>
+        <p class="hint" id="doneNote"></p>
+      </div>
+
+      <div id="msgHost"></div>
+    </div>
+
+    <div class="foot">
+      <div class="lang">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.99 7.99 0 0 1 5.08 16zm2.95-8H5.08a7.99 7.99 0 0 1 4.33-3.56A15.65 15.65 0 0 0 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a7.99 7.99 0 0 1-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/>
+        </svg>
+        简体中文
+      </div>
+      <div class="legal-links">
+        <a href="#" onclick="return false">帮助</a>
+        <a href="#" onclick="return false">隐私权</a>
+        <a href="#" onclick="return false">条款</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var params = new URLSearchParams(window.location.search);
+  var Q = {
+    client_id: params.get("client_id") || "",
+    redirect_uri: params.get("redirect_uri") || "",
+    scope: params.get("scope") || "",
+    state: params.get("state") || "",
+    code_challenge: params.get("code_challenge") || "",
+    code_challenge_method: params.get("code_challenge_method") || "S256",
+    consent: params.get("consent") || ""
+  };
+
+  // This page is served from account.example.com, so it calls the API on the
+  // same origin. That is the whole point of hosting it here: the .example.com
+  // SSO cookie is scoped to the registrable domain, so it reaches this page
+  // and can be exchanged for an access token without a second sign-in. The
+  // same page on api.example.com would never see that cookie.
+  var API = window.location.origin;
+  var TOKEN_KEY = "replow.oauth.consent.token";
+  var USER_KEY = "replow.oauth.consent.user";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var ctx = null;
+
+  function show(el) { el.classList.remove("hidden"); }
+  function hide(el) { el.classList.add("hidden"); }
+
+  var ICONS = {
+    person: '<svg viewBox="0 0 24 24" fill="#1a73e8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+    mail: '<svg viewBox="0 0 24 24" fill="#1a73e8"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>',
+    key: '<svg viewBox="0 0 24 24" fill="#1a73e8"><path d="M12.65 10A5.99 5.99 0 0 0 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6a5.99 5.99 0 0 0 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="#1a73e8"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="#188038"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+    error: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 7h2v2h-2V7zm0 4h2v6h-2v-6zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>',
+    chevron: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>'
+  };
+
+  var MSG_ICON = { err: ICONS.error, ok: ICONS.check, warn: ICONS.warn };
+
+  function setMsg(text, kind) {
+    var k = kind || "err";
+    var host = $("msgHost");
+    host.innerHTML = '<div class="msg show ' + k + '">' +
+      (MSG_ICON[k] || ICONS.info) + "<div>" + text + "</div></div>";
+  }
+  function clearMsg() { $("msgHost").innerHTML = ""; }
+
+  function getToken() {
+    try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; }
+  }
+  function setToken(t) {
+    try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); }
+    catch (e) {}
+  }
+  function getUser() {
+    try { return localStorage.getItem(USER_KEY) || ""; } catch (e) { return ""; }
+  }
+  function setUser(v) {
+    try { v ? localStorage.setItem(USER_KEY, v) : localStorage.removeItem(USER_KEY); }
+    catch (e) {}
+  }
+
+  function authHeaders() {
+    var h = { "Content-Type": "application/json", "Accept": "application/json" };
+    var t = getToken().trim();
+    if (t) h.Authorization = "Bearer " + t;
+    return h;
+  }
+
+  function api(method, path, body) {
+    var opts = { method: method, headers: authHeaders(), credentials: "same-origin" };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+    return fetch(API + path, opts).then(function (r) {
+      return r.text().then(function (text) {
+        var data = null;
+        try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
+        return { ok: r.ok, status: r.status, body: data };
+      });
+    });
+  }
+
+  // Exchange the .example.com SSO cookie for an access token. /v1/auth/session
+  // is cookie-only by design, so this needs no Authorization header. Returns
+  // true when a live session was found and cached.
+  function adoptSession() {
+    return fetch(API + "/v1/auth/session", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" }
+    }).then(function (r) {
+      if (!r.ok) return false;
+      return r.json().then(function (j) {
+        var d = j && j.data;
+        if (!d || !d.accessToken) return false;
+        setToken(d.accessToken);
+        setUser(d.nickname || d.username || "");
+        return true;
+      }).catch(function () { return false; });
+    }).catch(function () { return false; });
+  }
+
+  function errorText(res) {
+    var d = res && res.body && res.body.detail;
+    if (d && typeof d === "object") {
+      return (d.error || "error") + "：" + (d.error_description || "");
+    }
+    var map = {
+      not_authenticated: "登录状态已失效，请重新登录。",
+      invalid_token: "登录凭证无效或已过期。",
+      session_revoked: "会话已被撤销，请重新登录。",
+      account_unavailable: "账号不可用。",
+      invalid_client: "客户端不存在、已禁用，或不属于你。",
+      redirect_uri_mismatch: "回调地址与该客户端注册的白名单不一致。",
+      invalid_scope: "请求了服务端不支持的权限范围。",
+      invalid_request: "请求参数不完整或格式有误。"
+    };
+    if (typeof d === "string") {
+      if (d.indexOf("unsupported_scope:") === 0) {
+        return "不支持的权限范围：" + d.slice("unsupported_scope:".length);
+      }
+      return map[d] || d;
+    }
+    return "HTTP " + res.status + " " + JSON.stringify(res.body);
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function ball(label, cls) {
+    var d = document.createElement("div");
+    d.className = cls || "ball";
+    d.textContent = String(label || "?").trim().charAt(0).toUpperCase() || "?";
+    return d;
+  }
+
+  function redirectOut(url) {
+    hide($("consent"));
+    hide($("gate"));
+    hide($("loading"));
+    clearMsg();
+    show($("done"));
+    $("doneNote").innerHTML =
+      "如果浏览器没有自动跳转，请手动打开：<br /><code>" +
+      escapeHtml(url) + "</code>";
+    window.location.href = url;
+  }
+
+  /* -- render --------------------------------------------------------- */
+
+  var SCOPE_ICON = {
+    profile: ICONS.person,
+    email: ICONS.mail,
+    openid: ICONS.shield
+  };
+
+  function renderContext() {
+    var d = ctx.body.data;
+    var client = d.client;
+    var u = d.user || {};
+
+    $("appName").textContent = client.name || "该应用";
+
+    // App mark: logo if provided, otherwise the initial.
+    var mark = $("appMark");
+    mark.innerHTML = "";
+    if (client.icon_url) {
+      var im = document.createElement("img");
+      im.src = client.icon_url;
+      im.alt = "";
+      im.onerror = function () {
+        mark.innerHTML = "";
+        mark.textContent = (client.name || "A").trim().charAt(0).toUpperCase() || "A";
+      };
+      mark.appendChild(im);
+    } else {
+      mark.textContent = (client.name || "A").trim().charAt(0).toUpperCase() || "A";
+    }
+
+    // Account chip -- the "you are signed in as" row Google always shows.
+    var acct = $("account");
+    acct.innerHTML = "";
+    var label = u.display_name || u.username || getUser() || "当前账号";
+    var sub = u.email || (u.username ? "@" + u.username : "");
+    if (u.avatar_url) {
+      var av = document.createElement("img");
+      av.src = u.avatar_url;
+      av.alt = "";
+      av.onerror = function () {
+        av.remove();
+        acct.insertBefore(ball(label, "ball"), acct.firstChild);
+      };
+      acct.appendChild(av);
+    } else {
+      acct.appendChild(ball(label, "ball"));
+    }
+    var who = document.createElement("div");
+    who.className = "who";
+    who.innerHTML = '<div class="n">' + escapeHtml(label) + "</div>" +
+      (sub ? '<div class="e">' + escapeHtml(sub) + "</div>" : "");
+    acct.appendChild(who);
+
+    // Scope rows.
+    var scopes = d.scopes && d.scopes.length ? d.scopes : [];
+    var ul = $("scopeList");
+    ul.innerHTML = "";
+    scopes.forEach(function (s) {
+      var li = document.createElement("li");
+      var req = s.required ? '<span class="req">必需</span>' : "";
+      if (s.scope === "openid") req = "";
+      var more = "";
+
+      li.innerHTML =
+        '<span class="ico">' + (SCOPE_ICON[s.scope] || ICONS.key) + "</span>" +
+        '<span class="body">' +
+        '<span class="name">' + escapeHtml(s.name || s.scope) + req + "</span>" +
+        '<div class="desc">' + escapeHtml(s.description || "") + "</div>" +
+        more +
+        "</span>";
+      ul.appendChild(li);
+    });
+    if (!scopes.length) {
+      ul.innerHTML =
+        '<li><span class="ico">' + ICONS.info + "</span>" +
+        '<span class="body"><span class="name">无需额外权限</span>' +
+        '<div class="desc">该应用未申请任何额外权限。</div></span></li>';
+    }
+
+    $("scopesIntro").textContent =
+      "该应用将获得以下权限。你可以随时在账号设置中撤销。";
+
+    hide($("loading"));
+    hide($("gate"));
+    show($("consent"));
+    clearMsg();
+
+    if (Q.consent === "1") {
+      $("btnApprove").focus();
+    }
+  }
+
+  /* -- flows ---------------------------------------------------------- */
+
+  function loadContext() {
+    if (!Q.client_id || !Q.redirect_uri) {
+      hide($("loading"));
+      show($("gate"));
+      $("gateTitle").textContent = "链接不完整";
+      $("gateSub").textContent = "该授权链接缺少必要参数，无法继续。";
+      $("gateBanner").className = "msg err show";
+      $("gateBanner").textContent =
+        "缺少 client_id 或 redirect_uri，请回到发起授权的应用重新开始。";
+      hide($("username")); hide($("password")); hide($("btnSignIn"));
+      hide($("btnForget"));
+      return;
+    }
+
+    var q = new URLSearchParams({
+      client_id: Q.client_id,
+      redirect_uri: Q.redirect_uri,
+      response_type: "code",
+      scope: Q.scope,
+      state: Q.state,
+      code_challenge: Q.code_challenge,
+      code_challenge_method: Q.code_challenge_method
+    });
+
+    api("GET", "/v1/oauth/authorize/context?" + q.toString()).then(function (res) {
+      if (res.ok) { ctx = res; renderContext(); return; }
+      hide($("loading"));
+      show($("gate"));
+      if (res.status === 401) {
+        // Stored token is stale. Drop it and ask for a fresh sign-in rather
+        // than making the user hunt for a token they cannot obtain here.
+        setToken("");
+        setUser("");
+        setMsg("登录状态已失效，请重新登录后继续。", "warn");
+        $("username").focus();
+      } else {
+        setMsg(errorText(res));
+        hide($("username")); hide($("password")); hide($("btnSignIn"));
+        hide($("btnForget"));
+      }
+    }).catch(function (e) {
+      hide($("loading"));
+      show($("gate"));
+      setMsg("无法连接授权服务器：" + e.message);
+    });
+  }
+
+  function signIn() {
+    var u = $("username").value.trim();
+    var p = $("password").value;
+    if (!u || !p) { setMsg("请填写用户名与密码。", "warn"); return; }
+
+    var b = $("btnSignIn");
+    b.disabled = true;
+    b.textContent = "登录中…";
+    clearMsg();
+
+    api("POST", "/v1/auth/login", { username: u, password: p, identity: u }).then(function (res) {
+      b.disabled = false;
+      b.textContent = "下一步";
+      if (!res.ok || !res.body || !res.body.data) {
+        setMsg(res.status === 401 ? "用户名或密码不正确。" : errorText(res));
+        return;
+      }
+      var data = res.body.data;
+      setToken(data.accessToken);
+      setUser(data.nickname || data.username || u);
+      $("password").value = "";   // never keep the password after success
+      hide($("gate"));
+      show($("loading"));
+      loadContext();
+    }).catch(function (e) {
+      b.disabled = false;
+      b.textContent = "下一步";
+      setMsg("登录请求失败：" + e.message);
+    });
+  }
+
+  $("btnSignIn").addEventListener("click", signIn);
+
+  ["username", "password"].forEach(function (id) {
+    $(id).addEventListener("keydown", function (e) {
+      if (e.key === "Enter") signIn();
+    });
+  });
+
+  $("btnForget").addEventListener("click", function () {
+    setToken("");
+    setUser("");
+    $("username").value = "";
+    $("password").value = "";
+    clearMsg();
+    // Sign out of SSO as well. Without this the next load would silently
+    // adopt the same cookie session again and the user could never switch
+    // accounts from here.
+    fetch(API + "/v1/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" }
+    }).catch(function () {}).then(function () {
+      setMsg("已退出登录，请重新输入账号。", "ok");
+      $("username").focus();
+    });
+  });
+
+  $("btnApprove").addEventListener("click", function () {
+    var b = $("btnApprove");
+    b.disabled = true;
+    b.textContent = "授权中…";
+    clearMsg();
+    api("POST", "/v1/oauth/authorize/approve", {
+      client_id: Q.client_id,
+      redirect_uri: Q.redirect_uri,
+      scope: Q.scope,
+      state: Q.state,
+      code_challenge: Q.code_challenge,
+      code_challenge_method: Q.code_challenge_method
+    }).then(function (res) {
+      if (!res.ok) {
+        b.disabled = false;
+        b.textContent = "继续";
+        setMsg(errorText(res));
+        if (res.status === 401) {
+          setToken("");
+          hide($("consent"));
+          show($("gate"));
+          $("username").focus();
+        }
+        return;
+      }
+      redirectOut(res.body.data.redirect_to);
+    }).catch(function (e) {
+      b.disabled = false;
+      b.textContent = "继续";
+      setMsg("授权失败：" + e.message);
+    });
+  });
+
+  $("btnDeny").addEventListener("click", function () {
+    var b = $("btnDeny");
+    b.disabled = true;
+    b.textContent = "取消中…";
+    clearMsg();
+    api("POST", "/v1/oauth/authorize/deny", {
+      redirect_uri: Q.redirect_uri,
+      state: Q.state
+    }).then(function (res) {
+      var target = res.ok && res.body && res.body.data ? res.body.data.redirect_to : "";
+      if (target) { redirectOut(target); return; }
+      b.disabled = false;
+      b.textContent = "取消";
+      setMsg("已取消授权，但无法自动跳回应用，请手动关闭本页。", "warn");
+    }).catch(function (e) {
+      b.disabled = false;
+      b.textContent = "取消";
+      setMsg("取消失败：" + e.message);
+    });
+  });
+
+  /* -- boot ----------------------------------------------------------- */
+
+  /* Reuse the SSO session first: anyone already signed in to
+     account.example.com should land straight on the consent screen instead of
+     being asked to sign in a second time. Fall back to the form only when
+     there is neither a cookie nor a cached token. */
+  show($("loading"));
+  adoptSession().then(function () {
+    if (getToken()) { loadContext(); return; }
+    hide($("loading"));
+    show($("gate"));
+    $("username").focus();
+  });
+})();
+</script>
+</body>
+</html>
