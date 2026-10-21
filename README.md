@@ -1,17 +1,43 @@
-# Replow Web (Astro)
+<h1>vue-pure-admin精简版（非国际化版本）</h1>
 
-This repository contains **only** the public Astro/Koharu frontend of Replow Web, including the reader, EPUB bookshelf, gallery, and Fanqie interface.
+[![license](https://img.shields.io/github/license/pure-admin/vue-pure-admin.svg)](LICENSE)
 
-**Not included:** `admin.replow.org`, `account.replow.org`, FastAPI services, backend databases, environment credentials, internal deployment data, and server backups.
+**中文** | [English](./README.en-US.md)
 
-## Build
+## 介绍
 
-- Node.js >= 22.20.0
-- pnpm 10.28.2
-- `pnpm install --frozen-lockfile`
-- `pnpm check`
-- `API_BASE_URL=https://api.4z.ink REPLOW_RELEASE=v26.10.21-u4 pnpm build`
+精简版是基于 [vue-pure-admin](https://github.com/pure-admin/vue-pure-admin) 提炼出的架子，包含主体功能，更适合实际项目开发，打包后的大小在全局引入 [element-plus](https://element-plus.org) 的情况下仍然低于 `2.3MB`，并且会永久同步完整版的代码。开启 `brotli` 压缩和 `cdn` 替换本地库模式后，打包大小低于 `350kb`
 
-GitHub Actions checks the Astro code and builds an artifact on each push to `main` and via manual dispatch. It **does not automatically deploy** the production website or expose deployment credentials. EPUB books remain in users' browser storage.
+## 版本选择
 
-Based on the upstream [astro-koharu](https://github.com/cosZone/astro-koharu) project, with custom Replow frontend features.
+当前是非国际化版本，如果您需要国际化版本 [请点击](https://github.com/pure-admin/pure-admin-thin/tree/i18n)
+
+## 配套视频
+
+[点我查看 UI 设计](https://www.bilibili.com/video/BV17g411T7rq)  
+[点我查看快速开发教程](https://www.bilibili.com/video/BV1kg411v7QT)
+
+## 配套保姆级文档
+
+[点我查看 vue-pure-admin 文档](https://pure-admin.cn/)  
+[点我查看 @pureadmin/utils 文档](https://pure-admin-utils.netlify.app)
+
+## 高级服务
+
+[点我查看详情](https://pure-admin.cn/pages/service/)
+
+## 预览
+
+[查看预览](https://pure-admin-thin.netlify.app/#/login)
+
+## 维护者
+
+[xiaoxian521](https://github.com/xiaoxian521)
+
+## ⚠️ 注意
+
+精简版不接受任何 `issues` 和 `pr`，如果有问题请到完整版 [issues](https://github.com/pure-admin/vue-pure-admin/issues/new/choose) 去提，谢谢！
+
+## 许可证
+
+[MIT © 2020-present, pure-admin](./LICENSE)
