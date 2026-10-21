@@ -1,17 +1,9 @@
-# Replow Web (Astro)
+# FastAPI service source (sanitized)
 
-This repository contains **only** the public Astro/Koharu frontend of Replow Web, including the reader, EPUB bookshelf, gallery, and Fanqie interface.
+Install: `python -m pip install -r requirements.txt`. Configure a local-only database and settings with a new `.env` based on `.env.example`.
 
-**Not included:** `admin.replow.org`, `account.replow.org`, FastAPI services, backend databases, environment credentials, internal deployment data, and server backups.
+Local development: `uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`.
 
-## Build
+`alembic.ini` points to a disposable local SQLite file by default; configure a dedicated development MySQL database and migrations as appropriate before applying them. Production connection strings, uploaded content, OAuth signing keys, and well-known verification files are intentionally not included.
 
-- Node.js >= 22.20.0
-- pnpm 10.28.2
-- `pnpm install --frozen-lockfile`
-- `pnpm check`
-- `API_BASE_URL=https://api.4z.ink REPLOW_RELEASE=v26.10.21-u4 pnpm build`
-
-GitHub Actions checks the Astro code and builds an artifact on each push to `main` and via manual dispatch. It **does not automatically deploy** the production website or expose deployment credentials. EPUB books remain in users' browser storage.
-
-Based on the upstream [astro-koharu](https://github.com/cosZone/astro-koharu) project, with custom Replow frontend features.
+**Never run database migrations against the production database from this clone.**
