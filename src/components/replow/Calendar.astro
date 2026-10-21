@@ -1,0 +1,51 @@
+---
+interface Props {
+  dates: string[];
+}
+const { dates } = Astro.props;
+---
+<section class="replow-calendar" data-replow-calendar data-dates={JSON.stringify(dates)}>
+  <header><button type="button" data-month-prev aria-label="上个月">‹</button><strong data-month-title></strong><button type="button" data-month-next aria-label="下个月">›</button></header>
+  <div class="calendar-week">{['日','一','二','三','四','五','六'].map((day) => <span>{day}</span>)}</div>
+  <div class="calendar-days" data-calendar-days></div>
+</section>
+<script>
+  function initCalendars() {
+    document.querySelectorAll<HTMLElement>('[data-replow-calendar]:not([data-ready])').forEach((calendar) => {
+      calendar.dataset.ready = 'true';
+      const dates = new Set<string>(JSON.parse(calendar.dataset.dates || '[]'));
+      const today = new Date();
+      let year = today.getFullYear(), month = today.getMonth();
+      function draw() {
+        const title = calendar.querySelector<HTMLElement>('[data-month-title]');
+        if (title) title.textContent = year + '年' + (month + 1) + '月';
+        const days = calendar.querySelector<HTMLElement>('[data-calendar-days]');
+        if (!days) return;
+        days.replaceChildren();
+        for (let i = 0; i < new Date(year, month, 1).getDay(); i++) days.append(document.createElement('span'));
+        for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
+          const element = document.createElement('span');
+          element.textContent = String(day);
+          const date = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+          if (dates.has(date)) { element.classList.add('has-post'); element.title = '这天发布了文章'; }
+          if (day === today.getDate() && year === today.getFullYear() && month === today.getMonth()) element.classList.add('today');
+          days.append(element);
+        }
+      }
+      calendar.querySelector('[data-month-prev]')?.addEventListener('click', () => { if (--month < 0) { month = 11; year--; } draw(); });
+      calendar.querySelector('[data-month-next]')?.addEventListener('click', () => { if (++month > 11) { month = 0; year++; } draw(); });
+      draw();
+    });
+  }
+  initCalendars();
+  document.addEventListener('astro:page-load', initCalendars);
+</script>
+<style is:global>
+  .replow-calendar { font-size:.72rem; padding:.8rem; border:1px solid hsl(var(--primary)/.12); border-radius:1rem; }
+  .replow-calendar header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.6rem; }
+  .replow-calendar button { width:1.6rem; height:1.6rem; border-radius:50%; cursor:pointer; }
+  .calendar-week,.calendar-days { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; }
+  .calendar-days span { position:relative; padding:.4rem 0; border-radius:50%; }
+  .calendar-days .today { background:hsl(var(--primary)); color:hsl(var(--primary-foreground)); }
+  .calendar-days .has-post::after { content:''; position:absolute; width:3px; height:3px; border-radius:50%; background:currentColor; bottom:2px; left:50%; }
+</style>

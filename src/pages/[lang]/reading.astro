@@ -1,0 +1,10 @@
+---
+import { getLocaleStaticPaths } from '../_shared/utils';
+import ReadingPage from '../reading.astro';
+export const getStaticPaths = getLocaleStaticPaths;
+interface Props {
+  locale: string;
+}
+const { locale } = Astro.props;
+---
+<ReadingPage locale={locale}/>

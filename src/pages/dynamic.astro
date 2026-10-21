@@ -1,0 +1,17 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Dynamics from '@components/replow/Dynamics.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { siteConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { defaultLocale } from '@/i18n';
+
+interface Props {
+  locale?: string;
+}
+const { locale = defaultLocale } = Astro.props;
+---
+<Layout locale={locale} title={'动态 | ' + siteConfig.title} description="记录日常与灵感。">
+  <TwoColumnLayout showPostFooter={false}><Cover slot="cover" title="动态" compact /><HomeSider slot="sider" /><Dynamics /></TwoColumnLayout>
+</Layout>

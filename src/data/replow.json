@@ -1,0 +1,1242 @@
+{
+  "site": {
+    "name": "SilverCode Nexus",
+    "icon_url": "https://cdn.replow.org/replow-org/images/tx.ico",
+    "url": "https://www.replow.org/",
+    "description": "记录思考，分享技术与生活。",
+    "keywords": [
+      "Replow",
+      "博客",
+      "技术博客",
+      "静态博客"
+    ]
+  },
+  "profile": {
+    "name": "Replow Lv.999",
+    "avatar_url": "https://cdn.replow.org/replow-org/images/tx.jpg",
+    "intro": "游戏爱好者，喜欢玩崩坏：星穹铁道和三角洲行动，会一点python和html等等，偶尔搞搞网站",
+    "github_url": "https://github.com/replow",
+    "bilibili_url": "https://www.bilibili.com/space/482339786",
+    "qq_url": "https://qm.qq.com/q/Os9Ssrx8ku",
+    "qq_group_url": "https://qm.qq.com/q/DLtGkWYc9y"
+  },
+  "theme": {
+    "wallpaper": {
+      "desktop": "https://cdn.replow.org/replow-org/images/bg.jpg",
+      "mobile": "https://cdn.replow.org/replow-org/images/bg-m.jpg"
+    },
+    "desktop_background_url": "https://cdn.replow.org/replow-org/images/bg.jpg",
+    "mobile_background_url": "https://cdn.replow.org/replow-org/images/bg-m.jpg",
+    "mode": "banner"
+  },
+  "announcement": {
+    "enabled": true,
+    "title": "网站公告",
+    "body_markdown": "欢迎来到SilverCode Nexus。",
+    "link": {
+      "url": "",
+      "text": "",
+      "enable": false,
+      "external": false
+    }
+  },
+  "navigation": {
+    "links": [
+      {
+        "url": "/",
+        "icon": "material-symbols:home",
+        "name": "主页",
+        "external": false
+      },
+      {
+        "url": "https://account.replow.org/",
+        "icon": "material-symbols:manage-accounts-rounded",
+        "name": "账号中心",
+        "external": true
+      }
+    ]
+  },
+  "firefly": {
+    "fontsList": [
+      {
+        "name": "Zen Maru Gothic",
+        "styles": [
+          "normal"
+        ],
+        "subsets": [
+          "latin",
+          "cyrillic"
+        ],
+        "weights": [
+          "300",
+          "400",
+          "500",
+          "600",
+          "700"
+        ],
+        "provider": "fontsource",
+        "fallbacks": [
+          "sans-serif"
+        ],
+        "cssVariable": "--font-zen-maru-gothic"
+      },
+      {
+        "name": "Inter",
+        "styles": [
+          "normal"
+        ],
+        "subsets": [
+          "latin",
+          "cyrillic"
+        ],
+        "weights": [
+          "300",
+          "400",
+          "500",
+          "600",
+          "700"
+        ],
+        "provider": "fontsource",
+        "fallbacks": [
+          "sans-serif"
+        ],
+        "cssVariable": "--font-inter"
+      },
+      {
+        "name": "JetBrains Mono",
+        "styles": [
+          "normal"
+        ],
+        "subsets": [
+          "latin",
+          "cyrillic"
+        ],
+        "weights": [
+          "400",
+          "700"
+        ],
+        "provider": "fontsource",
+        "fallbacks": [
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          "Liberation Mono",
+          "Courier New",
+          "monospace"
+        ],
+        "cssVariable": "--font-jetbrains-mono"
+      },
+      {
+        "name": "GreatVibes Regular 2",
+        "options": {
+          "variants": [
+            {
+              "src": [
+                "./public/assets/fonts/GreatVibes-Regular-2.otf"
+              ]
+            }
+          ]
+        },
+        "provider": "local",
+        "fallbacks": [
+          "sans-serif"
+        ],
+        "cssVariable": "--font-greatvibes"
+      }
+    ],
+    "fontConfig": {
+      "enable": true,
+      "codeFont": "--font-jetbrains-mono",
+      "selected": [
+        "system"
+      ],
+      "subsetFonts": {
+        "--font-greatvibes": {
+          "extraChars": ""
+        }
+      },
+      "bannerTitleFont": "--font-zen-maru-gothic",
+      "navbarTitleFont": "",
+      "bannerSubtitleFont": "--font-inter"
+    },
+    "siteConfig": {
+      "mal": {
+        "nsfw": "hide",
+        "apiUrl": "https://api.myanimelist.net/v2",
+        "clientId": "",
+        "username": "",
+        "animeBaseUrl": "https://myanimelist.net/anime/",
+        "mangaBaseUrl": "https://myanimelist.net/manga/"
+      },
+      "card": {
+        "border": true,
+        "followTheme": false
+      },
+      "lang": "zh_CN",
+      "post": {
+        "sharePoster": false,
+        "rehypeCallouts": {
+          "theme": "github",
+          "enablePythonMarkdownAdmonitions": false
+        },
+        "generateOgImages": true,
+        "showLastModified": true,
+        "outdatedThreshold": 30
+      },
+      "vndb": {
+        "mode": "static",
+        "nsfw": "hide",
+        "apiUrl": "https://api.vndb.org/kana",
+        "userId": "",
+        "apiToken": "",
+        "vnBaseUrl": "https://vndb.org/",
+        "downloadCovers": false
+      },
+      "pages": {
+        "mal": false,
+        "vndb": false,
+        "bangumi": false,
+        "booknav": false,
+        "dynamic": true,
+        "friends": true,
+        "gallery": false,
+        "sponsor": false,
+        "bilibili": false,
+        "guestbook": false
+      },
+      "title": "SilverCode Nexus",
+      "navbar": {
+        "logo": {
+          "alt": "SilverCode Nexus",
+          "type": "image",
+          "value": "assets/images/logo/firefly-light.png",
+          "valueDark": "assets/images/logo/firefly-dark.png"
+        },
+        "title": "SilverCode Nexus",
+        "menuAlign": "center",
+        "widthFull": false,
+        "followTheme": false,
+        "stickyNavbar": true
+      },
+      "bangumi": {
+        "mode": "dynamic",
+        "nsfw": "hide",
+        "apiUrl": "https://api.bangumi.pro",
+        "userId": "",
+        "categoryOrder": [
+          "anime",
+          "book",
+          "music",
+          "game"
+        ],
+        "subjectBaseUrl": "https://api.bangumi.pro/subject/"
+      },
+      "favicon": [
+        {
+          "src": "https://cdn.replow.org/replow-org/images/tx.ico"
+        }
+      ],
+      "bilibili": {
+        "uid": ""
+      },
+      "keywords": [
+        "Replow",
+        "博客",
+        "技术博客",
+        "静态博客"
+      ],
+      "site_url": "https://www.replow.org/",
+      "subtitle": "Replow's Blog",
+      "tagStyle": "pill",
+      "timezone": "Asia/Shanghai",
+      "pageWidth": 120,
+      "pagination": {
+        "postsPerPage": 10
+      },
+      "themeColor": {
+        "hue": 250,
+        "defaultMode": "system"
+      },
+      "categoryBar": true,
+      "description": "记录思考，分享技术与生活。",
+      "foldArticle": true,
+      "categoryStyle": "rectangle",
+      "siteStartDate": "2025-01-01",
+      "postListLayout": {
+        "grid": {
+          "masonry": false,
+          "columnWidth": 320,
+          "coverFullWidth": true
+        },
+        "meta": {
+          "showTags": true,
+          "tagCount": 2,
+          "showWords": false,
+          "showCategory": true,
+          "showPublished": true,
+          "showReadingTime": false
+        },
+        "stats": {
+          "showWords": true,
+          "showPublished": true,
+          "showReadingTime": true
+        },
+        "defaultMode": "grid",
+        "tagsPosition": "meta",
+        "coverPosition": "right",
+        "showStatsIcons": true,
+        "tagsBottomStyle": "chip",
+        "descriptionLines": 2,
+        "mobileDefaultMode": "grid"
+      },
+      "imageOptimization": {
+        "formats": "webp",
+        "quality": 85,
+        "noReferrerDomains": []
+      }
+    },
+    "footerConfig": {
+      "enable": true,
+      "customHtml": "<span class=\"footer-line footer-version-line\"><span class=\"footer-version-brand\">SilverCode_Nexus</span> <span>Version：v26.10.21</span> <span>Update：5</span></span>\n<span class=\"footer-line footer-copyright-line\">Copyright ® <a href=\"https://www.bilibili.com/space/482339786\" target=\"_blank\" rel=\"noopener noreferrer\"><span data-runtime-profile-name>Replow Lv.999</span></a> ALL RIGHTS RESERVED. <span data-footer-year>2026</span> 版权所有</span>\n<span class=\"footer-line footer-infra-line\">Server By Azure <i aria-hidden=\"true\">|</i> CDN By Cloudflare</span>\n<span class=\"footer-line footer-theme-line\">Theme astro-koharu <i aria-hidden=\"true\">|</i> Power By Astro</span>\n<span class=\"footer-line footer-uptime-line\">System Uptime：<time data-site-uptime data-start=\"2026-07-01T00:00:00Z\"></time></span>\n<span class=\"footer-line footer-legal-gap\" aria-hidden=\"true\"></span>\n<nav class=\"footer-line footer-legal-line\" aria-label=\"站点链接\"><a href=\"/privacy\">隐私协议</a><i aria-hidden=\"true\">|</i><a href=\"/sitemap.xml\">SiteMap</a><i aria-hidden=\"true\">|</i><a href=\"https://api.4z.ink\" target=\"_blank\" rel=\"noopener noreferrer\">API 站</a><i aria-hidden=\"true\">|</i><a href=\"/rss.xml\">RSS</a></nav>"
+    },
+    "koharuConfig": {
+      "heroTitle": "Silver Wolf",
+      "navbarTitle": "Miro",
+      "headerIdleMs": 400,
+      "postCardImagePosition": "alternating",
+      "motionLevel": "lively",
+      "runtimeArticles": true,
+      "theme": "astro-koharu"
+    },
+    "navBarConfig": {
+      "links": [
+        {
+          "url": "/",
+          "icon": "material-symbols:home",
+          "name": "主页",
+          "external": false
+        },
+        {
+          "url": "https://account.replow.org/",
+          "icon": "material-symbols:manage-accounts-rounded",
+          "name": "账号中心",
+          "external": true
+        }
+      ]
+    },
+    "sakuraConfig": {
+      "size": {
+        "max": 1.1,
+        "min": 0.5
+      },
+      "speed": {
+        "rotation": 0.03,
+        "vertical": {
+          "max": 2.2,
+          "min": 1.5
+        },
+        "fadeSpeed": 0.03,
+        "horizontal": {
+          "max": -1.2,
+          "min": -1.7
+        }
+      },
+      "enable": true,
+      "zIndex": 100,
+      "opacity": {
+        "max": 0.9,
+        "min": 0.3
+      },
+      "sakuraNum": 21,
+      "limitTimes": -1
+    },
+    "booknavConfig": [],
+    "commentConfig": {
+      "type": "none",
+      "artalk": {
+        "locale": "zh-CN",
+        "server": "",
+        "visitorCount": true
+      },
+      "disqus": {
+        "shortname": ""
+      },
+      "giscus": {
+        "lang": "zh-CN",
+        "repo": "",
+        "repoId": "",
+        "strict": "0",
+        "loading": "lazy",
+        "mapping": "title",
+        "category": "",
+        "categoryId": "",
+        "emitMetadata": "1",
+        "inputPosition": "top",
+        "reactionsEnabled": "1"
+      },
+      "twikoo": {
+        "lang": "zh-CN",
+        "envId": "",
+        "jsUrl": "",
+        "cssUrl": "",
+        "visitorCount": true
+      },
+      "waline": {
+        "lang": "zh-CN",
+        "emoji": [
+          "https://unpkg.com/@waline/emojis@1.4.0/weibo",
+          "https://unpkg.com/@waline/emojis@1.4.0/bilibili",
+          "https://unpkg.com/@waline/emojis@1.4.0/bmoji"
+        ],
+        "login": "enable",
+        "serverURL": "",
+        "visitorCount": true
+      }
+    },
+    "dynamicConfig": {
+      "memos": {
+        "apiUrl": "",
+        "enable": false,
+        "parent": ""
+      },
+      "title": "",
+      "apiUrl": "/api/dynamic.json",
+      "profileUrl": "/about/",
+      "description": "",
+      "showComment": false,
+      "itemsPerPage": 20
+    },
+    "friendsConfig": [],
+    "galleryConfig": {
+      "albums": [],
+      "columnWidth": 240
+    },
+    "licenseConfig": {
+      "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "icon": "",
+      "name": "CC BY-NC-SA 4.0",
+      "enable": true
+    },
+    "mermaidConfig": {
+      "darkTheme": "editor-dark",
+      "lightTheme": "editor-light"
+    },
+    "profileConfig": {
+      "bio": "游戏爱好者，喜欢玩崩坏：星穹铁道和三角洲行动，会一点python和html等等，偶尔搞搞网站",
+      "name": "Replow Lv.999",
+      "links": [
+        {
+          "url": "https://github.com/replow",
+          "icon": "fa7-brands:github",
+          "name": "GitHub",
+          "showName": false
+        },
+        {
+          "url": "https://www.bilibili.com/space/482339786",
+          "icon": "fa7-brands:bilibili",
+          "name": "Bilibili",
+          "showName": false
+        },
+        {
+          "url": "https://qm.qq.com/q/Os9Ssrx8ku",
+          "icon": "fa7-brands:qq",
+          "name": "QQ",
+          "showName": false
+        },
+        {
+          "url": "https://qm.qq.com/q/DLtGkWYc9y",
+          "icon": "fa7-brands:qq",
+          "name": "QQ群",
+          "showName": false
+        },
+        {
+          "url": "mailto:replow@vip.qq.com",
+          "icon": "fa7-solid:envelope",
+          "name": "邮箱",
+          "showName": false
+        }
+      ],
+      "avatar": "https://cdn.replow.org/replow-org/images/tx.jpg"
+    },
+    "sponsorConfig": {
+      "title": "",
+      "usage": "您的打赏将用于服务器维护、内容创作和功能开发，帮助我持续提供优质内容。",
+      "methods": [],
+      "sponsors": [],
+      "description": "",
+      "showComment": false,
+      "showButtonInPost": false,
+      "showSponsorsList": false
+    },
+    "friendSiteInfo": {
+      "url": "https://www.replow.org/",
+      "name": "SilverCode Nexus",
+      "avatar_url": "https://cdn.replow.org/replow-org/images/tx.jpg",
+      "account_url": "https://account.replow.org/",
+      "description": "SilverCode_Nexus"
+    },
+    "plantumlConfig": {
+      "enable": true,
+      "server": "https://www.plantuml.com/plantuml",
+      "darkTheme": "cyborg",
+      "lightTheme": ""
+    },
+    "analyticsConfig": {
+      "la51Analytics": {
+        "Id": "",
+        "ck": "",
+        "sdkUrl": "",
+        "hashMode": false,
+        "autoTrack": false,
+        "screenRecord": true
+      },
+      "umamiAnalytics": {
+        "replays": {
+          "enabled": false,
+          "maskLevel": "moderate",
+          "sampleRate": 0.15,
+          "maxDuration": 300000,
+          "blockSelector": ""
+        },
+        "scriptUrl": "https://cloud.umami.is/script.js",
+        "websiteId": "",
+        "collectWebVitals": false,
+        "replaysScriptUrl": "https://cloud.umami.is/recorder.js",
+        "trackOutboundLinks": true
+      },
+      "googleAnalyticsId": "",
+      "microsoftClarityId": ""
+    },
+    "coverImageConfig": {
+      "showLoading": false,
+      "enableInPost": true,
+      "randomCoverImage": {
+        "apis": [],
+        "enable": false
+      },
+      "enableInPostOverlay": false
+    },
+    "spineModelConfig": {
+      "size": {
+        "width": 135,
+        "height": 165
+      },
+      "model": {
+        "x": 0,
+        "y": 0,
+        "path": "",
+        "scale": 1
+      },
+      "enable": false,
+      "zIndex": 1000,
+      "opacity": 1,
+      "position": {
+        "corner": "bottom-left",
+        "offsetX": 0,
+        "offsetY": 0
+      },
+      "responsive": {
+        "hideOnMobile": true,
+        "mobileBreakpoint": 768
+      },
+      "interactive": {
+        "enabled": true,
+        "idleInterval": 8000,
+        "clickMessages": [],
+        "idleAnimations": [],
+        "clickAnimations": [],
+        "messageDisplayTime": 3000
+      }
+    },
+    "booknavPageConfig": {
+      "title": "",
+      "favicon": {
+        "api": "https://a.favicon.im/{domain}",
+        "enabled": true
+      },
+      "description": ""
+    },
+    "friendsPageConfig": {
+      "title": "",
+      "description": "",
+      "showComment": false,
+      "randomizeSort": false,
+      "showCustomContent": true
+    },
+    "musicPlayerConfig": {
+      "mode": "local",
+      "local": {
+        "playlist": []
+      },
+      "meting": {
+        "id": "",
+        "api": "",
+        "auth": "",
+        "type": "playlist",
+        "server": "netease",
+        "fallbackApis": []
+      },
+      "volume": 0.7,
+      "playMode": "list",
+      "showLyrics": false,
+      "showInNavbar": true,
+      "showInSidebar": false
+    },
+    "announcementConfig": {
+      "enable": true,
+      "link": {
+        "url": "",
+        "text": "",
+        "enable": false,
+        "external": false
+      },
+      "title": "网站公告",
+      "content": "欢迎来到SilverCode Nexus。",
+      "closable": true
+    },
+    "live2dWidgetConfig": {
+      "size": {
+        "width": 200,
+        "height": 200
+      },
+      "tips": {
+        "enable": true,
+        "offset": {
+          "x": 0,
+          "y": 0
+        },
+        "duration": 3000,
+        "interval": 6000,
+        "messages": [
+          "有什么需要帮助的吗？",
+          "今天天气真不错呢！",
+          "要不要一起玩游戏？",
+          "记得按时休息哦！"
+        ],
+        "welcomeMessage": [
+          "你好呀！",
+          "欢迎来到我的世界！"
+        ]
+      },
+      "menus": {
+        "align": "right",
+        "items": [
+          {
+            "icon": "mdi:home",
+            "label": "返回主页",
+            "action": "home"
+          },
+          {
+            "icon": "mdi:arrow-up",
+            "label": "返回顶部",
+            "action": "scrollToTop"
+          },
+          {
+            "icon": "mdi:bed",
+            "label": "休眠",
+            "action": "sleep"
+          },
+          {
+            "icon": "mdi:swap-horizontal",
+            "label": "切换模型",
+            "action": "switchModel"
+          },
+          {
+            "icon": "mdi:github",
+            "label": "GitHub",
+            "action": "github"
+          }
+        ]
+      },
+      "model": [],
+      "enable": false,
+      "position": "bottom-left",
+      "responsive": {
+        "hideOnMobile": true,
+        "mobileBreakpoint": 768
+      },
+      "primaryColor": "var(--l2d-msg-bg)",
+      "transitionType": "slide",
+      "transitionDuration": 1500
+    },
+    "navBarSearchConfig": {
+      "method": 0
+    },
+    "backgroundWallpaper": {
+      "src": {
+        "mobile": [
+          "https://cdn.replow.org/replow-org/images/bg-m.jpg"
+        ],
+        "desktop": [
+          "https://cdn.replow.org/replow-org/images/bg.jpg"
+        ]
+      },
+      "mode": "banner",
+      "banner": {
+        "waves": {
+          "enable": true
+        },
+        "navbar": {
+          "blur": 10,
+          "transparentMode": "semifull"
+        },
+        "gradient": {
+          "enable": {
+            "mobile": true,
+            "desktop": true
+          },
+          "height": "18%"
+        },
+        "position": "0% 20%",
+        "postInfo": {
+          "mode": "description"
+        }
+      },
+      "common": {
+        "carousel": {
+          "enable": false,
+          "interval": 5000,
+          "transitionEffect": "zoom"
+        },
+        "homeText": {
+          "links": [],
+          "title": "Replow Blog",
+          "enable": false,
+          "subtitle": [
+            "记录思考，分享技术与生活。"
+          ],
+          "titleSize": "4.5rem",
+          "typewriter": {
+            "speed": 100,
+            "enable": true,
+            "pauseTime": 2000,
+            "deleteSpeed": 50
+          },
+          "linksEnable": true,
+          "subtitleSize": "1.5rem"
+        },
+        "dimOpacity": 0.2,
+        "playerMode": "random"
+      },
+      "overlay": {
+        "blur": 1,
+        "zIndex": -1,
+        "opacity": 0.3,
+        "cardOpacity": 0.6
+      },
+      "fullscreen": {
+        "navbar": {
+          "dynamicTransparent": false
+        },
+        "blurRamp": {
+          "enable": {
+            "mobile": true,
+            "desktop": true
+          }
+        },
+        "position": "center"
+      },
+      "switchable": true,
+      "mobileLight": [
+        "https://cdn.replow.org/replow-org/images/bg-light-m.jpg"
+      ],
+      "desktopLight": [
+        "https://cdn.replow.org/replow-org/images/bg-light.jpg"
+      ],
+      "playerEnable": false,
+      "playerPlaceholderUrl": "https://cdn.replow.org/replow-org/images/tx.jpg",
+      "articlePlaceholderUrl": "https://cdn.replow.org/replow-org/images/cover.webp"
+    },
+    "sidebarLayoutConfig": {
+      "enable": true,
+      "position": "left",
+      "tabletSidebar": "left",
+      "leftComponents": [
+        {
+          "type": "profile",
+          "enable": true,
+          "position": "top",
+          "showOnPostPage": true
+        },
+        {
+          "type": "announcement",
+          "enable": true,
+          "position": "top",
+          "showOnPostPage": true
+        },
+        {
+          "type": "music",
+          "enable": true,
+          "position": "sticky",
+          "showOnPostPage": true
+        },
+        {
+          "type": "categories",
+          "enable": true,
+          "position": "sticky",
+          "showOnPostPage": true,
+          "specificConfig": {
+            "collapseThreshold": 5
+          }
+        },
+        {
+          "type": "tags",
+          "enable": true,
+          "position": "sticky",
+          "showOnPostPage": true,
+          "specificConfig": {
+            "collapseThreshold": 10
+          }
+        },
+        {
+          "type": "dynamic",
+          "enable": true,
+          "position": "top",
+          "showOnPostPage": true,
+          "specificConfig": {
+            "dynamic": {
+              "limit": 2
+            }
+          }
+        },
+        {
+          "type": "stats",
+          "enable": true,
+          "position": "top",
+          "showOnPostPage": false
+        },
+        {
+          "type": "siteInfo",
+          "enable": true,
+          "position": "top",
+          "showOnPostPage": true,
+          "specificConfig": {
+            "siteInfo": {
+              "unknownBuildPlatform": "Unknown CI"
+            }
+          }
+        },
+        {
+          "type": "calendar",
+          "enable": true,
+          "position": "sticky",
+          "showTitle": false,
+          "showOnPostPage": false,
+          "specificConfig": {
+            "calendar": {
+              "showHeatmap": true
+            }
+          }
+        },
+        {
+          "type": "sidebarToc",
+          "enable": true,
+          "position": "sticky",
+          "showOnPostPage": true,
+          "hideOnNonPostPage": true
+        },
+        {
+          "type": "advertisement",
+          "enable": false,
+          "position": "sticky",
+          "showOnPostPage": false
+        }
+      ],
+      "rightComponents": [],
+      "hideSidebarOnPostPage": false,
+      "mobileBottomComponents": [
+        {
+          "type": "profile",
+          "enable": true,
+          "showOnPostPage": true
+        },
+        {
+          "type": "announcement",
+          "enable": true,
+          "showOnPostPage": true
+        },
+        {
+          "type": "categories",
+          "enable": true,
+          "showOnPostPage": true,
+          "specificConfig": {
+            "collapseThreshold": 5
+          }
+        },
+        {
+          "type": "tags",
+          "enable": true,
+          "showOnPostPage": true,
+          "specificConfig": {
+            "collapseThreshold": 10
+          }
+        },
+        {
+          "type": "dynamic",
+          "enable": true,
+          "showOnPostPage": true,
+          "specificConfig": {
+            "dynamic": {
+              "limit": 2
+            }
+          }
+        },
+        {
+          "type": "stats",
+          "enable": true,
+          "showOnPostPage": true
+        },
+        {
+          "type": "siteInfo",
+          "enable": true,
+          "showOnPostPage": true,
+          "specificConfig": {
+            "siteInfo": {
+              "unknownBuildPlatform": "Unknown CI"
+            }
+          }
+        }
+      ],
+      "showBothSidebarsOnPostPage": false
+    },
+    "expressiveCodeConfig": {
+      "darkTheme": "one-dark-pro",
+      "lightTheme": "one-light",
+      "pluginCollapsible": {
+        "enable": true,
+        "previewLines": 8,
+        "lineThreshold": 15,
+        "defaultCollapsed": true
+      },
+      "pluginLanguageLogo": {
+        "color": "mono",
+        "enable": false,
+        "excludedLangs": []
+      },
+      "pluginLanguageBadge": {
+        "enable": true
+      }
+    },
+    "displaySettingsConfig": {
+      "enable": false,
+      "wavesSwitchable": false,
+      "layoutSwitchable": false,
+      "sakuraSwitchable": false,
+      "overlaySwitchable": false,
+      "gradientSwitchable": false,
+      "cardBorderSwitchable": false,
+      "themeColorSwitchable": true,
+      "bannerTitleSwitchable": false,
+      "wallpaperModeSwitchable": false,
+      "bannerCarouselSwitchable": false,
+      "cardFollowThemeSwitchable": false
+    }
+  },
+  "account": {
+    "registration_enabled": true,
+    "email_verification_enabled": true
+  },
+  "friends": [
+    {
+      "id": 1,
+      "name": "冬優ちゃんの小窝",
+      "avatar_url": "https://fuibafuyu.net/icon/favicon-128.png",
+      "description": "冬優ちゃんの小窝",
+      "website_url": "https://fuibafuyu.net",
+      "language": "HTML",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-10-11T03:30:26",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 2,
+      "name": "Anycast's Blog",
+      "avatar_url": "https://cdn.replow.org/site/2026/07/f5f48b48ee5319b20d2cd4419db6c7283a717383.jpg",
+      "description": "AnycastBlog, record anything I want.",
+      "website_url": "https://blog.91vip.pw",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-07-30T11:42:59",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 3,
+      "name": "Emnasop Blog",
+      "avatar_url": "https://emnasop.cn/YLYLogo.webp",
+      "description": "ο(=•ω＜=)ρ⌒☆",
+      "website_url": "https://emnasop.cn",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-07-27T06:00:57",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 4,
+      "name": "语景小站",
+      "avatar_url": "https://res.rainview.net/images/favicon.png",
+      "description": "没有比脚更长的路，没有比人更高的山。",
+      "website_url": "https://rainview.net",
+      "language": "WordPress",
+      "rss_url": "https://rainview.net/rss.xml",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-10-11T03:29:20",
+      "latest_article_title": "MuMu模拟器雨景优化版——让模拟器回归本质",
+      "latest_article_url": "https://rainview.net/archives/mumu-lite"
+    },
+    {
+      "id": 5,
+      "name": "LynxCatTheThird",
+      "avatar_url": "https://s2.hdslb.com/bfs/face/55653dbd3d6e3d685896bcd10242aa9585d28f56.jpg@1e_0c.webp",
+      "description": "I am LynxCatTheThird, an AGI from the 103rd century.",
+      "website_url": "https://www.lynx3.me/",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-07-27T06:00:57",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 7,
+      "name": "Meowhuan的个人主页",
+      "avatar_url": "https://www.meowra.cn/logo.png",
+      "description": "一只处于互联网边缘的小猫的个人主页",
+      "website_url": "https://www.meowra.cn/",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-07-27T06:00:57",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 9,
+      "name": "靈霊均灵的个人网站",
+      "avatar_url": "http://xn--qwts17j.xyz/images/logo.webp",
+      "description": "一个个人网站啊~~~~",
+      "website_url": "http://xn--qwts17j.xyz/",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-07-27T19:31:38",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 10,
+      "name": "涡猫社TurboNeko STUDIO",
+      "avatar_url": "https://nachocrazy.top/avatar/logo.jpg",
+      "description": "TurboNeko Studio — 速度即风格\n\"燃油在左，幻想在右。我们活在两者的交界处。\" \n我们是谁？\nTurboNeko Studio 是一个把二次元幻想、硬核汽车文化和前沿科技揉在一起的创意厂牌。\n名字里的 Turbo 代表涡轮增压般的爆发力与机械美学——我们追求性能、速度、改装的极致；Neko 代表猫咪般的灵动创意与破格思维——我们拒绝死板，拥抱想象。\n我们做什么？\n \n🚗 汽车文化内容 — 从经典JDM到新能源性能车，改装方案、车型解析、驾驶文化\n \n🎨 二次元创意融合 — 角色设计、视觉风格、IP联动，让机械也有灵魂\n \n💻 科技前沿探索 — 开源工具、智能交互、数字体验，用代码驱动创意\n我们的态度？\n不跟风，不将就，不画大饼。\n我们相信：真正的好东西，是踩过坑、拧过螺丝、熬过夜之后磨出来的。\nTurboNeko Studio Speed Meets Style. 速度即风格。",
+      "website_url": "https://turboneko.top/",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-08-16T00:22:03",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 11,
+      "name": "Olinl Blog",
+      "avatar_url": "https://blog.olinl.com/assets/images/avatar.webp",
+      "description": "分享、实践、学习",
+      "website_url": "https://blog.olinl.com",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-08-09T17:14:12",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 12,
+      "name": "星宇安全实验室",
+      "avatar_url": "https://cdn.replow.org/friend/2026/08/e0d95c5f1e80bb98fe91b1f0474a05fa1d72eae4.webp",
+      "description": "星宇安全实验室，专注网络安全技术分享，记录团队实战经历、安全研究与编程成长笔记，致力于分享网安学习干货。",
+      "website_url": "https://bk.zhaozhiqiang.pw/",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-08-12T20:09:58",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 13,
+      "name": "threetwoa's blog",
+      "avatar_url": "https://github.com/Aafff623.png",
+      "description": "少写一点胶水代码，多留一点判断。中北软件 · Java & Python · Agent。",
+      "website_url": "https://www.threetwoa.live/",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-08-12T23:47:26",
+      "latest_article_title": "",
+      "latest_article_url": ""
+    },
+    {
+      "id": 14,
+      "name": "朝朝听雨",
+      "avatar_url": "https://rainzt.cn/zzty.png",
+      "description": "物物而不物于物，念念而不念于念",
+      "website_url": "https://rainzt.cn/",
+      "language": "",
+      "rss_url": "",
+      "sort_order": 0,
+      "is_enabled": true,
+      "updated_at": "2026-08-26T15:20:57",
+      "latest_article_title": "自动上架系统：用 Playwright 构建可控发布流程",
+      "latest_article_url": "https://rainzt.cn/posts/auto-listing-system/"
+    }
+  ],
+  "stats": {
+    "articles": 11,
+    "comments": 4,
+    "friends": 12,
+    "users": 20,
+    "media": 21,
+    "published_articles": 10
+  },
+  "version": "v26.10.21-u5",
+  "articles": [
+    {
+      "id": 60018,
+      "slug": "replow-accesskey-api-guide",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "SilverCode Nexus AccessKey API 使用文档",
+      "cover_url": "",
+      "category": "API",
+      "tags": [
+        "api",
+        "guide"
+      ]
+    },
+    {
+      "id": 60002,
+      "slug": "关于本站",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "关于本站",
+      "cover_url": "",
+      "category": "站务",
+      "tags": [
+        "site"
+      ]
+    },
+    {
+      "id": 60000,
+      "slug": "关于silvercode-nexus",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "关于SilverCode Nexus",
+      "cover_url": "",
+      "category": "站务",
+      "tags": [
+        "site"
+      ]
+    },
+    {
+      "id": 60019,
+      "slug": "replow-accesskey-api-ai-spec",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "SilverCode Nexus AccessKey API：AI 接入规范",
+      "cover_url": "",
+      "category": "API",
+      "tags": [
+        "api",
+        "ai"
+      ]
+    },
+    {
+      "id": 60017,
+      "slug": "trss-napcat-yunzai-qq-bot",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "使用 TRSS + NapCat 搭建 Yunzai QQ 机器人",
+      "cover_url": "",
+      "category": "技术笔记",
+      "tags": [
+        "tutorial",
+        "qqbot",
+        "yunzai"
+      ]
+    },
+    {
+      "id": 60016,
+      "slug": "newbie-website-building-chapter-2",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "从零开始的新人建站笔记：第二章",
+      "cover_url": "",
+      "category": "技术笔记",
+      "tags": [
+        "tutorial",
+        "website"
+      ]
+    },
+    {
+      "id": 60015,
+      "slug": "newbie-website-building-chapter-1",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "从零开始的新人建站笔记：第一章",
+      "cover_url": "",
+      "category": "技术笔记",
+      "tags": [
+        "tutorial",
+        "website"
+      ]
+    },
+    {
+      "id": 60014,
+      "slug": "bilibili-tool-pro-install-use",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "BiliBiliToolPro 安装及使用",
+      "cover_url": "",
+      "category": "技术笔记",
+      "tags": [
+        "tutorial",
+        "bilibili",
+        "tools"
+      ]
+    },
+    {
+      "id": 60013,
+      "slug": "cc-switch-codex-takeover-guide-2",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "使用 CC Switch 接管 Codex",
+      "cover_url": "",
+      "category": "技术笔记",
+      "tags": [
+        "tutorial",
+        "server",
+        "nginx"
+      ]
+    },
+    {
+      "id": 60001,
+      "slug": "yuexin-music",
+      "updated_at": "2026-08-28T16:05:13",
+      "title": "Yuexin Music",
+      "cover_url": "https://cdn.replow.org/article/2026/07/e49bf846bc2c030abbe2aaa69d4787bf28a634b6.png",
+      "category": "音乐",
+      "tags": [
+        "music"
+      ]
+    }
+  ]
+}

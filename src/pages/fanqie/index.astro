@@ -1,0 +1,16 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Fanqie from '@components/replow/Fanqie.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { defaultLocale } from '@/i18n';
+
+interface Props {
+  locale?: string;
+}
+const { locale = defaultLocale } = Astro.props;
+---
+<Layout locale={locale} title="番茄小说下载器 | Miro" description="登录后搜索小说，选择章节范围并下载 TXT 或 EPUB。">
+  <TwoColumnLayout showPostFooter={false}><Cover slot="cover" title="阅读，让故事继续" compact/><HomeSider slot="sider"/><Fanqie/></TwoColumnLayout>
+</Layout>

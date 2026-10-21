@@ -1,0 +1,89 @@
+---
+import logoSrc from '@assets/svg/logo.svg?url';
+import ChristmasLights from '@components/christmas/ChristmasLights.astro';
+import { ChristmasOrnamentToggle } from '@components/christmas/ChristmasOrnamentToggle';
+import { MobilePostHeader } from '@components/layout/MobilePostHeader';
+import UserMenu from '@components/replow/UserMenu.astro';
+import { MenuIcon } from '@components/ui/MenuIcon';
+import { MAX_WIDTH } from '@constants/layout';
+import { christmasConfig, siteConfig } from 'constants/site-config';
+import snapshot from '@/data/replow.json';
+import { getLocaleFromUrl, localizedPath } from '@/i18n';
+import Navigator from './Navigator';
+
+interface Props {
+  isPostPage?: boolean;
+  tocNumbering?: boolean;
+}
+
+const { isPostPage = false, tocNumbering = true } = Astro.props;
+const { showLogo } = siteConfig;
+const navbarTitle = snapshot.firefly.koharuConfig.navbarTitle || 'Miro';
+const locale = getLocaleFromUrl(Astro.url.pathname);
+---
+
+<div
+  id="site-header"
+  class={`shadow-text fixed tablet:backdrop-blur inset-x-0 top-0 z-30 gap-4 py-2.5 text-white select-none tablet:py-2 tablet:pl-3 tablet:pr-0 overflow-visible`}
+>
+  <div class={`header-inner mx-auto tablet:w-full px-6 tablet:pl-0 tablet:pr-3 ${MAX_WIDTH.content}`}>
+    <div class="header-capsule" aria-hidden="true"></div>
+    <div class="header-content tablet:grid tablet:grid-cols-[minmax(3rem,1fr)_auto_1fr] tablet:gap-x-3 flex items-center justify-between">
+      <!-- Desktop: Always show logo -->
+      <a
+        transition:persist="page-header-avatar"
+        class="site-logo header-desktop-logo tablet:hidden -my-4 mr-4 flex cursor-pointer items-center justify-center gap-1 whitespace-nowrap"
+        href="/"
+        target="_self"
+        title={navbarTitle}
+        aria-label={navbarTitle}
+      >
+        {showLogo ? <img src={logoSrc} alt="" class="h-8 w-auto" width="448" height="153" /> : <p class="logo-text">{navbarTitle}</p>}
+      </a>
+      <!-- Mobile: MobilePostHeader (shows heading on post pages, logo otherwise) -->
+      <div class="header-mobile-logo tablet:col-start-2 tablet:flex hidden items-center justify-center">
+        {isPostPage ? (
+          <MobilePostHeader
+            client:load
+            isPostPage={isPostPage}
+            enableNumbering={tocNumbering}
+            logoElement={showLogo ? 'svg' : 'text'}
+            logoText={navbarTitle}
+            logoSrc={logoSrc}
+            locale={locale}
+          />
+        ) : (
+          <a href={localizedPath('/', locale)} class="flex items-center gap-1">
+            {showLogo ? <img src={logoSrc} alt={navbarTitle} class="h-8 w-auto" width="448" height="153" /> : <span class="logo-text">{navbarTitle}</span>}
+          </a>
+        )}
+      </div>
+      <Navigator client:load transition:persist="site-nav" currentPath={Astro.url.pathname} locale={locale}>
+        <UserMenu />
+      </Navigator>
+    </div>
+  </div>
+  {christmasConfig.enabled && christmasConfig.features.christmasCoverDecoration && <ChristmasLights />}
+  {christmasConfig.enabled && <ChristmasOrnamentToggle client:only="react" />}
+</div>
+
+<!-- 移动端菜单按钮 -->
+<MenuIcon
+  client:load
+  locale={locale}
+  className="tablet:flex fixed top-0 left-3 z-52 hidden h-14 transition-transform"
+  id="mobile-menu-container"
+/>
+
+<script>
+  import { observeHeaderNavigation } from '@lib/header-responsive';
+
+  let cleanup = () => {};
+  function init() {
+    cleanup();
+    cleanup = observeHeaderNavigation();
+  }
+  if (document.readyState !== 'loading') init();
+  document.addEventListener('astro:page-load', init);
+  document.addEventListener('astro:before-swap', () => cleanup());
+</script>

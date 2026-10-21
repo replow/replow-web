@@ -1,0 +1,12 @@
+---
+import snapshot from '@/data/replow.json';
+---
+<section class="replow-announcement" data-replow-announcement hidden={!snapshot.announcement.enabled}>
+  <strong data-announcement-title>{snapshot.announcement.title}</strong>
+  <p data-announcement-body>{snapshot.announcement.body_markdown}</p>
+</section>
+<style>
+  .replow-announcement { margin: 1rem .5rem; padding: 1rem; border-radius: 1rem; background: hsl(var(--card)); color: hsl(var(--card-foreground)); font-size: .85rem; line-height: 1.7; border: 1px solid color-mix(in srgb, hsl(var(--primary)) 12%, transparent); }
+  strong { color: hsl(var(--primary)); }
+  p { margin-top: .4rem; }
+</style>

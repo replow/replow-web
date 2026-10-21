@@ -1,0 +1,17 @@
+<section class="index-surface shadow-box dynamics-surface" data-dynamics>
+  <div class="dynamic-toolbar"><div><h2>此刻 · 动态</h2><p>日常、灵感，还有一些想说的话。</p></div><button type="button" data-dynamic-refresh>刷新动态</button></div>
+  <p class="dynamic-status" role="status" aria-live="polite" data-dynamic-status>正在读取动态……</p>
+  <div class="dynamic-feed" data-dynamic-list></div>
+  <button type="button" class="dynamic-more" data-dynamic-more hidden>加载更多</button>
+  <noscript>动态需要启用 JavaScript 后读取。</noscript>
+</section>
+<script>
+  import { startDynamics, stopDynamics } from '@/lib/replow/dynamics';
+  if (document.readyState !== 'loading') startDynamics();
+  else document.addEventListener('DOMContentLoaded', startDynamics, {once:true});
+  document.addEventListener('astro:page-load', startDynamics);
+  document.addEventListener('astro:before-swap', stopDynamics);
+</script>
+<style is:global>
+.dynamics-surface{padding:clamp(18px,3vw,32px);min-width:0}.dynamic-toolbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.dynamic-toolbar h2{font-size:1.45rem;font-weight:700}.dynamic-toolbar p,.dynamic-status,.dynamic-meta,.dynamic-empty{color:hsl(var(--muted-foreground))}.dynamic-toolbar p{font-size:.9rem;margin-top:8px}.dynamics-surface button{border:1px solid hsl(var(--border));border-radius:12px;padding:9px 14px;background:hsl(var(--background));cursor:pointer}.dynamics-surface button:disabled{opacity:.6;cursor:wait}.dynamic-status{font-size:.85rem;min-height:1.4em;margin:16px 0}.dynamic-entry{padding:26px 0;border-top:1px solid hsl(var(--border));min-width:0}.dynamic-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.8rem}.dynamic-pinned{color:hsl(var(--primary));background:hsl(var(--primary)/.1);padding:3px 10px;border-radius:99px}.dynamic-location{overflow-wrap:anywhere}.dynamic-body{margin:16px 0;max-width:none;overflow-wrap:anywhere;line-height:1.85}.dynamic-body pre{overflow-x:auto}.dynamic-images{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:720px}.dynamic-images a{display:block;border-radius:13px;overflow:hidden;background:hsl(var(--muted));aspect-ratio:1}.dynamic-images img{width:100%;height:100%;object-fit:cover;transition:transform .2s ease}.dynamic-images a:hover img{transform:scale(1.04)}.dynamic-empty{padding:28px 0}.dynamic-more{display:block;margin:18px auto 0}.dynamic-more[hidden]{display:none}.dynamics-surface :is(a,button):focus-visible{outline:2px solid hsl(var(--primary));outline-offset:3px}@media(max-width:600px){.dynamic-images{gap:7px}.dynamic-images a{border-radius:9px}.dynamic-entry{padding:22px 0}.dynamic-meta{gap:8px}.dynamic-toolbar h2{font-size:1.25rem}}@media(prefers-reduced-motion:reduce){.dynamic-images img{transition:none}.dynamic-images a:hover img{transform:none}}
+</style>

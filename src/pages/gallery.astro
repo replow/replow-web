@@ -1,0 +1,17 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Gallery from '@components/replow/Gallery.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { siteConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { defaultLocale } from '@/i18n';
+
+interface Props {
+  locale?: string;
+}
+const { locale = defaultLocale } = Astro.props;
+---
+<Layout locale={locale} title={'相册 | '+siteConfig.title} description="收集日常、风景与值得留下的瞬间。">
+ <TwoColumnLayout showPostFooter={false}><Cover slot="cover" title="相册" compact/><HomeSider slot="sider"/><Gallery/></TwoColumnLayout>
+</Layout>

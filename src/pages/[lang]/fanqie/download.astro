@@ -1,0 +1,10 @@
+---
+import { getLocaleStaticPaths } from '../../_shared/utils';
+import DownloadPage from '../../fanqie/download.astro';
+export const getStaticPaths = getLocaleStaticPaths;
+interface Props {
+  locale: string;
+}
+const { locale } = Astro.props;
+---
+<DownloadPage locale={locale}/>

@@ -1,0 +1,124 @@
+---
+// Kept for compatibility with any deployment that still points the public
+// site at a dedicated API host. Emitted inline so the client script stays
+// self-contained.
+const publicApiBase = (import.meta.env.PUBLIC_API_BASE_URL || import.meta.env.PUBLIC_API_BASE || 'https://api.4z.ink').replace(
+  /\/+$/,
+  '',
+);
+---
+
+<script is:inline define:vars={{ publicApiBase }} data-swup-ignore-script>
+  (() => {
+    if (window.__replowAuthRuntimeStarted) return;
+    window.__replowAuthRuntimeStarted = true;
+
+    // Prefer a same-origin API path when this site is served from a domain
+    // that proxies the API itself. The session cookie is scoped to a
+    // registrable domain, so a same-origin call is what actually carries it.
+    const sameOriginDomains = ["replow.org", "4z.ink"];
+    const host = window.location.hostname.toLowerCase();
+    const useSameOrigin = host === "localhost" || host === "127.0.0.1" || sameOriginDomains.some(
+      (domain) => host === domain || host.endsWith("." + domain)
+    );
+    const apiBase = useSameOrigin ? "" : publicApiBase;
+
+    const sessionKey = "silvercode.main.session";
+    let syncing = false;
+    let lastVerifiedAt = 0;
+    let revision = 0;
+    document.addEventListener("replow:signout", () => { revision++; publish(null); });
+
+    const publish = (session) => {
+      // The public site only needs login metadata. Never persist access or
+      // refresh tokens in its localStorage.
+      const publicSession = session
+        ? {
+            username: session.username,
+            nickname: session.nickname,
+            avatar: session.avatar,
+            roles: session.roles,
+            expires: session.expires
+          }
+        : null;
+      try {
+        if (publicSession) localStorage.setItem(sessionKey, JSON.stringify({ ...publicSession, verifiedAt: Date.now() }));
+        else localStorage.removeItem(sessionKey);
+      } catch { /* Private browsing may disable localStorage. */ }
+      window.__replowAuthSession = publicSession;
+      document.dispatchEvent(new CustomEvent("replow:auth", { detail: publicSession }));
+    };
+
+    const sync = async (force = false) => {
+      if (syncing || document.visibilityState !== "visible" || (!force && Date.now() - lastVerifiedAt < 15_000)) return;
+      syncing = true;
+      const requestRevision = revision;
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 8_000);
+      try {
+        const response = await fetch(`${apiBase}/v1/auth/status`, {
+          method: "POST",
+          signal: controller.signal,
+          credentials: "include",
+          headers: { Accept: "application/json" },
+          cache: "no-store"
+        });
+        if (!response.ok) {
+          if (response.status === 401 && requestRevision === revision) publish(null);
+          return;
+        }
+        const result = await response.json();
+        if (requestRevision !== revision) return;
+        lastVerifiedAt = Date.now();
+        const user = result?.authenticated ? result.user : null;
+        publish(
+          user
+            ? {
+                username: user.username,
+                nickname: user.display_name,
+                avatar: user.avatar_url,
+                roles: user.role ? [user.role] : [],
+                expires: null
+              }
+            : null
+        );
+      } catch {
+        // Keep the statically rendered site usable during an API outage.
+      } finally {
+        window.clearTimeout(timeout);
+        syncing = false;
+      }
+    };
+
+    // Cached metadata is for instant navbar display only: it is never
+    // accepted as proof of authentication by the API.
+    try {
+      const cached = JSON.parse(localStorage.getItem(sessionKey) || "null");
+      if (cached && typeof cached.username === "string" && cached.username &&
+          typeof cached.verifiedAt === "number" &&
+          Date.now() >= cached.verifiedAt && Date.now() - cached.verifiedAt < 86_400_000) {
+        const preview = {
+          username: cached.username,
+          nickname: typeof cached.nickname === "string" ? cached.nickname : cached.username,
+          avatar: typeof cached.avatar === "string" ? cached.avatar : "",
+          roles: Array.isArray(cached.roles) ? cached.roles.filter((role) => typeof role === "string") : [],
+          expires: null
+        };
+        window.__replowAuthSession = preview;
+        document.dispatchEvent(new CustomEvent("replow:auth", { detail: preview }));
+      }
+    } catch { /* No usable cached metadata. */ }
+    sync();
+    window.addEventListener("storage", (event) => {
+      if (event.key === null || (event.key === sessionKey && !event.newValue)) {
+        revision++;
+        window.__replowAuthSession = null;
+        document.dispatchEvent(new CustomEvent("replow:auth", { detail: null }));
+      } else if (event.key === sessionKey) void sync(true);
+    });
+    document.addEventListener("visibilitychange", () => void sync(true));
+    window.addEventListener("pageshow", (event) => { if (event.persisted) void sync(true); });
+    document.addEventListener("astro:page-load", () => void sync());
+    window.setInterval(sync, 60_000);
+  })();
+</script>

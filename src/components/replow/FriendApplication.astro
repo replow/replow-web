@@ -1,0 +1,75 @@
+<section class="replow-friend-apply">
+  <h2>申请友情链接</h2>
+  <p>填写邮箱并验证后，友链会自动加入。已有账号也可以在<a href="https://account.replow.org/">账号中心</a>管理友链。</p>
+  <form data-replow-friend-form>
+    <div class="form-grid">
+      <label>邮箱<input name="email" type="email" autocomplete="email" required maxlength="190" /></label>
+      <label>邮箱验证码<div class="code-row"><input name="code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" required /><button type="button" data-send-code>发送验证码</button></div></label>
+      <label>站点名称<input name="site_name" required maxlength="120" /></label>
+      <label>站点网址<input name="website_url" type="url" required placeholder="https://" /></label>
+      <label>头像网址<input name="avatar_url" type="url" placeholder="选填" /></label>
+      <label>RSS 地址<input name="rss_url" type="url" placeholder="选填，默认 /rss.xml" /></label>
+    </div>
+    <label>站点简介<textarea name="description" rows="3" maxlength="500"></textarea></label>
+    <button type="submit">提交申请</button>
+    <p role="status" aria-live="polite" data-apply-status></p>
+  </form>
+</section>
+<script>
+  async function submitRequest(path: string, data: Record<string, string>) {
+    const response = await fetch('/v1/public/friend-links/' + path, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('提交失败，请检查填写内容和验证码后重试（' + response.status + '）');
+    return response.json();
+  }
+  function initForms() {
+    document.querySelectorAll<HTMLFormElement>('[data-replow-friend-form]:not([data-ready])').forEach((form) => {
+      form.dataset.ready = 'true';
+      const status = form.querySelector<HTMLElement>('[data-apply-status]');
+      const codeButton = form.querySelector<HTMLButtonElement>('[data-send-code]');
+      codeButton?.addEventListener('click', async () => {
+        const email = form.elements.namedItem('email') as HTMLInputElement;
+        if (!email.reportValidity()) return;
+        codeButton.disabled = true;
+        try {
+          await submitRequest('verification/send', { email: email.value });
+          if (status) status.textContent = '验证码已发送，请查收邮件。';
+          setTimeout(() => { codeButton.disabled = false; }, 60_000);
+        } catch (error) {
+          if (status) status.textContent = error instanceof Error ? error.message : '发送失败';
+          codeButton.disabled = false;
+        }
+      });
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+        const button = form.querySelector<HTMLButtonElement>('[type=submit]');
+        if (button) button.disabled = true;
+        try {
+          const data = Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, String(value)]));
+          await submitRequest('apply', data);
+          if (status) status.textContent = '申请成功！刷新页面即可查看友链。';
+          form.reset();
+        } catch (error) {
+          if (status) status.textContent = error instanceof Error ? error.message : '申请失败';
+        } finally { if (button) button.disabled = false; }
+      });
+    });
+  }
+  initForms();
+  document.addEventListener('astro:page-load', initForms);
+</script>
+<style>
+  .replow-friend-apply { padding: 1.5rem; border-radius: 1rem; border: 1px solid color-mix(in srgb,hsl(var(--primary)) 18%,transparent); }
+  h2 { font-size:1.35rem; font-weight:700; color:hsl(var(--primary)); }
+  p { font-size:.875rem; margin:.7rem 0; color:hsl(var(--muted-foreground)); }
+  a { color:hsl(var(--primary)); }
+  label { display:flex; flex-direction:column; gap:.4rem; font-size:.875rem; margin-bottom:1rem; }
+  input,textarea { width:100%; border:1px solid color-mix(in srgb,hsl(var(--primary)) 20%,transparent); border-radius:.6rem; padding:.65rem; background:hsl(var(--card)); color:hsl(var(--card-foreground)); }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 1rem; }
+  .code-row { display:flex; gap:.5rem; }
+  button { padding:.65rem 1rem; border-radius:.6rem; background:hsl(var(--primary)); color:hsl(var(--primary-foreground)); white-space:nowrap; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  @media(max-width:767px) { .form-grid { grid-template-columns:1fr; } }
+</style>

@@ -1,0 +1,99 @@
+---
+import './user-menu.css';
+---
+
+<div class="replow-account" data-replow-account>
+  <a class="replow-login-link" href="https://account.replow.org/" data-astro-reload>登录</a>
+  <button type="button" class="replow-avatar-button" aria-label="账号菜单" aria-haspopup="dialog" aria-expanded="false" popovertarget="replow-account-menu" hidden>
+    <span class="replow-avatar-fallback" aria-hidden="true"></span>
+    <img alt="用户头像" referrerpolicy="no-referrer" hidden />
+  </button>
+  <section id="replow-account-menu" popover class="replow-user-popover replow-user-menu" role="dialog" aria-label="账号操作">
+    <div class="replow-user-heading">
+      <span class="replow-user-eyebrow">已登录</span>
+      <strong data-account-name></strong>
+      <small data-account-username></small>
+    </div>
+    <a class="replow-user-action" href="https://account.replow.org/" data-astro-reload>
+      <i class="replow-menu-icon ri-user-3-line" aria-hidden="true"></i>用户中心<span aria-hidden="true">↗</span>
+    </a>
+    <a class="replow-user-action" href="https://admin.replow.org/" data-account-admin data-astro-reload hidden>
+      <i class="replow-menu-icon ri-dashboard-line" aria-hidden="true"></i>管理后台<span aria-hidden="true">↗</span>
+    </a>
+    <div class="replow-user-divider"></div>
+    <button type="button" class="replow-user-action replow-signout">
+      <i class="replow-menu-icon ri-logout-box-r-line" aria-hidden="true"></i><span data-signout-label>退出登录</span>
+    </button>
+    <p role="alert" class="replow-user-error" hidden>退出失败，请稍后重试。</p>
+  </section>
+</div>
+
+<!-- This slot is static HTML inside Navigator. Its tiny controller runs while
+     parsing, before React and the navigation's animation dependencies hydrate. -->
+<script is:inline data-swup-ignore-script>
+  (() => {
+    const root = document.querySelector('[data-replow-account]');
+    if (!root || root.dataset.ready) return;
+    root.dataset.ready = 'true';
+    const login = root.querySelector('.replow-login-link');
+    const button = root.querySelector('.replow-avatar-button');
+    const fallback = root.querySelector('.replow-avatar-fallback');
+    const image = root.querySelector('img');
+    const menu = root.querySelector('[popover]');
+    const signout = root.querySelector('.replow-signout');
+    const error = root.querySelector('[role="alert"]');
+    const close = () => { if (menu.matches(':popover-open')) menu.hidePopover(); };
+    const update = () => {
+      const session = window.__replowAuthSession;
+      login.href = 'https://account.replow.org/?return_to=' + encodeURIComponent(location.href);
+      login.hidden = !!session;
+      button.hidden = !session;
+      if (!session) { close(); image.removeAttribute('src'); image.hidden = true; return; }
+      const name = session.nickname || session.username;
+      button.setAttribute('aria-label', name + '的账号菜单');
+      fallback.textContent = Array.from(name)[0]?.toUpperCase() || '书';
+      root.querySelector('[data-account-name]').textContent = name;
+      const username = root.querySelector('[data-account-username]');
+      username.textContent = '@' + session.username;
+      username.hidden = name === session.username;
+      root.querySelector('[data-account-admin]').hidden = !session.roles?.includes('admin');
+      const avatar = typeof session.avatar === 'string' && /^(https:\/\/|\/(?!\/))/.test(session.avatar) ? session.avatar : '';
+      if (avatar && image.getAttribute('src') !== avatar) { image.hidden = false; image.src = avatar; }
+      if (!avatar) { image.removeAttribute('src'); image.hidden = true; }
+    };
+    image.addEventListener('error', () => { image.hidden = true; });
+    menu.addEventListener('beforetoggle', event => {
+      const open = event.newState === 'open';
+      button.setAttribute('aria-expanded', String(open));
+      if (open) {
+        document.dispatchEvent(new Event('replow:account-open'));
+        const bounds = button.getBoundingClientRect();
+        menu.style.top = (bounds.bottom + 10) + 'px';
+        menu.style.left = Math.max(12, Math.min(bounds.right - 240, innerWidth - 252)) + 'px';
+      }
+    });
+    menu.querySelectorAll('a').forEach(link => link.addEventListener('click', close));
+    signout.addEventListener('click', async () => {
+      signout.disabled = true;
+      error.hidden = true;
+      const label = root.querySelector('[data-signout-label]');
+      label.textContent = '正在退出…';
+      try {
+        const response = await fetch('/v1/auth/logout', {method: 'POST', credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(8000)});
+        if (!response.ok) throw new Error('signout_failed');
+        document.dispatchEvent(new Event('replow:signout'));
+        close();
+        button.hidden = true;
+        login.hidden = false;
+        login.focus();
+      } catch { error.hidden = false; }
+      finally { signout.disabled = false; label.textContent = '退出登录'; }
+    });
+    document.addEventListener('replow:auth', update);
+    document.addEventListener('astro:page-load', update);
+    document.addEventListener('astro:before-preparation', close);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, {passive: true});
+    update();
+  })();
+</script>

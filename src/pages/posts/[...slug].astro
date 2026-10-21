@@ -1,0 +1,15 @@
+---
+import { getPostSlug, getSortedPosts } from '@lib/content';
+export async function getStaticPaths() {
+  return (await getSortedPosts()).map((post) => ({
+    params: { slug: getPostSlug(post) },
+    props: { slug: getPostSlug(post), title: post.data.title },
+  }));
+}
+const target = '/post/' + Astro.props.slug.split('/').map(encodeURIComponent).join('/') + '/';
+---
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8" /><title>{Astro.props.title}</title>
+<link rel="canonical" href={new URL(target, Astro.site).href} />
+<meta http-equiv="refresh" content={'0;url=' + target} /></head>
+<body data-pagefind-ignore="all"><a href={target}>转到文章：{Astro.props.title}</a></body></html>
