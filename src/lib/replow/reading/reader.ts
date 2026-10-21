@@ -277,7 +277,7 @@ export async function openReader(
       navigating = true;
       updateChapterButtons();
       try {
-        await action();
+        await waitFor(action(), '切换章节');
       } catch (error) {
         fail(error);
       } finally {
@@ -290,7 +290,7 @@ export async function openReader(
     };
     function chapter(direction: 'next' | 'prev') {
       const target = adjacentChapter(direction);
-      if (target?.href) void navigate(() => rendition.display(target.href));
+      if (target?.href) void navigate(() => display(target.href));
     }
     footer.prepend(previousChapter);
     footer.append(nextChapter);
@@ -321,7 +321,8 @@ export async function openReader(
       const start = location.start;
       activeIndex = start.index;
       updateChapterButtons();
-      const chapter = navigation.get(start.href)?.label?.trim() || toc.selectedOptions[0]?.textContent || '正文';
+      const matching = Array.from(toc.options).find((x) => x.value.split('#')[0] === start.href.split('#')[0]);
+      const chapter = navigation.get(start.href)?.label?.trim() || matching?.textContent || '正文';
       const fraction = (start.displayed.page - 1) / Math.max(1, start.displayed.total);
       const percentage = location.atEnd
         ? 100
@@ -336,7 +337,6 @@ export async function openReader(
       item.chapter = chapter;
       item.updated_at = Date.now() / 1000;
       status.textContent = `${chapter} · 约 ${percentage.toFixed(1)}%`;
-      const matching = Array.from(toc.options).find((x) => x.value.split('#')[0] === start.href.split('#')[0]);
       if (matching) toc.value = matching.value;
       sync.textContent = '进度已保存在本机';
       void saveProgress(uid, item.id, current).catch(() => {
@@ -372,7 +372,7 @@ export async function openReader(
     }
     if (closed) return;
     toc.addEventListener('change', () => {
-      void navigate(() => rendition.display(toc.value || undefined));
+      void navigate(() => display(toc.value || undefined));
     });
     size.addEventListener('input', preferences);
     theme.addEventListener('change', preferences);
