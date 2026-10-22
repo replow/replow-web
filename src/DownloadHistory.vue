@@ -11,6 +11,6 @@ onBeforeUnmount(() => stop?.());
   <div ref="root" class="card fq-app fq-account" aria-label="历史下载记录"></div>
 </template>
 <style scoped>
-.fq-account{--fq-bg:0 0% 100%;--fq-fg:220 20% 20%;--fq-muted:220 9% 46%;--fq-line:220 18% 89%;--fq-primary:215 76% 46%;padding:24px;min-width:0}
+.fq-account{padding:24px;min-width:0}
 @media(max-width:600px){.fq-account{padding:14px}}
 </style>

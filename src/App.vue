@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import DownloadHistory from "./DownloadHistory.vue";
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import ThemePicker from "./ThemePicker.vue";
+import MediaLibrary from "./MediaLibrary.vue";
+import type { MediaItem } from "./media";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import {
   ApiError,
   authApi,
@@ -17,7 +20,7 @@ import {
   type SessionData
 } from "./api";
 
-type Section = "downloads" | "overview" | "profile" | "security" | "articles" | "comments" | "notifications" | "friends";
+type Section = "downloads" | "overview" | "profile" | "security" | "articles" | "media" | "comments" | "notifications" | "friends";
 // There is no sign-up page any more: code login creates the account when the
 // email is unknown, so only "login" and "reset" remain.
 type AuthMode = "login" | "reset";
@@ -58,6 +61,52 @@ const setupForm = reactive({ username: "", password: "", confirm: "" });
 const profileForm = reactive({ display_name: "", avatar_url: "", bio: "", website_url: "" });
 const emailForm = reactive({ email: "", code: "" });
 const passwordForm = reactive({ old_password: "", new_password: "", confirm: "" });
+
+type MediaTarget = "avatar" | "article" | "cover" | "icon";
+const mediaTarget = ref<MediaTarget | null>(null);
+const articleBodyRef = ref<HTMLTextAreaElement | null>(null);
+const articleSelection = ref({start: 0, end: 0});
+const mediaCategory = computed(() => mediaTarget.value === "avatar" ? "avatar" : "article");
+
+function openMedia(target: MediaTarget) {
+  if (target === "article") {
+    articleSelection.value = {
+      start: articleBodyRef.value?.selectionStart ?? articleForm.body_markdown.length,
+      end: articleBodyRef.value?.selectionEnd ?? articleForm.body_markdown.length
+    };
+  }
+  mediaTarget.value = target;
+}
+
+async function selectMedia(item: MediaItem) {
+  if (!item.mime_type.startsWith("image/")) {
+    notify("只能选择图片作为头像或文章插图", true);
+    return;
+  }
+  const target = mediaTarget.value;
+  mediaTarget.value = null;
+  if (target === "avatar") {
+    profileForm.avatar_url = item.public_url;
+    await saveProfile();
+  } else if (target === "cover") {
+    articleForm.cover_url = item.public_url;
+  } else if (target === "icon") {
+    articleForm.icon_url = item.public_url;
+  } else if (target === "article") {
+    const {start, end} = articleSelection.value;
+    const title = (item.original_name || "图片").replace(/([\\\]])/g, "\\$1");
+    const markdown = `
+![${title}](${item.public_url})
+`;
+    articleForm.body_markdown =
+      articleForm.body_markdown.slice(0, start) + markdown +
+      articleForm.body_markdown.slice(end);
+    await nextTick();
+    articleBodyRef.value?.focus();
+    const position = start + markdown.length;
+    articleBodyRef.value?.setSelectionRange(position, position);
+  }
+}
 
 const articleEditorOpen = ref(false);
 const articleEditingId = ref<number | null>(null);
@@ -118,6 +167,7 @@ const navItems: Array<{ key: Section; label: string; icon: string }> = [
   { key: "profile", label: "个人资料", icon: "account_circle" },
   { key: "security", label: "登录与安全", icon: "shield_lock" },
   { key: "articles", label: "我的文章", icon: "article" },
+  { key: "media", label: "媒体库", icon: "image" },
   { key: "comments", label: "我的评论", icon: "forum" },
   { key: "notifications", label: "通知", icon: "notifications" },
   { key: "friends", label: "友情链接", icon: "link" },
@@ -817,6 +867,7 @@ onBeforeUnmount(() => {
     </section>
 
     <section class="auth-panel">
+      <div class="auth-theme"><ThemePicker /></div>
       <div class="auth-card">
         <img class="login-avatar-logo" src="/avatar.svg" alt="" />
         <template v-if="authMode === 'login'">
@@ -931,6 +982,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div class="top-actions">
+        <ThemePicker />
         <a class="top-action-link hide-mobile" href="https://www.example.com/"><span class="material-symbols-rounded btn-icon" aria-hidden="true">home</span>返回主站</a>
         <button v-if="isAdmin" class="top-action-link hide-mobile" @click="goAdmin"><span class="material-symbols-rounded btn-icon" aria-hidden="true">admin_panel_settings</span>管理后台</button>
         <div class="header-user">
@@ -1001,7 +1053,12 @@ onBeforeUnmount(() => {
             <article class="card solid">
               <div class="card-head"><div><h2>公开资料</h2><div class="card-sub">修改后会同步用于文章作者和后续评论。</div></div></div>
               <div class="field"><label>显示名称</label><input v-model="profileForm.display_name" class="input" maxlength="80" /></div>
-              <div class="field"><label>头像 URL</label><input v-model="profileForm.avatar_url" class="input" placeholder="https://..." /></div>
+              <div class="field"><label>头像 URL</label><input v-model="profileForm.avatar_url" class="input" placeholder="https://..." />
+                <div class="media-field-actions">
+                  <button class="btn btn-soft" :disabled="busy" @click="openMedia('avatar')">上传头像 / 从媒体库选择</button>
+                  <img v-if="profileForm.avatar_url" :src="profileForm.avatar_url" class="media-avatar-preview" alt="头像预览"/>
+                </div>
+              </div>
               <div class="field"><label>个人简介</label><textarea v-model="profileForm.bio" class="textarea" maxlength="500" placeholder="介绍一下自己"></textarea></div>
               <div class="field"><label>个人网站</label><input v-model="profileForm.website_url" class="input" placeholder="https://..." /></div>
               <button class="btn btn-primary" :disabled="busy" @click="saveProfile"><span class="material-symbols-rounded btn-icon" aria-hidden="true">save</span>保存资料</button>
@@ -1098,6 +1155,7 @@ onBeforeUnmount(() => {
           </div>
         </template>
 
+        <MediaLibrary v-else-if="section === 'media'" />
         <DownloadHistory v-else-if="section === 'downloads'" />
 
         <template v-else>
@@ -1205,16 +1263,22 @@ onBeforeUnmount(() => {
         <div class="field span-2"><label>摘要</label><input v-model="articleForm.excerpt" class="input" maxlength="500" /></div>
         <div class="field"><label>分类</label><input v-model="articleForm.category" class="input" maxlength="100" /></div>
         <div class="field"><label>标签（逗号分隔）</label><input v-model="articleForm.tags" class="input" placeholder="Astro, 随笔" /></div>
-        <div class="field"><label>封面 URL</label><input v-model="articleForm.cover_url" class="input" placeholder="https://..." /></div>
-        <div class="field"><label>图标 URL</label><input v-model="articleForm.icon_url" class="input" placeholder="可选" /></div>
+        <div class="field"><label>封面 URL</label><input v-model="articleForm.cover_url" class="input" placeholder="https://..." /><button class="btn btn-soft" @click="openMedia('cover')">从媒体库选择封面 / 上传图片</button></div>
+        <div class="field"><label>图标 URL</label><input v-model="articleForm.icon_url" class="input" placeholder="可选" /><button class="btn btn-soft" @click="openMedia('icon')">选择图标图片</button></div>
         <div class="field"><label>状态</label><select v-model="articleForm.status" class="select"><option value="draft">草稿</option><option value="published">发布</option><option value="pending">待处理</option></select></div>
         <div class="field span-2">
-          <label>Markdown 正文</label>
-          <textarea v-model="articleForm.body_markdown" class="textarea markdown-editor" placeholder="# 开始写作…"></textarea>
+          <div class="media-editor-row"><label>Markdown 正文</label><button class="btn btn-soft" @click="openMedia('article')">插入图片（上传 / 媒体库）</button></div>
+          <textarea ref="articleBodyRef" v-model="articleForm.body_markdown" class="textarea markdown-editor" placeholder="# 开始写作…"></textarea>
           <div class="editor-meta"><span>支持 Markdown</span><span>{{ articleForm.body_markdown.length }} 字符</span></div>
         </div>
       </div>
       <div class="action-row"><button class="btn btn-primary" :disabled="busy" @click="saveArticle"><span class="material-symbols-rounded btn-icon" aria-hidden="true">save</span>保存文章</button><button class="btn btn-ghost" @click="articleEditorOpen = false">取消</button></div>
+    </div>
+  </div>
+
+  <div v-if="mediaTarget" class="modal-backdrop media-picker-backdrop" @click.self="mediaTarget=null">
+    <div class="modal wide">
+      <MediaLibrary picker image-only :category="mediaCategory" @select="selectMedia" @close="mediaTarget=null" />
     </div>
   </div>
 
