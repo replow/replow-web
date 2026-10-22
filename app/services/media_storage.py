@@ -312,7 +312,7 @@ class MediaStorageService:
                     "object_key": key, "public_url": self._public_url(base_url, key),
                     "original_name": filename[:255], "mime_type": content_type,
                     "byte_size": byte_size, "category": category,
-                    "storage_backend": backend, "sha256": checksum,
+                    "storage_backend": backend, "sha256": checksum, "uploader_id": actor_id,
                 })
             except Exception:
                 self._remove_object(cfg, backend, key)
@@ -490,7 +490,7 @@ class MediaStorageService:
                 "object_key": key, "public_url": self._public_url(cfg.od_public_base_url, key),
                 "original_name": str(payload["filename"])[:255], "mime_type": mime_type,
                 "byte_size": byte_size, "category": category, "storage_backend": "od",
-                "sha256": checksum,
+                "sha256": checksum, "uploader_id": actor_id,
             })
         if backend != "r2":
             raise MediaError("media_direct_ticket_invalid", 403)
@@ -528,7 +528,7 @@ class MediaStorageService:
             "public_url": self._public_url(cfg.r2_public_base_url, key),
             "original_name": str(payload["filename"])[:255],
             "mime_type": mime_type, "byte_size": byte_size,
-            "category": category, "storage_backend": "r2", "sha256": checksum,
+            "category": category, "storage_backend": "r2", "sha256": checksum, "uploader_id": actor_id,
         })
 
     @staticmethod

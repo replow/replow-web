@@ -91,6 +91,7 @@ class MediaODTests(unittest.TestCase):
                 "header":base64.b64encode(self.data).decode()}):
             item=self.s.confirm_direct_upload(prepared["ticket"],10000)
         self.assertEqual(item["storage_backend"],"od")
+        self.assertEqual(item["uploader_id"], 10000)
         self.assertTrue(item["public_url"].startswith("https://drive.4z.ink/media/site/"))
         self.assertNotIn("?", item["public_url"])
 

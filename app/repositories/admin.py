@@ -281,9 +281,14 @@ class AdminRepository:
         rows = self.db.execute(
             text(
                 """
-                SELECT id, object_key, public_url, original_name, mime_type,
-                       byte_size, category, storage_backend, sha256, created_at
-                FROM media_objects ORDER BY created_at DESC, id DESC
+                SELECT m.id, m.object_key, m.public_url, m.original_name, m.mime_type,
+                       m.byte_size, m.category, m.storage_backend, m.sha256,
+                       m.created_at, m.uploader_id,
+                       COALESCE(NULLIF(u.display_name, ''), u.username) AS uploader_name,
+                       u.username AS uploader_username
+                FROM media_objects AS m
+                LEFT JOIN users AS u ON u.uid = m.uploader_id
+                ORDER BY m.created_at DESC, m.id DESC
                 LIMIT :limit OFFSET :offset
                 """
             ),
@@ -315,10 +320,10 @@ class AdminRepository:
                 """
                 INSERT INTO media_objects
                   (object_key, public_url, original_name, mime_type, byte_size,
-                   category, storage_backend, sha256, created_at)
+                   category, storage_backend, sha256, uploader_id, created_at)
                 VALUES
                   (:object_key, :public_url, :original_name, :mime_type, :byte_size,
-                   :category, :storage_backend, :sha256, NOW())
+                   :category, :storage_backend, :sha256, :uploader_id, NOW())
                 """
             ),
             data,
