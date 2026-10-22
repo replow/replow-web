@@ -3,11 +3,26 @@ import argparse
 import asyncio
 import getpass
 import json
+import os
+import warnings
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
 import app
 from openlist_auth import AUTH_PAGE, LOGIN_URL, OnlineAuthError, renew, validate_account
+
+def read_refresh_token():
+    # Text-mode r+ requires seeking and rejects a valid terminal on Python 3.9.
+    fd = os.open("/dev/tty", os.O_RDWR)
+    os.close(fd)
+    # Refuse getpass's echoing fallback if terminal access changes after the check.
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", getpass.GetPassWarning)
+        try:
+            return getpass.getpass("Paste the OpenList refresh token (hidden): ").strip()
+        except getpass.GetPassWarning:
+            raise OSError("Hidden terminal input is unavailable") from None
+
 
 async def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -36,14 +51,11 @@ async def main():
         if not app.DRIVE or not app.ROOT:
             parser.error("Configure OD_DRIVE_ID and OD_ROOT_ITEM_ID.")
         if args.action == "import":
-            # getpass fallback would echo on non-TTY; refuse such input instead.
             try:
-                tty = open("/dev/tty", "r+")
-                tty.close()
+                raw = read_refresh_token()
             except OSError:
                 print("Use an interactive terminal for hidden token input.")
                 return 1
-            raw = getpass.getpass("Paste the OpenList refresh token (hidden): ").strip()
             data = await renew(client, raw)
             await validate_account(client, data["access_token"], app.DRIVE, app.ROOT)
             data.update(drive_id=app.DRIVE, root_item_id=app.ROOT)
