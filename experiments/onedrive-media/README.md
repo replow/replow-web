@@ -1,5 +1,52 @@
 # OneDrive 媒体固定链接试验（仅 preview）
 
+## v26.10.22-u2：无需 OpenList 常驻进程的授权方式
+
+新增 openlist_auth.py 和 authorize_openlist.py，对接 OpenList 官方 Online API；
+文件查询和直链仍直接走微软 Graph，不安装 OpenList，不新增生产后台依赖。
+
+已从 Azure 实测：
+- 官方页面 HTTP 200。
+- /onedrive/requests 返回 HTTP 200，目标是 login.microsoftonline.com，
+  并设置官方回调需要的 cookie；不要把服务器获取的微软 URL 直接交给另一浏览器，
+  应在自己的浏览器从 https://api.oplist.org/ 开始操作。
+- /onedrive/renewapi 无凭据时拒绝请求。完整续期仍待用户授权后验证。
+- 本地 32 项隔离测试通过；mock 接口测试不代表真实账号已授权。
+
+### 授权与导入
+
+1. 打开 https://api.oplist.org/，选择 OneDrive 个人版，勾选使用 OpenList 提供的参数，
+   点击获取 Token，并在微软页面登录实际保存媒体的账号。
+2. 默认应用目前请求 offline_access 和 Files.ReadWrite.All，范围包含账号文件读写，
+   并不只限媒体目录。当前程序仅实现读取。由用户在微软同意页决定是否授权。
+3. 在此目录配置 OD_DRIVE_ID、OD_ROOT_ITEM_ID、OD_TOKEN_FILE（存放到仓库外）。
+4. 在交互终端执行：
+
+       .venv/bin/python authorize_openlist.py import
+
+   在隐藏输入提示下粘贴 Refresh Token，不要粘贴 Access Token 或整条回调 URL，
+   不要把令牌放进命令参数、聊天、截图或工单。
+   导入会先续期并验证正确的个人 drive 和专用本地文件夹，验证成功才保存。
+5. 真正测试在线续期：
+
+       .venv/bin/python authorize_openlist.py check
+
+这两条命令只导入和验证，不启动常驻服务、不更改 DNS 或生产配置。
+不带凭据检查官方入口可运行 authorize_openlist.py probe。
+
+Online API 当前实现使用 GET /onedrive/renewapi，参数是 driver_txt=onedrive_pr、
+server_use=true 和 refresh_ui。令牌通过 HTTPS 发给官方续期服务；这是授权模式的一部分。
+我们不记录请求完整 URL、不打印原始错误，也不跟随续期接口重定向。
+官方结果没有 expires_in，因此访问令牌保守复用 15 分钟，并在 Graph 401 时立即续期；
+旋转后的 Refresh Token 原子保存，文件权限 0600；限流时持久化等待时间。
+与此独立，文件直链仍使用下方的短缓存和有效性验证。
+
+参考实现：
+- https://github.com/OpenListTeam/OpenList/blob/main/drivers/onedrive/util.go
+- https://github.com/OpenListTeam/OpenList-APIPages/blob/main/src/driver/onedrive_oa.ts
+
+
+
 本目录是独立后端 PoC，不参与 Astro 构建，不替换 R2，不发布 GitHub Release，
 不修改生产 API、Nginx 或 main。测试只监听回环地址。
 
@@ -15,7 +62,7 @@
   Graph 限流、目录边界、共享快捷方式、下载目标白名单和缺少授权时关闭访问。
 - 自动测试使用隔离的 HTTP transport，不能代表真实 OneDrive 授权已完成。
 - 已在 OD 准备 website-media 试验目录和 preview-probe.txt。
-- 服务器尚无网站独立的微软授权。ChatGPT SharePoint 连接不能作为网站凭据。
+- 服务器尚未导入网站使用的授权。可用 OpenList Online API 或自有应用；ChatGPT SharePoint 连接不能作为网站凭据。
 - 真实文件跳转、微软侧实际失效时间和国内访问性能仍待完成独立授权后测试。
 
 ## 缓存方式
@@ -40,7 +87,7 @@
 
     python3 -m venv .venv
     .venv/bin/pip install -r requirements.txt
-    .venv/bin/python -m unittest -v test_app.py
+    .venv/bin/python -m unittest discover -v
 
 复制 .env.example 到本地 .env 并填入对应的 drive ID 和媒体文件夹 item ID。
 只加载你自己填写的文件：
@@ -53,7 +100,7 @@
 不要把令牌放进仓库、Astro PUBLIC_ 变量、静态快照或日志。
 网站启动时不调用 ChatGPT 插件；它自己通过 Microsoft Graph 访问 OD。
 
-## 一次性微软授权
+## 备选：自有应用的一次性微软授权
 
 在你自己的 Microsoft Entra 应用注册中，使用支持个人微软账号的公共客户端，
 启用 public client flow，授予委托 Files.Read。工具请求 offline_access，

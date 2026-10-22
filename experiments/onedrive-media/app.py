@@ -12,6 +12,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, quote, urlsplit
 
 import httpx
+from openlist_auth import OnlineAuthError, renew
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -102,7 +103,27 @@ class Media:
                 data = json.loads(TOKEN_FILE.read_text())
             except (OSError, ValueError):
                 raise Failure(503, "authorization_required")
+            if data.get("provider") == "openlist" and (
+                    data.get("drive_id") != DRIVE or data.get("root_item_id") != ROOT):
+                raise Failure(503, "authorization_required")
             if not force and data.get("expires_at", 0) > time.time() + 90:
+                return data["access_token"]
+            if data.get("provider") == "openlist":
+                if (data.get("drive_id") != DRIVE or data.get("root_item_id") != ROOT):
+                    raise Failure(503, "authorization_required")
+                if time.time() < data.get("retry_after", 0):
+                    raise Failure(503, "authorization_busy",
+                                  max(1, int(data["retry_after"]-time.time())))
+                try:
+                    fresh = await renew(self.client, data.get("refresh_token"))
+                except OnlineAuthError as error:
+                    if error.code in ("authorization_busy", "authorization_unavailable"):
+                        data["retry_after"] = time.time() + error.retry
+                        atomic_token(data)
+                    raise Failure(503, error.code, error.retry) from None
+                data.update(fresh)
+                data.pop("retry_after", None)
+                atomic_token(data)
                 return data["access_token"]
             if not data.get("refresh_token") or not data.get("client_id"):
                 raise Failure(503, "authorization_required")
@@ -284,7 +305,7 @@ async def failure(request, exc):
 @app.get("/healthz")
 async def health(request: Request):
     media = request.app.state.media
-    return JSONResponse({"service": "onedrive-media", "version": "v26.10.22-u1",
+    return JSONResponse({"service": "onedrive-media", "version": "v26.10.22-u2",
                          "authorized": media.configured()}, headers=HEADERS)
 
 @app.api_route("/{path:path}", methods=["GET", "HEAD"])
