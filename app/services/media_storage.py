@@ -423,8 +423,9 @@ class MediaStorageService:
                         ExpiresIn=self.DIRECT_UPLOAD_TTL_SECONDS, HttpMethod="PUT")}
                 selected = backend
                 break
-            except MediaError:
-                raise
+            except MediaError as error:
+                if error.detail == "media_hash_required" or not cfg.fallback_enabled:
+                    raise
             except Exception:
                 if not cfg.fallback_enabled:
                     raise MediaError("media_storage_prepare_failed", 502) from None
