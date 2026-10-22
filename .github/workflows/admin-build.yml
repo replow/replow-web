@@ -27,10 +27,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Type check
         run: pnpm typecheck
+      - name: Initialize public build settings
+        run: cp .env.example .env.production
       - name: Security tests and build
         env:
           NODE_OPTIONS: --max-old-space-size=4096
-          VITE_BASE_URL: /
+          VITE_PUBLIC_PATH: /
+          VITE_ROUTER_HISTORY: hash
           VITE_API_BASE_URL: https://api.4z.ink/v1
         run: pnpm build
       - name: Package and publish
