@@ -1,0 +1,46 @@
+name: Admin build and publish
+on:
+  push:
+    branches: [admin]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: admin-build-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    if: github.ref == 'refs/heads/admin'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d
+        with:
+          version: 10.28.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.20.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Type check
+        run: pnpm typecheck
+      - name: Security tests and build
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+          VITE_BASE_URL: /
+          VITE_API_BASE_URL: https://api.4z.ink/v1
+        run: pnpm build
+      - name: Package and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -s dist/index.html
+          tar -C dist -czf replow-admin.tar.gz .
+          sha256sum replow-admin.tar.gz > replow-admin.tar.gz.sha256
+          gh release create "admin-build-${GITHUB_RUN_NUMBER}" replow-admin.tar.gz replow-admin.tar.gz.sha256 \
+            --target "${GITHUB_SHA}" --title "Admin build #${GITHUB_RUN_NUMBER}" \
+            --notes "Verified admin build from ${GITHUB_SHA}" --latest=false

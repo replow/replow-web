@@ -1,4 +1,6 @@
 import { http } from "@/utils/http";
+import Axios from "axios";
+import { quickXorHash } from "@/utils/quickxor";
 
 export type DashboardResponse = {
   counts: {
@@ -292,7 +294,7 @@ export type MediaItem = {
   mime_type: string;
   byte_size: number;
   category: string;
-  storage_backend: "r2" | "local" | "legacy";
+  storage_backend: "od" | "r2" | "local" | "legacy";
   sha256?: string;
   created_at: string;
 };
@@ -305,6 +307,13 @@ export type MediaStorageSettings = {
   r2_limit_bytes: number;
   local_root: string;
   local_public_base_url: string;
+  storage_mode: "od_first" | "r2_first" | "balanced";
+  od_weight: number;
+  r2_weight: number;
+  fallback_enabled: boolean;
+  od_enabled: boolean;
+  od_configured: boolean;
+  od_public_base_url: string;
   r2_access_key_configured: boolean;
   r2_secret_key_configured: boolean;
   r2_configured: boolean;
@@ -318,7 +327,10 @@ export type MediaStorageStatus = {
   r2_remaining_bytes: number;
   local_bytes: number;
   total_bytes: number;
-  next_backend: "r2" | "local";
+  od_configured: boolean;
+  od_bytes: number;
+  storage_mode: "od_first" | "r2_first" | "balanced";
+  next_backend: "od" | "r2" | "balanced" | "unavailable";
 };
 
 export const getAdminMedia = (params?: { limit?: number; offset?: number }) =>
@@ -326,15 +338,183 @@ export const getAdminMedia = (params?: { limit?: number; offset?: number }) =>
     params
   });
 
-export const uploadAdminMedia = (file: File, category = "general") => {
-  const form = new FormData();
-  form.append("file", file);
-  form.append("category", category);
-  return http.request<{ data: MediaItem }>("post", "/admin/media/upload", {
-    data: form,
-    headers: { "Content-Type": "multipart/form-data" }
-  });
+export type MediaUploadProgress = {
+  loaded: number;
+  total: number;
+  bytesPerSecond: number;
 };
+
+/** Upload original bytes directly to the chosen cloud. Azure signs and verifies metadata. */
+export const uploadAdminMedia = async (
+  file: File,
+  category = "general",
+  onProgress?: (value: MediaUploadProgress) => void
+): Promise<{ data: MediaItem }> => {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error("当前浏览器不支持安全直传，请使用 HTTPS 和较新的浏览器");
+  }
+  if (!file.size || file.size > 100 * 1024 * 1024) {
+    throw new Error("文件不能为空或超过 100 MB");
+  }
+  const bytes = await file.arrayBuffer();
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const quickxor = quickXorHash(bytes);
+  const sha256 = Array.from(new Uint8Array(digest), byte =>
+    byte.toString(16).padStart(2, "0")
+  ).join("");
+  const mimeTypes: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    avif: "image/avif",
+    bmp: "image/bmp",
+    heic: "image/heic",
+    heif: "image/heif",
+    pdf: "application/pdf",
+    txt: "text/plain",
+    epub: "application/epub+zip",
+    zip: "application/zip",
+    mp3: "audio/mpeg",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    ogg: "audio/ogg",
+    wav: "audio/wav",
+    flac: "audio/flac"
+  };
+  const extension = file.name.split(".").pop()?.toLowerCase() || "";
+  const contentType =
+    mimeTypes[extension] || file.type || "application/octet-stream";
+  const prepared = await http.request<{
+    data: {
+      upload_url: string;
+      ticket: string;
+      content_type: string;
+      sha256: string;
+      backend: "od" | "r2";
+      chunk_size?: number;
+    };
+  }>("post", "/admin/media/direct/prepare", {
+    data: {
+      filename: file.name,
+      category,
+      content_type: contentType,
+      byte_size: file.size,
+      sha256,
+      quickxor
+    },
+    timeout: 60_000
+  });
+  try {
+    // A separate Axios instance: no site cookies, bearer tokens or app headers.
+    if (prepared.data.backend === "od") {
+      const chunkSize = prepared.data.chunk_size || 5 * 1024 * 1024;
+      for (let offset = 0; offset < file.size; offset += chunkSize) {
+        const end = Math.min(offset + chunkSize, file.size);
+        await Axios.put(prepared.data.upload_url, file.slice(offset, end), {
+          timeout: 300_000,
+          withCredentials: false,
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "Content-Range": `bytes ${offset}-${end - 1}/${file.size}`
+          },
+          onUploadProgress: onProgress
+            ? event =>
+                onProgress({
+                  loaded: offset + event.loaded,
+                  total: file.size,
+                  bytesPerSecond: event.rate || 0
+                })
+            : undefined
+        });
+      }
+    } else
+      await Axios.put(prepared.data.upload_url, file, {
+        timeout: 300_000,
+        withCredentials: false,
+        headers: {
+          "Content-Type": prepared.data.content_type,
+          "x-amz-meta-sha256": prepared.data.sha256,
+          "Cache-Control": "public, max-age=31536000, immutable"
+        },
+        onUploadProgress: onProgress
+          ? event =>
+              onProgress({
+                loaded: event.loaded,
+                total: event.total || file.size,
+                bytesPerSecond: event.rate || 0
+              })
+          : undefined
+      });
+  } catch {
+    // Never expose presigned URLs in errors or logs.
+    throw new Error(
+      `${prepared.data.backend === "od" ? "OneDrive" : "R2"} 直传失败，请检查当前网络或稍后重试`
+    );
+  }
+  return http.request<{ data: MediaItem }>(
+    "post",
+    "/admin/media/direct/confirm",
+    {
+      data: { ticket: prepared.data.ticket },
+      timeout: 60_000
+    }
+  );
+};
+
+/** Surface the actual upload failure instead of hiding it behind a generic toast. */
+export function mediaUploadErrorMessage(error: unknown): string {
+  const failure = error as {
+    code?: string;
+    response?: { status?: number; data?: { detail?: unknown } };
+  } | null;
+  const code = failure?.code;
+  const status = failure?.response?.status;
+  if (
+    error instanceof Error &&
+    (error.message.startsWith("R2 直传失败") ||
+      error.message.startsWith("OneDrive 直传失败") ||
+      error.message.startsWith("当前浏览器不支持安全直传") ||
+      error.message.startsWith("图片不能为空"))
+  )
+    return error.message;
+  if (code === "ECONNABORTED" || code === "ETIMEDOUT") {
+    return "图片上传超时，请检查网络后重试";
+  }
+  if (status === 413) return "图片超过服务器上传大小限制";
+  if (status === 401) return "登录状态已失效，请重新登录后上传";
+  const detail = failure?.response?.data?.detail;
+  if (typeof detail === "string") {
+    if (detail.startsWith("media_r2_upload_failed")) {
+      return "R2 存储上传失败，请检查存储服务状态";
+    }
+    const labels: Record<string, string> = {
+      media_image_type_not_allowed:
+        "支持 JPG、PNG、GIF、WebP、AVIF、HEIC、HEIF 或 BMP 图片",
+      media_file_too_large: "图片不能超过 100 MB",
+      media_file_empty: "图片文件为空",
+      media_r2_sdk_not_installed: "服务器尚未安装 R2 存储依赖",
+      media_r2_direct_not_configured: "R2 存储未配置，无法直接上传",
+      media_r2_direct_limit_reached: "R2 剩余容量不足，已阻止上传",
+      media_direct_object_mismatch: "R2 文件校验未通过，请重新上传",
+      media_direct_object_not_found: "R2 尚未收到图片，请稍后重试",
+      media_direct_ticket_invalid: "上传授权已过期，请重新上传",
+      media_direct_validation_failed: "R2 文件验证暂时失败",
+      media_checksum_invalid: "图片完整性校验失败",
+      media_r2_direct_sign_failed: "暂时无法生成 R2 上传授权",
+      media_storage_unavailable: "没有可用的云存储，请检查存储策略或授权",
+      media_storage_prepare_failed: "上传准备失败，请稍后重试或启用备用存储",
+      media_onedrive_validation_failed: "OneDrive 文件尚未确认，请稍后重试",
+      media_onedrive_delete_failed: "OneDrive 文件删除失败，请稍后重试",
+      media_hash_required: "请刷新后台后重新上传",
+      media_image_type_not_allowed: "文件格式或文件内容不受支持"
+    };
+    return labels[detail] || detail;
+  }
+  if (status === 502 || status === 504) return "上传服务响应超时，请稍后重试";
+  return "图片上传失败，请检查网络后重试";
+}
 
 export const deleteAdminMedia = (mediaId: number) =>
   http.request<{ success: boolean }>("delete", `/admin/media/${mediaId}`);
