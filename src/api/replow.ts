@@ -476,7 +476,7 @@ export function mediaUploadErrorMessage(error: unknown): string {
     (error.message.startsWith("R2 直传失败") ||
       error.message.startsWith("OneDrive 直传失败") ||
       error.message.startsWith("当前浏览器不支持安全直传") ||
-      error.message.startsWith("图片不能为空"))
+      error.message.startsWith("文件不能为空"))
   )
     return error.message;
   if (code === "ECONNABORTED" || code === "ETIMEDOUT") {
@@ -490,14 +490,12 @@ export function mediaUploadErrorMessage(error: unknown): string {
       return "R2 存储上传失败，请检查存储服务状态";
     }
     const labels: Record<string, string> = {
-      media_image_type_not_allowed:
-        "支持 JPG、PNG、GIF、WebP、AVIF、HEIC、HEIF 或 BMP 图片",
-      media_file_too_large: "图片不能超过 100 MB",
+      media_file_too_large: "文件不能超过 100 MB",
       media_file_empty: "图片文件为空",
       media_r2_sdk_not_installed: "服务器尚未安装 R2 存储依赖",
       media_r2_direct_not_configured: "R2 存储未配置，无法直接上传",
       media_r2_direct_limit_reached: "R2 剩余容量不足，已阻止上传",
-      media_direct_object_mismatch: "R2 文件校验未通过，请重新上传",
+      media_direct_object_mismatch: "云端文件校验未通过，请重新上传",
       media_direct_object_not_found: "R2 尚未收到图片，请稍后重试",
       media_direct_ticket_invalid: "上传授权已过期，请重新上传",
       media_direct_validation_failed: "R2 文件验证暂时失败",
