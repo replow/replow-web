@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { ElMessageBox } from "element-plus";
-import { getFqJobs, manageFqJob, fqTime, fileSize, stateLabels, type FqJob } from "@/api/fanqie";
+import { getFqJobs, manageFqJob, deleteFqJob, fqTime, fileSize, stateLabels, type FqJob } from "@/api/fanqie";
 import { message } from "@/utils/message";
 const props=defineProps<{revision:number}>();
 const emit=defineEmits<{changed:[]}>();
@@ -25,6 +25,25 @@ async function act(row:FqJob,action:"retry"|"cancel"){
   catch{message("任务状态可能已变化，请刷新后重试。",{type:"error"});}
   finally{working.value="";}
 }
+async function remove(row:FqJob){
+  try{
+    await ElMessageBox.confirm(
+      `确定删除《${row.title||row.book_id}》这条下载记录及对应原文件？此操作不可撤销。若其他记录复用了同一文件，其下载链接也会失效，需重新下载。`,
+      "删除记录及文件",
+      {type:"warning",confirmButtonText:"删除记录及文件",cancelButtonText:"返回",closeOnClickModal:false}
+    );
+  }catch{return;}
+  working.value=row.job_id;
+  try{
+    const result=await deleteFqJob(row.job_id);
+    message(`记录已删除，已移除 ${result.data.removed_files} 个原文件${result.data.affected_records ? `，${result.data.affected_records} 条关联记录需重新下载` : ""}`,{type:"success"});
+    if(rows.value.length===1&&page.value>1)page.value--;
+    await load();emit("changed");
+  }catch(error:any){
+    const detail=error?.response?.data?.detail;
+    message(detail==="book_has_running_job"?"该书籍正在下载，请完成后再删除。":detail==="file_cache_purge_failed"?"CDN 缓存清理失败，文件和记录已保留，请稍后重试。":"删除失败，文件和记录已保留，请刷新后重试。",{type:"error"});
+  }finally{working.value="";}
+}
 watch(()=>props.revision,()=>void load());
 watch(auto,()=>{clearTimeout(timer);if(auto.value)void load();});
 onMounted(()=>void load());
@@ -37,7 +56,7 @@ onBeforeUnmount(()=>{alive=false;clearTimeout(timer);});
     <el-select v-model="format" aria-label="文件格式" @change="load(true)"><el-option label="全部格式" value="" /><el-option label="TXT" value="txt" /><el-option label="EPUB" value="epub" /></el-select>
     <el-button type="primary" @click="load(true)">查询</el-button><el-switch v-model="auto" active-text="自动刷新" />
   </div>
-  <p class="fq-note">一次处理一本书；有效原文件直接复用。可取消待处理任务、重试失败或已取消任务，正在下载的任务会继续完成。</p>
+  <p class="fq-note">一次处理一本书；有效原文件直接复用。可取消待处理任务、重试失败或已取消任务，可删除记录及对应原文件；共享该文件的其他记录将需要重新下载。正在下载的书籍须完成后才能删除。</p>
   <el-table v-loading="loading" :data="rows" row-key="job_id" style="width:100%">
     <el-table-column type="expand"><template #default="{row}"><div class="fq-job-detail">
       <p><b>任务 ID</b> {{row.job_id}}</p><p><b>书籍 ID</b> {{row.book_id}} · 用户 UID {{row.user_id}}</p>
@@ -49,10 +68,11 @@ onBeforeUnmount(()=>{alive=false;clearTimeout(timer);});
     <el-table-column label="范围 / 格式" min-width="140"><template #default="{row}"><span>{{row.format.toUpperCase()}}</span><small class="block">目录 {{row.start_chapter}}—{{row.end_chapter||'最新'}}</small></template></el-table-column>
     <el-table-column label="状态 / 进度" min-width="160"><template #default="{row}"><el-tag :type="row.status==='completed'?'success':row.status==='failed'?'danger':row.status==='cancelled'?'info':'warning'">{{stateLabels[row.status]}}</el-tag><el-progress v-if="row.status==='running'" :percentage="Math.round(row.progress*100)" :stroke-width="5" /><small class="block">{{row.completed_chapters}}/{{row.total_chapters||'—'}} 项<span v-if="row.queue_position"> · 排位 {{row.queue_position}}</span></small></template></el-table-column>
     <el-table-column label="原文件有效期" min-width="185"><template #default="{row}"><span v-if="row.file_available">{{fqTime(row.expires_at)}}</span><span v-else>{{row.status==='completed'?'已过期或不可用':'—'}}</span><small v-if="row.size_bytes" class="block">{{fileSize(row.size_bytes)}}</small></template></el-table-column>
-    <el-table-column label="操作" min-width="145" fixed="right"><template #default="{row}">
+    <el-table-column label="操作" min-width="185" fixed="right"><template #default="{row}">
       <el-link v-if="row.file_available && row.download_url" :href="row.download_url" target="_blank" rel="noopener noreferrer" type="primary">下载原文件 ↗</el-link>
       <el-button v-if="['queued','retry'].includes(row.status)" text type="warning" :loading="working===row.job_id" @click="act(row,'cancel')">取消任务</el-button>
       <el-button v-if="['failed','cancelled'].includes(row.status)" text type="primary" :loading="working===row.job_id" @click="act(row,'retry')">重新排队</el-button>
+      <el-button text type="danger" :disabled="row.status==='running'||!!working" :loading="working===row.job_id" @click="remove(row)">删除记录及文件</el-button>
     </template></el-table-column>
   </el-table>
   <el-pagination v-model:current-page="page" :total="total" :page-size="25" layout="total,prev,pager,next" @current-change="load()" />

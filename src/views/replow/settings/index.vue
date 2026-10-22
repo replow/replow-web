@@ -47,7 +47,7 @@ const form = reactive({
     description: "",
     url: "",
     avatarUrl: "",
-    accountUrl: "https://account.example.com/"
+    accountUrl: "https://account.replow.org/"
   },
   wallpaper: {
     mode: "banner",
@@ -121,7 +121,7 @@ const form = reactive({
     credential: "",
     accountId: "",
     zoneId: "",
-    zoneName: "example.com",
+    zoneName: "replow.org",
     credentialConfigured: false,
     configured: false,
     clearCredential: false
@@ -185,15 +185,15 @@ function loadForm(config: FireflyConfig) {
     friendSite.description || site.description || ""
   );
   form.friendSite.url = String(
-    friendSite.url || site.site_url || "https://example.com/"
+    friendSite.url || site.site_url || "https://replow.org/"
   );
   form.friendSite.avatarUrl = String(
     friendSite.avatar_url ||
       profile.avatar ||
-      "https://cdn.example.com/replow-org/images/tx.jpg"
+      "https://cdn.replow.org/replow-org/images/tx.jpg"
   );
   form.friendSite.accountUrl = String(
-    friendSite.account_url || "https://account.example.com/"
+    friendSite.account_url || "https://account.replow.org/"
   );
 
   form.wallpaper.mode = String(wallpaper.mode || "banner");
@@ -440,7 +440,7 @@ function applyCloudflare(value: CloudflareSettings) {
   form.cloudflare.credential = "";
   form.cloudflare.accountId = value.account_id || "";
   form.cloudflare.zoneId = value.zone_id || "";
-  form.cloudflare.zoneName = value.zone_name || "example.com";
+  form.cloudflare.zoneName = value.zone_name || "replow.org";
   form.cloudflare.credentialConfigured = Boolean(value.credential_configured);
   form.cloudflare.configured = Boolean(value.configured);
   form.cloudflare.clearCredential = false;
@@ -645,7 +645,7 @@ onMounted(load);
                 ><el-form-item label="站点 URL"
                   ><el-input
                     v-model="form.site.siteUrl"
-                    placeholder="https://example.com" /></el-form-item
+                    placeholder="https://4z.ink" /></el-form-item
               ></el-col>
               <el-col :xs="24" :md="12"
                 ><el-form-item label="语言"
@@ -724,7 +724,7 @@ onMounted(load);
                 <el-form-item label="站点网址">
                   <el-input
                     v-model="form.friendSite.url"
-                    placeholder="https://example.com/"
+                    placeholder="https://replow.org/"
                   />
                 </el-form-item>
               </el-col>
@@ -740,7 +740,7 @@ onMounted(load);
                 <el-form-item label="Account 申请入口">
                   <el-input
                     v-model="form.friendSite.accountUrl"
-                    placeholder="https://account.example.com/"
+                    placeholder="https://account.replow.org/"
                   />
                 </el-form-item>
               </el-col>
@@ -1048,7 +1048,7 @@ onMounted(load);
                 <el-form-item label="Zone 域名">
                   <el-input
                     v-model="form.cloudflare.zoneName"
-                    placeholder="example.com"
+                    placeholder="replow.org"
                   />
                 </el-form-item>
               </el-col>

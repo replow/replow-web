@@ -23,7 +23,7 @@ onMounted(load);
       <div class="heading-actions">
         <el-tag v-if="overview" :type="overview.worker_online?'success':'danger'">{{overview.worker_online?'下载进程在线':'下载进程暂无心跳'}}</el-tag>
         <el-button :loading="loading" @click="refresh">刷新</el-button>
-        <el-button tag="a" href="https://www.example.com/fanqie/" target="_blank" rel="noopener noreferrer">打开下载器 ↗</el-button>
+        <el-button tag="a" href="https://www.replow.org/fanqie/" target="_blank" rel="noopener noreferrer">打开下载器 ↗</el-button>
       </div>
     </div>
     <div v-if="overview" class="fq-metrics">

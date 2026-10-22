@@ -10,6 +10,7 @@ import {
   deleteAlbum,
   getAdminMedia,
   uploadAdminMedia,
+  mediaUploadErrorMessage,
   type AlbumItem,
   type AlbumPhoto,
   type MediaItem
@@ -24,6 +25,8 @@ const albums = ref<AlbumItem[]>([]),
   photoEditor = ref(false),
   libraryOpen = ref(false),
   uploading = ref(false);
+const uploadPercent = ref(0);
+const uploadStage = ref("");
 const editingId = ref<number>(),
   activeAlbum = ref<AlbumItem>(),
   photos = ref<AlbumPhoto[]>([]),
@@ -198,8 +201,15 @@ async function upload(event: Event) {
   const file = input.files?.[0];
   if (!file) return;
   uploading.value = true;
+  uploadPercent.value = 0;
+  uploadStage.value = "准备发送图片…";
   try {
-    const item = (await uploadAdminMedia(file, "article")).data;
+    const item = (await uploadAdminMedia(file, "article", progress => {
+      uploadPercent.value = Math.min(100, Math.round(progress.loaded / Math.max(1, progress.total) * 100));
+      uploadStage.value = uploadPercent.value >= 100
+        ? "文件已发送，正在确认云端存储…"
+        : `正在发送 ${uploadPercent.value}%${progress.bytesPerSecond ? ` · ${Math.round(progress.bytesPerSecond / 1024)} KB/s` : ""}`;
+    })).data;
     photos.value.push({
       media_id: item.id,
       public_url: item.public_url,
@@ -207,10 +217,11 @@ async function upload(event: Event) {
       caption: ""
     });
     message("上传完成，保存图片列表后加入相册", { type: "success" });
-  } catch {
-    message("图片上传失败", { type: "error" });
+  } catch (error: unknown) {
+    message(mediaUploadErrorMessage(error), { type: "error" });
   } finally {
     uploading.value = false;
+    uploadStage.value = "";
     input.value = "";
   }
 }
@@ -246,7 +257,7 @@ onMounted(load);
             ><el-button type="primary" @click="edit()">新建相册</el-button
             ><el-button
               tag="a"
-              href="https://www.example.com/gallery/"
+              href="https://www.replow.org/gallery/"
               target="_blank"
               rel="noopener"
               >查看主站相册</el-button
@@ -351,6 +362,10 @@ onMounted(load);
         hidden
         @change="upload"
       />
+      <div v-if="uploading" class="upload-progress">
+        <el-progress :percentage="uploadPercent" :stroke-width="5" :show-text="false" />
+        <small>{{ uploadStage }}</small>
+      </div>
       <div class="photo-list">
         <article
           v-for="(photo, index) in photos"
@@ -424,6 +439,8 @@ onMounted(load);
   </div>
 </template>
 <style scoped>
+.upload-progress { margin: 10px 0; }
+.upload-progress small { color: var(--el-text-color-secondary); }
 .toolbar,
 .toolbar > div:last-child,
 .title,

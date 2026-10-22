@@ -7,7 +7,7 @@ const year = new Date().getFullYear();
     © {{ year }}&nbsp;
     <a
       class="hover:text-primary!"
-      href="https://www.example.com/"
+      href="https://www.replow.org/"
       target="_blank"
       rel="noopener noreferrer"
       >Miro</a

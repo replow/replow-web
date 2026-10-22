@@ -46,7 +46,7 @@ const rules: FormRules = {
             return callback(new Error("仅支持 http 或 https"));
           }
         } catch {
-          return callback(new Error("请输入有效的域名，例如 account.example.com"));
+          return callback(new Error("请输入有效的域名，例如 user.4z.ink"));
         }
         callback();
       },
@@ -436,7 +436,7 @@ onMounted(async () => {
       />
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <el-form-item label="域名 / 站点地址" prop="site_url">
-          <el-input v-model="form.site_url" placeholder="例如 account.example.com 或 https://account.example.com" clearable />
+          <el-input v-model="form.site_url" placeholder="例如 user.4z.ink 或 https://user.4z.ink" clearable />
         </el-form-item>
         <el-form-item label="所属模块" prop="module_slug">
           <el-select v-model="form.module_slug" class="full" placeholder="请选择模块">

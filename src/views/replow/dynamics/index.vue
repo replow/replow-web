@@ -243,7 +243,7 @@ async function remove(item: DynamicItem) {
         /></el-select>
         <el-button :loading="loading" @click="filter">搜索</el-button>
         <a
-          href="https://www.example.com/dynamic/"
+          href="https://www.replow.org/dynamic/"
           target="_blank"
           rel="noopener noreferrer"
           >查看主站动态 ↗</a

@@ -50,7 +50,7 @@ const ruleForm = reactive({
 async function finishLogin(result: any) {
   if (!result?.success) throw new Error("login_failed");
   if (!result?.data?.roles?.includes("admin")) {
-    window.location.href = "https://account.example.com/";
+    window.location.href = "https://account.replow.org/";
     return;
   }
   setToken(result.data);

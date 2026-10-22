@@ -3,8 +3,8 @@ import { storageLocal } from "@pureadmin/utils";
 export const MIRO_PRIMARY = "#7760C9";
 export const MIRO_DARK_PRIMARY = "#AF9AF4";
 export const MIRO_ACCENT = "#4F95BD";
-export const MIRO_AVATAR = "https://cdn.example.com/replow-org/images/tx.jpg";
-export const MIRO_WALLPAPER = "https://cdn.example.com/replow-org/images/bg.jpg";
+export const MIRO_AVATAR = "https://cdn.replow.org/replow-org/images/tx.jpg";
+export const MIRO_WALLPAPER = "https://cdn.replow.org/replow-org/images/bg.jpg";
 
 /** Replace the previous brand once, without clearing login or user preferences. */
 export function migrateMiroBrand(config: PlatformConfigs) {
