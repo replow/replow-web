@@ -412,3 +412,4 @@ Keep business logic pure, framework calls at boundaries.
 - Never emit credentials or admin-only settings in static snapshots.
 
 - Public gallery lives at /gallery; only published albums from /v1/public/albums enter the build snapshot. Retain runtime refresh, draft privacy, keyboard/touch large-image browsing and locale mirrors.
+- OneDrive media service lives in experiments/onedrive-media on main. API and admin integration sources remain on api/admin branches. Keep OAuth credentials in the OD service only; the API uses the authenticated loopback control plane, and Nginx blocks /internal/. Uploads go directly from the admin browser to OD or R2; routing settings apply only to new uploads and must preserve existing public URLs. Admin builds also use GitHub Actions.
