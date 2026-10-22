@@ -297,6 +297,9 @@ export type MediaItem = {
   storage_backend: "od" | "r2" | "local" | "legacy";
   sha256?: string;
   created_at: string;
+  uploader_id?: number | null;
+  uploader_name?: string | null;
+  uploader_username?: string | null;
 };
 
 export type MediaStorageSettings = {

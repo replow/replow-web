@@ -57,6 +57,12 @@ export default {
       meta: { title: "媒体库", icon: MediaIcon }
     },
     {
+      path: "/replow/media/storage",
+      name: "ReplowMediaStorage",
+      component: () => import("@/views/replow/media/storage.vue"),
+      meta: { title: "媒体存储设置", icon: SettingsIcon }
+    },
+    {
       path: "/replow/comments",
       name: "ReplowComments",
       component: () => import("@/views/replow/comments/index.vue"),
