@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -18,6 +18,7 @@ from app.repositories.account import AccountRepository
 from app.services.account import AccountError, AccountService
 from app.services.admin import AdminError, AdminService
 from app.services.portal import PortalService
+from app.services.media_storage import MediaError, MediaStorageService
 
 
 router = APIRouter(prefix="/account", tags=["account"])
@@ -95,6 +96,110 @@ def update_profile(
     if not data:
         raise HTTPException(status_code=404, detail="account_not_found")
     return {"success": True, "data": data}
+
+
+# A personal media library never exposes all-users admin endpoints.
+# These handlers require a login and enforce uploader ownership in the database.
+ACCOUNT_MEDIA_CATEGORIES = {"site", "avatar", "article"}
+
+
+def _media_category(value: str) -> str:
+    category = str(value or "site").strip().lower()
+    if category not in ACCOUNT_MEDIA_CATEGORIES:
+        raise HTTPException(status_code=422, detail="media_invalid_category")
+    return category
+
+
+def _media_failure(error: MediaError) -> None:
+    raise HTTPException(status_code=error.status_code, detail=error.detail) from error
+
+
+@router.get("/media")
+def personal_media(
+    limit: int = Query(default=60, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    user: dict = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    items, total = MediaStorageService(db).list_owned(int(user["uid"]), limit, offset)
+    return {"items": items, "total": total, "limit": limit, "offset": offset}
+
+
+@router.post("/media/direct/prepare")
+def prepare_personal_media(
+    payload: dict[str, Any],
+    response: Response,
+    user: dict = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    response.headers["Cache-Control"] = "no-store"
+    data = {**payload, "category": _media_category(payload.get("category"))}
+    try:
+        return {"data": MediaStorageService(db).prepare_direct_upload(data, int(user["uid"]))}
+    except MediaError as error:
+        _media_failure(error)
+
+
+@router.post("/media/direct/confirm")
+def confirm_personal_media(
+    payload: dict[str, Any],
+    response: Response,
+    user: dict = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    response.headers["Cache-Control"] = "no-store"
+    try:
+        # Ticket binds account UID, category, object key and checksum.
+        return {"data": MediaStorageService(db).confirm_direct_upload(
+            str(payload.get("ticket") or ""), int(user["uid"])
+        )}
+    except MediaError as error:
+        _media_failure(error)
+
+
+@router.post("/media/upload")
+def upload_personal_media(
+    file: UploadFile = File(...),
+    category: str = Form(default="site"),
+    user: dict = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return {"data": MediaStorageService(db).upload(
+            file, _media_category(category), int(user["uid"])
+        )}
+    except MediaError as error:
+        _media_failure(error)
+
+
+@router.patch("/media/{media_id}")
+def rename_personal_media(
+    media_id: int,
+    payload: dict[str, Any],
+    user: dict = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return {"data": MediaStorageService(db).rename_owned(
+            media_id, int(user["uid"]), payload.get("original_name")
+        )}
+    except MediaError as error:
+        _media_failure(error)
+
+
+@router.delete("/media/{media_id}")
+def delete_personal_media(
+    media_id: int,
+    user: dict = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        deleted = MediaStorageService(db).delete(media_id, actor_id=int(user["uid"]))
+    except MediaError as error:
+        _media_failure(error)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="media_not_found")
+    return {"success": True}
 
 
 @router.post("/email/verification")

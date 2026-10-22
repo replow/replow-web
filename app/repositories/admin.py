@@ -296,6 +296,33 @@ class AdminRepository:
         ).mappings().all()
         return [dict(row) for row in rows], total
 
+    def media_owned(self, uploader_id: int, limit: int = 100, offset: int = 0) -> tuple[list[dict], int]:
+        """Privacy boundary: ownership filtering happens in SQL, before pagination."""
+        params = {"uid": uploader_id, "limit": limit, "offset": offset}
+        total = int(self.db.execute(
+            text("SELECT COUNT(*) FROM media_objects WHERE uploader_id=:uid"), params
+        ).scalar_one())
+        rows = self.db.execute(text("""
+            SELECT id, object_key, public_url, original_name, mime_type,
+                   byte_size, category, storage_backend, sha256, created_at, uploader_id
+            FROM media_objects
+            WHERE uploader_id=:uid
+            ORDER BY created_at DESC, id DESC
+            LIMIT :limit OFFSET :offset
+        """), params).mappings().all()
+        return [dict(row) for row in rows], total
+
+    def rename_owned_media(self, media_id: int, uploader_id: int, name: str) -> Optional[dict]:
+        result = self.db.execute(text("""
+            UPDATE media_objects SET original_name=:name
+            WHERE id=:id AND uploader_id=:uid
+        """), {"name": name, "id": media_id, "uid": uploader_id})
+        if not result.rowcount:
+            self.db.rollback()
+            return None
+        self.db.commit()
+        return self.get_media(media_id)
+
     def media_storage_bytes(self) -> tuple[int, int, int]:
         row = self.db.execute(
             text(

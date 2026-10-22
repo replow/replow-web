@@ -637,7 +637,7 @@ class MediaStorageService:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(path, target)
 
-    def _remove_object(self, cfg: MediaStorageConfig, backend: str, object_key: str) -> None:
+    def _remove_object(self, cfg: MediaStorageConfig, backend: str, object_key: str) -> bool:
         try:
             if backend == "r2" and cfg.r2_configured:
                 self._r2_client(cfg).delete_object(Bucket=cfg.r2_bucket, Key=object_key)
@@ -648,14 +648,42 @@ class MediaStorageService:
                 target = (root / object_key).resolve()
                 if root in target.parents:
                     target.unlink(missing_ok=True)
+            else:
+                return False
+            return True
         except Exception:
-            # The original database error is more useful to the caller. A
-            # later storage reconciliation can remove an orphan object.
-            pass
+            # Prepare/confirmation cleanup remains best-effort. Delete callers
+            # must check this result before removing the database record.
+            return False
 
-    def delete(self, media_id: int) -> bool:
+    def list_owned(self, actor_id: int, limit: int, offset: int) -> tuple[list[dict], int]:
+        return self.repository.media_owned(actor_id, limit, offset)
+
+    def rename_owned(self, media_id: int, actor_id: int, name: str) -> dict:
+        item = self.repository.get_media(media_id)
+        if not item or int(item.get("uploader_id") or -1) != actor_id:
+            raise MediaError("media_not_found", 404)
+        name = str(name or "").strip()
+        if (not name or len(name) > 255 or
+                any(ord(c) < 32 or ord(c) == 127 for c in name) or
+                "/" in name or "\\" in name or name in {".", ".."}):
+            raise MediaError("media_name_invalid", 422)
+        original = str(item.get("original_name") or "")
+        # The display name may change, but the actual stored bytes/type do not.
+        original_ext = Path(original).suffix.lower()
+        if original_ext and Path(name).suffix.lower() != original_ext:
+            raise MediaError("media_extension_cannot_change", 422)
+        updated = self.repository.rename_owned_media(media_id, actor_id, name)
+        if not updated:
+            raise MediaError("media_not_found", 404)
+        return updated
+
+    def delete(self, media_id: int, actor_id: Optional[int] = None) -> bool:
         item = self.repository.get_media(media_id)
         if not item:
+            return False
+        if actor_id is not None and int(item.get("uploader_id") or -1) != actor_id:
+            # Return the same result as a nonexistent ID; avoid leaking metadata.
             return False
         cfg = self.config()
         backend = str(item.get("storage_backend") or "legacy")
@@ -672,5 +700,6 @@ class MediaStorageService:
             # The legacy MySQL column is VARBINARY; str(bytes) adds a b'...' wrapper.
             if isinstance(object_key, bytes):
                 object_key = object_key.decode("utf-8")
-            self._remove_object(cfg, backend, str(object_key))
+            if not self._remove_object(cfg, backend, str(object_key)):
+                raise MediaError("media_storage_delete_failed", 502)
         return self.repository.delete_media(media_id)
