@@ -1,0 +1,16 @@
+# Preview 独立部署
+
+仅部署 preview 中的 OneDrive 实验服务；不合并 main，不构建主站。
+
+- 服务仅监听 127.0.0.1:8812，单 worker。
+- 私有环境文件 /etc/replow/od-preview.env：设置 OD_DRIVE_ID、OD_ROOT_ITEM_ID、OD_TOKEN_FILE、OD_LINK_TTL；不得提交令牌。
+- 令牌目录须已存在且归 agentdock。服务需要写入轮换后的令牌。
+- systemd 单元安装到 /etc/systemd/system/replow-od-preview.service。
+- Nginx 配置安装到 /www/server/panel/vhost/nginx/drive.4z.ink.conf；使用现有通配证书。
+- 安装后执行 systemd-analyze verify、daemon-reload、enable --now；Nginx 必须先 nginx -t，再 reload。
+- 域名必须加入 Cloudflare SaaS，再经 CF 优选 DNS 接入。禁止直连源站。
+- 302 禁止缓存，文件流量由客户端直接从 OneDrive 下载。
+- 公网只暴露 website-media 中的文件，不提供目录列表或上传。
+- 停用回滚：先停用域名解析，再移走本独立 vhost 并 nginx -t/reload，最后 systemctl disable --now replow-od-preview。保留私有令牌及源码以便恢复。
+
+验证须分别检查 origin、CF 边缘和正常 DNS 公网访问；不能只用进程状态判断成功。

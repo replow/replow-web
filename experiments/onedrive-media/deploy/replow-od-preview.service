@@ -1,0 +1,27 @@
+[Unit]
+Description=OneDrive media preview redirect service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=agentdock
+Group=agentdock
+WorkingDirectory=/srv/agentdock/AgentDock/replow-web-preview-od/experiments/onedrive-media
+EnvironmentFile=/etc/replow/od-preview.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/srv/agentdock/AgentDock/replow-web-preview-od/experiments/onedrive-media/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8812 --workers 1 --no-access-log --log-level warning
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/srv/agentdock/.local/state/replow-od-preview
+RestrictSUIDSGID=true
+MemoryMax=160M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target
