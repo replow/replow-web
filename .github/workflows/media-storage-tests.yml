@@ -6,6 +6,7 @@ on:
       - app/services/media*.py
       - app/services/onedrive_storage.py
       - app/services/quickxor.py
+      - requirements.txt
       - tests/test_media_od.py
       - .github/workflows/media-storage-tests.yml
   workflow_dispatch:
