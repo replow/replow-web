@@ -235,6 +235,10 @@ navigation:
   - name: 关于
     path: /about
     icon: ri:information-line
+  - name: Status
+    path: https://status.4z.ink
+    icon: ri:heart-pulse-line
+    localeIndependent: true
   - name: 账号中心
     path: https://account.replow.org/
     icon: ri:account-circle-line

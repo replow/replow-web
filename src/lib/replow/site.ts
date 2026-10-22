@@ -5,6 +5,8 @@ export type PublicSite = typeof snapshot;
 function releaseFooter(html: string): string {
   const [version, update] = snapshot.version.split('-u');
   return html
+    .replace(/(href=["'])https:\/\/api\.4z\.ink\/?(["'])/gi, '$1https://status.4z.ink$2')
+    .replace(/>API\s*站<\/a>/gi, '>Status</a>')
     .replace(/Theme\s+Firefly/gi, 'Theme astro-koharu')
     .replace(/Version[：:]\s*v[\d.]+/g, 'Version：' + version)
     .replace(/Update[：:]\s*\d+/g, 'Update：' + update);

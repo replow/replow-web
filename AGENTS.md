@@ -405,7 +405,7 @@ Keep business logic pure, framework calls at boundaries.
 - Site configuration: `src/constants/site-config.ts`
 
 ## Replow deployment integration
-- Azure canonical source is /data/replow-next/source/koharu. Legacy Firefly source stays available separately for rollback.
+- Canonical Astro source is the GitHub repository replow/replow-web. Build and validate with GitHub Actions; Azure pulls verified static releases for deployment. Do not build or edit the historical Azure source checkout for website changes. Legacy Firefly source stays available separately for rollback.
 - scripts/sync-replow.mjs imports public backend articles and configuration before every complete build. Do not remove this step or Pagefind output.
 - Retain /posts/<slug> compatibility, API runtime refresh, SilverCode footer, same-origin authentication and the 400ms header idle behavior.
 - Theme controls are stored under firefly_config.koharuConfig for backward compatibility with the existing backend schema.

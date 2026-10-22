@@ -35,6 +35,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Test public site data mapping
+        run: pnpm test:replow
       - name: Type check
         run: pnpm check
       - name: Astro production build

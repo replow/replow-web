@@ -39,6 +39,8 @@ export function footerHtml(html, version) {
   const match = version.match(/^(v\d+\.\d+\.\d+)-u(\d+)$/);
   if (!match) throw new Error('Invalid release version');
   return String(html || '')
+    .replace(/(href=["'])https:\/\/api\.4z\.ink\/?(["'])/gi, '$1https://status.4z.ink$2')
+    .replace(/>API\s*站<\/a>/gi, '>Status</a>')
     .replace(/Theme\s+Firefly/gi, 'Theme astro-koharu')
     .replace(/Version[：:]\s*v[\d.]+/g, 'Version：' + match[1])
     .replace(/Update[：:]\s*\d+/g, 'Update：' + match[2]);
@@ -97,6 +99,7 @@ export function makeSiteConfig(base, payload, friends) {
     ...(oldSite.pages?.friends !== false ? [{ name: '友链', path: '/friends', icon: 'ri:links-line' }] : []),
     { name: '相册', path: '/gallery', icon: 'ri:gallery-line' },
     { name: '关于', path: '/about', icon: 'ri:information-line' },
+    { name: 'Status', path: 'https://status.4z.ink', icon: 'ri:heart-pulse-line', localeIndependent: true },
     { name: '账号中心', path: 'https://account.replow.org/', icon: 'ri:account-circle-line', localeIndependent: true },
   ];
   for (const link of f.navBarConfig?.links || []) {
