@@ -10,8 +10,8 @@
 - /onedrive/requests 返回 HTTP 200，目标是 login.microsoftonline.com，
   并设置官方回调需要的 cookie；不要把服务器获取的微软 URL 直接交给另一浏览器，
   应在自己的浏览器从 https://api.oplist.org/ 开始操作。
-- /onedrive/renewapi 无凭据时拒绝请求。完整续期仍待用户授权后验证。
-- 本地 32 项隔离测试通过；mock 接口测试不代表真实账号已授权。
+- /onedrive/renewapi 无凭据时拒绝请求；已完成真实授权续期和媒体根目录验证。
+- 34 项测试通过，包含真实伪终端隐藏输入测试；另有独立真实账号/文件验证。
 
 ### 授权与导入
 
@@ -47,23 +47,27 @@ server_use=true 和 refresh_ui。令牌通过 HTTPS 发给官方续期服务；�
 
 
 
-本目录是独立后端 PoC，不参与 Astro 构建，不替换 R2，不发布 GitHub Release，
-不修改生产 API、Nginx 或 main。测试只监听回环地址。
+本目录是独立后端 PoC，不参与 Astro 构建，不替换 R2，不发布 GitHub Release。
+代码保留 preview，不修改生产 API 或 main；部署只新增独立 systemd 服务和 drive Nginx 入口，
+后端仅监听回环地址。配置与回滚见 deploy/README.md。
 
 目标映射：公开媒体目录中的 images/a.webp → https://drive.4z.ink/images/a.webp。
 固定的是入口路径；响应为 302，浏览器随后直接从微软下载，图片字节不经过 Azure。
 移动、重命名或删除源文件会影响路径；目前没有实现重命名后的永久别名。
-现在尚未上线 drive 域名。未来接入必须沿用 Cloudflare SaaS/优选链路，
-先确认 SaaS hostname 与 SSL，再添加优选解析；不能直接 CNAME 到源站 IP 域名。
+2026-10-22 已上线 drive.4z.ink：CF SaaS hostname/SSL 均 active，
+DNS CNAME 到 api.4z.ink，沿用现有 CF 优选。新主机需要先临时指向 SaaS 接入 CNAME
+完成激活和签发，再恢复优选；禁止直连源站。
 
 ## 当前验证状态
 
 - 自动测试覆盖缓存命中、提前刷新、过期换链、直链提前失效、并发请求、
   Graph 限流、目录边界、共享快捷方式、下载目标白名单和缺少授权时关闭访问。
-- 自动测试使用隔离的 HTTP transport，不能代表真实 OneDrive 授权已完成。
+- 已导入独立网站授权并验证真实在线续期；ChatGPT SharePoint 连接不作为网站凭据。
 - 已在 OD 准备 website-media 试验目录和 preview-probe.txt。
-- 服务器尚未导入网站使用的授权。可用 OpenList Online API 或自有应用；ChatGPT SharePoint 连接不能作为网站凭据。
-- 真实文件跳转、微软侧实际失效时间和国内访问性能仍待完成独立授权后测试。
+- 源站 HTTPS、正常 DNS 公网和指定优选边缘均验证：302、缓存命中、微软下载 200 且内容匹配。
+- 真实缓存过期重新取链和后台刷新已验证；目录根路径和缺失文件 404，POST 403。
+- CF 跳过此域名缓存，响应 no-store；宝塔响应过滤仅豁免本服务经校验的 302。
+- 微软实际直链失效时刻与国内各运营商下载性能尚未测量。
 
 ## 缓存方式
 
