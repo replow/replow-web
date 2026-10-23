@@ -1,7 +1,7 @@
-name: Astro build and publish
+name: Isolated preview www
 on:
   push:
-    branches: [main]
+    branches: [preview-www]
   workflow_dispatch:
 
 permissions:
@@ -13,11 +13,11 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/preview-www'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      API_BASE_URL: https://api.4z.ink
+      API_BASE_URL: https://www.preview.replow.org
       REPLOW_RELEASE: v26.10.21-u${{ github.run_number }}
       NODE_OPTIONS: --max-old-space-size=4096
     steps:
@@ -38,10 +38,24 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Test public site data mapping
         run: pnpm test:replow
+      - name: Check source formatting
+        run: pnpm lint:fix
       - name: Type check
         run: pnpm check
       - name: Astro production build
         run: pnpm build
+      - name: Isolate generated links and API endpoints
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          replacements={'https://www.replow.org':'https://www.preview.replow.org','https://account.replow.org':'https://account.preview.replow.org','https://admin.replow.org':'https://admin.preview.replow.org','https://api.4z.ink':'https://www.preview.replow.org'}
+          for p in Path('dist').rglob('*'):
+              if p.is_file() and p.suffix in ('.html','.js','.json','.xml','.css'):
+                  s=p.read_text()
+                  for old,new in replacements.items(): s=s.replace(old,new)
+                  if p.suffix=='.html': s=s.replace('</head>','<meta name="robots" content="noindex,nofollow"></head>')
+                  p.write_text(s)
+          PY
       - name: Guard comment editor against stale artifacts
         run: node scripts/verify-comment-editor.mjs
       - name: Validate and package complete static site
@@ -68,10 +82,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          tag="astro-build-${GITHUB_RUN_NUMBER}"
+          tag="preview-www-${GITHUB_RUN_NUMBER}"
           gh release create "$tag" replow-astro.tar.gz replow-astro.tar.gz.sha256 \
             --repo "${GITHUB_REPOSITORY}" \
             --target "${GITHUB_SHA}" \
             --title "Astro static build #${GITHUB_RUN_NUMBER}" \
             --notes "Verified static Astro build from commit ${GITHUB_SHA}. Azure deployer validates SHA-256 and switches the web symlink after smoke tests." \
-            --latest
+            --prerelease --latest=false
