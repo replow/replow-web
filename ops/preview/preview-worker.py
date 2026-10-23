@@ -25,8 +25,9 @@ def main():
   if not request.exists():return
   request.unlink();started=now();version='preview-'+dt.datetime.now().strftime('%Y%m%d-%H%M%S')
   previous=(BASE/'www').resolve();switched=False
+  commit=subprocess.run(['git','rev-parse','HEAD'],cwd=SOURCE,capture_output=True,text=True,check=True).stdout.strip()
   try:
-   update(status='building',stage='正在构建预览内容',started_at=started,content_cutoff_at=started,finished_at='',version=version,error='',run_url='')
+   update(status='building',stage='正在构建预览内容',started_at=started,content_cutoff_at=started,finished_at='',version=version,error='',run_url='',commit=commit)
    env=os.environ.copy();env.update(API_BASE_URL='http://127.0.0.1:8814',REPLOW_RELEASE='v'+dt.datetime.now().strftime('%y.%m.%d')+'-u'+dt.datetime.now().strftime('%H%M%S'),NODE_OPTIONS='--max-old-space-size=1400',PATH='/data/replow-next/bin:'+env.get('PATH',''),BIOME_MAX_THREADS='1',HUSKY='0')
    with (STATE/'build.log').open('w') as log:
     for command in [['/data/replow-next/bin/pnpm','check'],['/data/replow-next/bin/pnpm','build']]:
@@ -44,4 +45,11 @@ def main():
     link=BASE/'www.rollback';link.symlink_to(previous);link.replace(BASE/'www')
    update(status='failed',stage='预览发布失败',finished_at=now(),error='构建或验证失败，保留上次可用预览；可重试。')
    raise
-if __name__=='__main__':main()
+if __name__=='__main__':
+ if '--finalize' in sys.argv:
+  try:
+   data=json.loads((STATE/'status.json').read_text())
+   if data.get('status') in ('queued','building','deploying'):
+    update(status='failed',stage='构建进程已停止',finished_at=now(),error='构建进程未完成，保留上次可用预览；请重试。')
+  except (OSError,ValueError):pass
+ else:main()
