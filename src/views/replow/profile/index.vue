@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import {
+  validNewPassword,
+  PASSWORD_POLICY_MESSAGE
+} from "@/utils/password-policy";
 import DeviceSessions from "@/components/DeviceSessions.vue";
 import { reactive, ref } from "vue";
 import type { FormInstance } from "element-plus";
@@ -90,9 +94,11 @@ async function savePassword() {
               :rules="[
                 {
                   required: true,
-                  min: 8,
-                  max: 128,
-                  message: '请输入 8-128 位新密码',
+                  validator: (_rule, value, callback) =>
+                    validNewPassword(value || '')
+                      ? callback()
+                      : callback(new Error(PASSWORD_POLICY_MESSAGE)),
+                  message: PASSWORD_POLICY_MESSAGE,
                   trigger: 'blur'
                 }
               ]"
@@ -102,6 +108,7 @@ async function savePassword() {
                 type="password"
                 show-password
                 autocomplete="new-password"
+                :placeholder="PASSWORD_POLICY_MESSAGE"
               />
             </el-form-item>
             <el-form-item
@@ -116,6 +123,7 @@ async function savePassword() {
                 type="password"
                 show-password
                 autocomplete="new-password"
+                :placeholder="PASSWORD_POLICY_MESSAGE"
               />
             </el-form-item>
             <el-button type="primary" :loading="saving" @click="savePassword"

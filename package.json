@@ -20,7 +20,7 @@
     "lint": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:stylelint",
     "prepare": "husky",
     "preinstall": "npx only-allow pnpm",
-    "test:security": "node --test tests/user-edit.test.cjs"
+    "test:security": "node --test tests/*.test.cjs"
   },
   "keywords": [
     "pure-admin-thin",
@@ -45,7 +45,7 @@
   "license": "MIT",
   "author": {
     "name": "xiaoxian521",
-    "email": "opensource@example.com",
+    "email": "pureadmin@163.com",
     "url": "https://github.com/xiaoxian521"
   },
   "dependencies": {
