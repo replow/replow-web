@@ -1,0 +1,55 @@
+name: Isolated preview frontend
+on:
+  push:
+    branches: [preview-admin, preview-account]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: preview-frontend-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    if: github.ref == 'refs/heads/preview-admin' || github.ref == 'refs/heads/preview-account'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+      VITE_PUBLIC_PATH: /
+      VITE_ROUTER_HISTORY: hash
+      VITE_API_BASE_URL: /v1
+      VITE_CDN: 'false'
+      VITE_COMPRESSION: none
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d
+        with:
+          version: 10.28.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.20.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+      - name: Type check
+        run: pnpm typecheck
+      - name: Build preview
+        run: pnpm build
+      - name: Add visible preview marker
+        run: python scripts/mark-preview.py
+      - name: Package verified preview
+        run: |
+          test -s dist/index.html
+          tar -C dist -czf preview-frontend.tar.gz .
+          sha256sum preview-frontend.tar.gz > preview-frontend.tar.gz.sha256
+      - name: Publish isolated artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}-${GITHUB_RUN_NUMBER}" preview-frontend.tar.gz preview-frontend.tar.gz.sha256 \
+            --target "${GITHUB_SHA}" --prerelease --latest=false \
+            --title "${GITHUB_REF_NAME} build ${GITHUB_RUN_NUMBER}" \
+            --notes "Isolated preview build. Production deployer ignores this tag and prerelease."

@@ -14,6 +14,19 @@ const emit = defineEmits<{
 }>();
 const rows = ref<MediaItem[]>([]);
 const total = ref(0);
+const trash = ref(false);
+const references = ref<{type:string;title:string}[]>([]);
+async function showReferences(item:MediaItem) {
+  try { const r=await mediaApi.references(item.id); references.value=r.data.items; error.value=r.data.total ? `仍有 ${r.data.total} 处引用，请先解除引用后再删除` : "暂无引用"; }
+  catch(err) { error.value=humanError(err); }
+}
+async function restore(item:MediaItem) {
+  try { await mediaApi.restore(item.id); await load(); } catch(err) { error.value=humanError(err); }
+}
+async function purge(item:MediaItem) {
+  if (!window.confirm(`彻底删除“${item.original_name}”？原文件无法恢复。`)) return;
+  try { await mediaApi.purge(item.id); await load(); } catch(err) { error.value=humanError(err); }
+}
 const offset = ref(0);
 const pageSize = 60;
 const loading = ref(false);
@@ -38,7 +51,7 @@ async function load(reset = false) {
   loading.value = true;
   error.value = "";
   try {
-    const result = await mediaApi.list(pageSize, offset.value);
+    const result = await mediaApi.list(pageSize, offset.value, trash.value);
     rows.value = result.items || [];
     total.value = result.total || 0;
     if (selected.value)
@@ -94,8 +107,10 @@ async function rename(item: MediaItem) {
 }
 
 async function remove(item: MediaItem) {
-  if (!window.confirm(`确定删除“${item.original_name}”吗？云端原文件也会删除，已引用该文件的头像或文章图片将无法显示。`)) return;
   try {
+    const refs=await mediaApi.references(item.id);
+    if(refs.data.total) { await showReferences(item); return; }
+    if (!window.confirm(`将“${item.original_name}”移入回收站？原文件保留，可以恢复。`)) return;
     await mediaApi.delete(item.id);
     selected.value = null;
     await load();
@@ -114,10 +129,11 @@ onMounted(() => void load());
   <div class="my-media">
     <div class="my-media-toolbar">
       <div>
-        <h2>{{ picker ? "从我的媒体库选择" : "我的媒体库" }}</h2>
+        <h2>{{ trash ? "我的回收站" : picker ? "从我的媒体库选择" : "我的媒体库" }}</h2>
         <p>仅显示当前账号上传的文件，共 {{ total }} 个。</p>
       </div>
       <div class="my-media-tools">
+        <button v-if="!picker" class="btn btn-soft" @click="trash=!trash;references=[];load(true)">{{ trash ? "返回媒体库" : "回收站" }}</button>
         <select v-model="category" class="select" :disabled="picker || uploading">
           <option value="site">通用文件</option>
           <option value="avatar">用户头像</option>
@@ -126,7 +142,7 @@ onMounted(() => void load());
         <input ref="fileInput" hidden type="file"
           :accept="imageOnly || category !== 'site' ? 'image/*,.heic,.heif' : '.jpg,.jpeg,.png,.gif,.webp,.avif,.bmp,.heic,.heif,.pdf,.txt,.epub,.zip,.mp3,.mp4,.webm,.ogg,.wav,.flac'"
           @change="upload"/>
-        <button class="btn btn-primary" :disabled="uploading" @click="fileInput?.click()">
+        <button v-if="!trash" class="btn btn-primary" :disabled="uploading" @click="fileInput?.click()">
           {{ uploading ? `上传中 ${progress}%` : "上传文件" }}
         </button>
         <button class="btn btn-soft" :disabled="loading || uploading" @click="load()">刷新</button>
@@ -135,6 +151,7 @@ onMounted(() => void load());
     </div>
     <div v-if="uploading" class="my-media-progress"><div :style="{width: progress+'%'}"></div></div>
     <p v-if="error" class="my-media-feedback" role="status">{{ error }}</p>
+    <ul v-if="references.length"><li v-for="(item,index) in references" :key="index">{{ item.type }} · {{ item.title }}</li></ul>
     <p v-if="loading" class="empty">正在加载媒体文件…</p>
     <div v-else-if="!visible.length" class="empty">{{ imageOnly ? "这一页没有可选择的图片" : "还没有上传文件" }}</div>
     <div v-else class="my-media-grid">
@@ -149,7 +166,8 @@ onMounted(() => void load());
           <button v-if="picker" class="link-button" @click.stop="emit('select', item)">使用</button>
           <button class="link-button" @click.stop="selected=item; rename(item)">改名</button>
           <button class="link-button" @click.stop="selected=item; copyLink(item)">复制</button>
-          <button class="link-button danger" @click.stop="remove(item)">删除</button>
+          <template v-if="trash"><button class="link-button" @click.stop="restore(item)">恢复</button><button class="link-button danger" @click.stop="purge(item)">彻底删除</button></template>
+          <template v-else><button class="link-button" @click.stop="showReferences(item)">引用</button><button class="link-button danger" @click.stop="remove(item)">移入回收站</button></template>
         </div>
       </article>
     </div>

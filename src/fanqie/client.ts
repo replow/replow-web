@@ -23,7 +23,7 @@ export function mountFanqie(root: HTMLElement, mode: ViewMode) {
   function login() {
     const box = el('div', 'fq-login'); box.append(el('div', 'fq-emblem', '书'), el('h2', '', '登录后，把故事带走'),
       el('p', 'fq-muted', '使用现有 SilverCode 账号，即可搜索小说、选择章节并保存下载历史。'),
-      link('登录账号', 'https://account.example.com/?return_to=' + encodeURIComponent(location.href)));
+      link('登录账号', 'https://account.preview.replow.org/?return_to=' + encodeURIComponent(location.href)));
     root.replaceChildren(box);
   }
   function fail(error: unknown) {
@@ -115,7 +115,7 @@ export function mountFanqie(root: HTMLElement, mode: ViewMode) {
   async function showHistory() {
     const data = await client.request<History>('/history?' + new URLSearchParams({ page: String(historyPage), size: '20' }));
     root.replaceChildren();
-    const heading = el('div', 'fq-history-heading'); heading.append(el('p', 'fq-muted', `共 ${data.total} 条下载记录 · 文件保留 31 天`), link('去下载小说', 'https://www.example.com/fanqie/', true)); root.append(heading);
+    const heading = el('div', 'fq-history-heading'); heading.append(el('p', 'fq-muted', `共 ${data.total} 条下载记录 · 文件保留 31 天`), link('去下载小说', 'https://www.preview.replow.org/fanqie/', true)); root.append(heading);
     if (!data.items.length) root.append(el('div', 'fq-empty', '书架还是空的。去搜一本喜欢的小说吧。'));
     for (const job of data.items) {
       const { card, info } = bookCard({ id: job.book_id, title: job.title || '小说 ' + job.book_id, author: job.author || '作者信息待获取', cover: job.cover_url, total: 0, description: '' });

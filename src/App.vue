@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useArticleDraft } from "./useArticleDraft";
+import ArticleVersions from "./ArticleVersions.vue";
 import DownloadHistory from "./DownloadHistory.vue";
 import ThemePicker from "./ThemePicker.vue";
 import MediaLibrary from "./MediaLibrary.vue";
@@ -111,6 +113,7 @@ async function selectMedia(item: MediaItem) {
 const articleEditorOpen = ref(false);
 const articleEditingId = ref<number | null>(null);
 const articleForm = reactive({
+  _base_token: "",
   title: "",
   slug: "",
   excerpt: "",
@@ -122,6 +125,11 @@ const articleForm = reactive({
   status: "draft"
 });
 
+const articleDraft = useArticleDraft(articleForm, articleEditorOpen, articleEditingId, () => profile.value?.uid || session.value?.username || "unknown", async () => window.confirm("发现自动保存的未提交草稿，是否恢复到编辑器？"));
+async function restoredArticle(item: Article) {
+  Object.assign(articleForm, {...item, _base_token:item.revision_token || "", tags:(item.tags || []).join(", ")});
+  await articleDraft.clear(); await loadAll(); await articleDraft.begin();
+}
 const commentEditorOpen = ref(false);
 const commentEditingId = ref<number | null>(null);
 const commentBody = ref("");
@@ -191,7 +199,7 @@ function returnToDownloader() {
   if (!value || setupOpen.value) return;
   try {
     const target = new URL(value);
-    if (['https://www.example.com', 'https://example.com'].includes(target.origin) &&
+    if (['https://www.preview.replow.org', 'https://replow.org'].includes(target.origin) &&
         (/^\/(?:fanqie|post|posts)(?:\/|$)/.test(target.pathname))) window.location.assign(target.href);
   } catch { /* Ignore invalid external return URLs. */ }
 }
@@ -513,6 +521,7 @@ async function changePassword() {
 
 function emptyArticle() {
   return {
+    _base_token: "",
     title: "",
     slug: "",
     excerpt: "",
@@ -535,10 +544,11 @@ function slugify(value: string) {
   return slug || "post-" + Date.now();
 }
 
-function openNewArticle() {
+async function openNewArticle() {
   articleEditingId.value = null;
   Object.assign(articleForm, emptyArticle());
   articleEditorOpen.value = true;
+  await articleDraft.begin();
 }
 
 async function openArticle(article: Article) {
@@ -548,6 +558,7 @@ async function openArticle(article: Article) {
     const item = result.data as Article;
     articleEditingId.value = item.id;
     Object.assign(articleForm, {
+      _base_token: item.revision_token || "",
       title: item.title,
       slug: item.slug,
       excerpt: item.excerpt,
@@ -559,6 +570,7 @@ async function openArticle(article: Article) {
       status: item.status === "rejected" ? "draft" : item.status
     });
     articleEditorOpen.value = true;
+    await articleDraft.begin();
   } catch (error) {
     notify(humanError(error), true);
   } finally {
@@ -570,6 +582,7 @@ async function saveArticle() {
   if (!articleForm.title.trim() || !articleForm.body_markdown.trim()) return notify("标题和正文不能为空", true);
   if (!articleForm.slug) articleForm.slug = slugify(articleForm.title);
   const payload = {
+    _base_token: articleForm._base_token || undefined,
     title: articleForm.title.trim(),
     slug: articleForm.slug.trim(),
     excerpt: articleForm.excerpt.trim(),
@@ -593,6 +606,7 @@ async function saveArticle() {
       await request("/account/articles", { method: "POST", body: JSON.stringify(payload) });
       notify("文章已创建");
     }
+    await articleDraft.clear();
     articleEditorOpen.value = false;
     await loadAll();
   } catch (error) {
@@ -780,7 +794,7 @@ function logout() {
 }
 
 function goAdmin() {
-  window.location.href = "https://admin.example.com/";
+  window.location.href = "https://admin.preview.replow.org/";
 }
 
 let sessionSyncTimer: number | undefined;
@@ -911,7 +925,7 @@ onBeforeUnmount(() => {
 
           <div class="auth-links">
             <button @click="setAuthMode('reset')">忘记密码？</button>
-            <a href="https://www.example.com/">返回主站</a>
+            <a href="https://www.preview.replow.org/">返回主站</a>
           </div>
         </template>
 
@@ -957,7 +971,14 @@ onBeforeUnmount(() => {
           :class="{ active: section === item.key }"
           @click="selectSection(item.key)"
         >
-          <span class="nav-icon material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
+          <span v-if="item.key === 'media'" class="nav-icon" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+          </span>
+          <span v-else class="nav-icon material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
           <span>{{ item.label }}</span>
         </button>
       </div>
@@ -983,7 +1004,7 @@ onBeforeUnmount(() => {
       </div>
       <div class="top-actions">
         <ThemePicker />
-        <a class="top-action-link hide-mobile" href="https://www.example.com/"><span class="material-symbols-rounded btn-icon" aria-hidden="true">home</span>返回主站</a>
+        <a class="top-action-link hide-mobile" href="https://www.preview.replow.org/"><span class="material-symbols-rounded btn-icon" aria-hidden="true">home</span>返回主站</a>
         <button v-if="isAdmin" class="top-action-link hide-mobile" @click="goAdmin"><span class="material-symbols-rounded btn-icon" aria-hidden="true">admin_panel_settings</span>管理后台</button>
         <div class="header-user">
           <div class="avatar">
@@ -1257,7 +1278,9 @@ onBeforeUnmount(() => {
   <div v-if="articleEditorOpen" class="modal-backdrop" @click.self="articleEditorOpen = false">
     <div class="modal wide">
       <div class="modal-head"><h2>{{ articleEditingId ? "编辑文章" : "新建文章" }}</h2><button class="close-btn" aria-label="关闭" @click="articleEditorOpen = false"><span class="material-symbols-rounded" aria-hidden="true">close</span></button></div>
-      <div class="form-grid">
+      <p class="muted" role="status">{{ articleDraft.status.value }}</p>
+      <ArticleVersions v-if="articleEditingId" :article-id="articleEditingId" :current="articleForm" :token="articleForm._base_token" @restored="restoredArticle"/>
+      <fieldset :disabled="busy" style="border:0;padding:0;margin:0;min-width:0"><div class="form-grid">
         <div class="field"><label>标题</label><input v-model="articleForm.title" class="input" maxlength="200" @blur="!articleForm.slug && (articleForm.slug = slugify(articleForm.title))" /></div>
         <div class="field"><label>Slug</label><input v-model="articleForm.slug" class="input" maxlength="220" placeholder="article-slug" /></div>
         <div class="field span-2"><label>摘要</label><input v-model="articleForm.excerpt" class="input" maxlength="500" /></div>
@@ -1272,7 +1295,7 @@ onBeforeUnmount(() => {
           <div class="editor-meta"><span>支持 Markdown</span><span>{{ articleForm.body_markdown.length }} 字符</span></div>
         </div>
       </div>
-      <div class="action-row"><button class="btn btn-primary" :disabled="busy" @click="saveArticle"><span class="material-symbols-rounded btn-icon" aria-hidden="true">save</span>保存文章</button><button class="btn btn-ghost" @click="articleEditorOpen = false">取消</button></div>
+      </fieldset><div class="action-row"><button class="btn btn-primary" :disabled="busy" @click="saveArticle"><span class="material-symbols-rounded btn-icon" aria-hidden="true">save</span>保存文章</button><button class="btn btn-ghost" @click="articleEditorOpen = false">取消</button></div>
     </div>
   </div>
 

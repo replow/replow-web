@@ -2,8 +2,8 @@
 // domain. Whenever this app is served from a domain that proxies the API on
 // its own origin, use that same-origin path so the browser actually sends the
 // cookie back. Anything else falls back to the public API host.
-const FALLBACK_API_BASE = (import.meta.env.VITE_API_BASE_URL || "https://api.example.com/v1").replace(/\/$/, "");
-const SAME_ORIGIN_API_DOMAINS = ["example.com", "example.com"];
+const FALLBACK_API_BASE = (import.meta.env.VITE_API_BASE_URL || "https://api.4z.ink/v1").replace(/\/$/, "");
+const SAME_ORIGIN_API_DOMAINS = ["replow.org", "4z.ink"];
 
 function resolveApiBase(): string {
   if (typeof window === "undefined") return FALLBACK_API_BASE;
@@ -50,6 +50,7 @@ export type Profile = {
 };
 
 export type Article = {
+  revision_token?: string;
   id: number;
   title: string;
   slug: string;
@@ -187,7 +188,7 @@ export async function request<T>(
 ): Promise<T> {
   const headers = new Headers(options.headers || {});
   headers.set("Accept", "application/json");
-  if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
 
   if (auth) {
     const session = getSession();
@@ -303,6 +304,12 @@ export function humanError(error: unknown): string {
     invalid_password: "密码需为 8–128 位",
     old_password_invalid: "旧密码不正确",
     article_slug_already_exists: "文章 Slug 已存在，请换一个",
+    article_changed_reload: "文章已在其他页面修改，请重新打开后再保存",
+    draft_changed_reload: "草稿已在其他页面修改，请重新打开；当前内容仍保存在本机",
+    media_in_use: "文件仍被引用，请先解除引用",
+    media_must_be_trashed_first: "请先将文件移入回收站",
+    too_many_drafts: "自动保存草稿已达上限，请整理旧草稿",
+    draft_too_large: "草稿超过 1 MB，已保存在本机",
     article_not_found: "文章不存在或不属于当前账号",
     comment_not_found: "评论不存在或不属于当前账号",
     friend_application_exists: "你已经提交过这个站点",

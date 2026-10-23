@@ -1,6 +1,7 @@
 import { request } from "./api";
 
 export type MediaItem = {
+  deleted_at?: string | null;
   id: number;
   original_name: string;
   public_url: string;
@@ -16,9 +17,12 @@ export type MediaItem = {
 export type MediaCategory = "site" | "avatar" | "article";
 
 export const mediaApi = {
-  list: (limit = 60, offset = 0) => request<{items: MediaItem[]; total: number}>(
-    `/account/media?limit=${limit}&offset=${offset}`
+  list: (limit = 60, offset = 0, trash = false) => request<{items: MediaItem[]; total: number}>(
+    `/account/media?limit=${limit}&offset=${offset}&trash=${trash}`
   ),
+  references: (id:number) => request<{data:{total:number;items:{type:string;title:string}[]}}>(`/account/media/${id}/references`),
+  restore: (id:number) => request(`/account/media/${id}/restore`, {method:"POST"}),
+  purge: (id:number) => request(`/account/media/${id}/purge`, {method:"DELETE"}),
   rename: (id: number, original_name: string) =>
     request<{data: MediaItem}>(`/account/media/${id}`, {
       method: "PATCH", body: JSON.stringify({original_name})
@@ -78,6 +82,12 @@ const contentTypes: Record<string, string> = {
 export async function uploadMedia(
   file: File, category: MediaCategory, onProgress: (fraction: number) => void
 ): Promise<MediaItem> {
+  if (window.location.hostname.endsWith(".preview.replow.org")) {
+    const body=new FormData();body.append("file",file);body.append("category",category);
+    const result=await request<{data:MediaItem}>("/account/media/upload",{method:"POST",body});
+    onProgress(1); return result.data;
+  }
+
   if (!file.size || file.size > 100 * 1024 * 1024) throw new Error("文件必须在 100 MB 以内");
   const ext = file.name.split(".").pop()?.toLowerCase() || "";
   const contentType = contentTypes[ext];
