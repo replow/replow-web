@@ -28,7 +28,7 @@ const form = reactive({
   r2_public_base_url: "",
   r2_endpoint_url: "",
   local_root: "./data/media",
-  local_public_base_url: "https://www.replow.org/v1/public/media",
+  local_public_base_url: "https://www.preview.replow.org/v1/public/media",
   clear_r2_credentials: false
 });
 
@@ -46,7 +46,7 @@ function applySettings(value: MediaStorageSettings) {
   form.r2_endpoint_url = value.r2_endpoint_url || "";
   form.local_root = value.local_root || "./data/media";
   form.local_public_base_url =
-    value.local_public_base_url || "https://www.replow.org/v1/public/media";
+    value.local_public_base_url || "https://www.preview.replow.org/v1/public/media";
   form.clear_r2_credentials = false;
 }
 
@@ -253,7 +253,7 @@ onMounted(load);
             ><el-form-item label="本地公开地址"
               ><el-input
                 v-model="form.local_public_base_url"
-                placeholder="https://www.replow.org/v1/public/media" /></el-form-item
+                placeholder="https://www.preview.replow.org/v1/public/media" /></el-form-item
           ></el-col>
         </el-row>
       </el-form>

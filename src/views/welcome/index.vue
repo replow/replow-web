@@ -166,7 +166,7 @@ onMounted(loadDashboard);
             <ArrowIcon class="shortcut-arrow" aria-hidden="true" />
           </router-link>
           <a
-            href="https://www.replow.org/"
+            href="https://www.preview.replow.org/"
             target="_blank"
             rel="noopener noreferrer"
             class="site-link"

@@ -13,6 +13,24 @@ import { message } from "@/utils/message";
 
 defineOptions({ name: "ReplowMedia" });
 
+import { mediaReferences, restoreMedia, purgeMedia, contentError } from "@/api/contentTools";
+const trash = ref(false);
+const refs = ref<{type:string;title:string;id:string}[]>([]);
+const refsOpen = ref(false);
+const refsTotal = ref(0);
+async function showReferences(item: MediaItem) {
+  try { const r = await mediaReferences(item.id); refs.value = r.data.items; refsTotal.value = r.data.total; refsOpen.value = true; }
+  catch { message("引用检查失败", {type:"error"}); }
+}
+async function restore(item: MediaItem) {
+  try { await restoreMedia(item.id); message("文件已恢复", {type:"success"}); await refreshMedia(); }
+  catch(error) { message(contentError(error,"恢复失败"), {type:"error"}); }
+}
+async function purge(item: MediaItem) {
+  try { await ElMessageBox.confirm(`彻底删除“${item.original_name}”？原文件将无法恢复。`, "彻底删除", {type:"warning",confirmButtonText:"彻底删除"});
+    await purgeMedia(item.id); message("文件已彻底删除", {type:"success"}); await refreshMedia();
+  } catch(error) { if(error!=="cancel" && error!=="close") message(contentError(error,"彻底删除失败"), {type:"error"}); }
+}
 const router = useRouter();
 const loading = ref(false);
 const uploading = ref(false);
@@ -33,7 +51,7 @@ const categoryLabels: Record<string, string> = {
 async function refreshMedia() {
   loading.value = true;
   try {
-    const result = await getAdminMedia({ limit: 200 });
+    const result = await getAdminMedia({ limit: 200, trash: trash.value });
     rows.value = result.items || [];
     total.value = result.total || 0;
     if (selectedItem.value) {
@@ -81,19 +99,21 @@ function openDetails(item: MediaItem) {
 
 async function remove(item: MediaItem) {
   try {
+    const references = await mediaReferences(item.id);
+    if (references.data.total) { await showReferences(item); return; }
     await ElMessageBox.confirm(
-      `确定删除“${item.original_name || item.object_key}”吗？文件和媒体记录都会删除。`,
-      "删除媒体", { type: "warning", confirmButtonText: "删除", cancelButtonText: "取消" }
+      `确定将“${item.original_name || item.object_key}”移入回收站吗？原文件保留，可随时恢复。`,
+      "移入回收站", { type: "warning", confirmButtonText: "移入回收站", cancelButtonText: "取消" }
     );
     await deleteAdminMedia(item.id);
     if (selectedItem.value?.id === item.id) {
       detailsVisible.value = false;
       selectedItem.value = null;
     }
-    message("媒体已删除", { type: "success" });
+    message("已移入回收站", { type: "success" });
     await refreshMedia();
   } catch (error: any) {
-    if (error !== "cancel" && error !== "close") message("媒体删除失败", { type: "error" });
+    if (error !== "cancel" && error !== "close") message(contentError(error,"移入回收站失败"), { type: "error" });
   }
 }
 
@@ -137,10 +157,11 @@ onMounted(refreshMedia);
       <template #header>
         <div class="toolbar">
           <div class="heading">
-            <strong>媒体库</strong>
+            <strong>{{ trash ? "媒体回收站" : "媒体库" }}</strong>
             <span class="muted">共 {{ total }} 个文件，点击文件查看详情</span>
           </div>
           <div class="toolbar-actions">
+            <el-button :type="trash ? 'warning' : 'default'" @click="trash=!trash;refreshMedia()">{{ trash ? "返回媒体库" : "回收站" }}</el-button>
             <el-select v-model="activeCategory" class="category-select" aria-label="上传类别">
               <el-option label="通用" value="general" />
               <el-option label="壁纸" value="wallpaper" />
@@ -148,7 +169,7 @@ onMounted(refreshMedia);
               <el-option label="用户头像" value="avatar" />
               <el-option label="友链头像" value="friend-avatar" />
             </el-select>
-            <el-button :loading="uploading" type="primary" @click="chooseFile">上传文件</el-button>
+            <el-button v-if="!trash" :loading="uploading" type="primary" @click="chooseFile">上传文件</el-button>
             <el-button :loading="loading" @click="refreshMedia">刷新</el-button>
             <el-button @click="router.push('/replow/media/storage')">存储设置</el-button>
           </div>
@@ -175,13 +196,18 @@ onMounted(refreshMedia);
           <div class="media-actions">
             <el-button link type="primary" @click="openDetails(item)">详情</el-button>
             <el-button link type="primary" @click="copyLink(item)">复制链接</el-button>
-            <el-button link type="danger" @click="remove(item)">删除</el-button>
+            <template v-if="trash"><el-button link type="primary" @click="restore(item)">恢复</el-button><el-button link type="danger" @click="purge(item)">彻底删除</el-button></template>
+            <template v-else><el-button link @click="showReferences(item)">引用</el-button><el-button link type="danger" @click="remove(item)">移入回收站</el-button></template>
           </div>
         </div>
       </div>
-      <el-empty v-if="!loading && rows.length === 0" description="媒体库暂无文件，请先上传" />
+      <el-empty v-if="!loading && rows.length === 0" :description="trash ? '回收站为空' : '媒体库暂无文件，请先上传'" />
     </el-card>
 
+    <el-dialog v-model="refsOpen" title="文件引用检查" width="min(620px,94vw)">
+      <el-alert :title="refsTotal ? `仍有 ${refsTotal} 处引用，请先解除引用后再删除` : '文件暂无引用'" :type="refsTotal ? 'warning' : 'success'" :closable="false" />
+      <el-table :data="refs"><el-table-column prop="type" label="类别" width="130"/><el-table-column prop="title" label="引用位置"/></el-table>
+    </el-dialog>
     <el-dialog v-model="detailsVisible" title="媒体详情" width="min(760px, 95vw)" destroy-on-close append-to-body>
       <div v-if="selectedItem" class="detail-layout">
         <div class="detail-preview">

@@ -25,6 +25,7 @@ export default {
     rank: 1
   },
   children: [
+    {path:"/replow/publishing",name:"ReplowPublishing",component:()=>import("@/views/replow/publishing/index.vue"),meta:{title:"内容发布",icon:ArticleIcon}},
     {path:"/replow/fanqie",name:"ReplowFanqie",component:()=>import("@/views/replow/fanqie/index.vue"),meta:{title:"番茄小说管理",icon:BookIcon}},
     {
       path: "/replow/dynamics",

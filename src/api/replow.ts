@@ -22,6 +22,7 @@ export type DashboardResponse = {
 };
 
 export type ArticleItem = {
+  revision_token?: string;
   id: number;
   title: string;
   slug: string;
@@ -38,6 +39,7 @@ export type ArticleItem = {
 };
 
 export type ArticlePayload = {
+  _base_token?: string;
   title: string;
   slug: string;
   excerpt?: string;
@@ -287,6 +289,7 @@ export const purgeCloudflareCache = () =>
   }>("post", "/admin/cdn/cloudflare/purge-all");
 
 export type MediaItem = {
+  deleted_at?: string | null;
   id: number;
   object_key: string;
   public_url: string;
@@ -336,7 +339,7 @@ export type MediaStorageStatus = {
   next_backend: "od" | "r2" | "balanced" | "unavailable";
 };
 
-export const getAdminMedia = (params?: { limit?: number; offset?: number }) =>
+export const getAdminMedia = (params?: { limit?: number; offset?: number; trash?: boolean }) =>
   http.request<{ items: MediaItem[]; total: number }>("get", "/admin/media", {
     params
   });
@@ -353,6 +356,11 @@ export const uploadAdminMedia = async (
   category = "general",
   onProgress?: (value: MediaUploadProgress) => void
 ): Promise<{ data: MediaItem }> => {
+  if (window.location.hostname.endsWith(".preview.replow.org")) {
+    const data = new FormData(); data.append("file", file); data.append("category", category);
+    return http.request<{data:MediaItem}>("post", "/admin/media/upload", {data, headers:{"Content-Type":"multipart/form-data"},
+      onUploadProgress:event=>onProgress?.({loaded:event.loaded,total:file.size,bytesPerSecond:event.rate||0})});
+  }
   if (!globalThis.crypto?.subtle) {
     throw new Error("当前浏览器不支持安全直传，请使用 HTTPS 和较新的浏览器");
   }
@@ -701,6 +709,8 @@ export const getApiModules = () =>
   http.request<{ data: ModuleItem[] }>("get", "/admin/access-keys/modules");
 
 export type SiteBuildStatus = {
+  environment?: string; site_url?: string; stage?: string; run_url?: string; commit?: string;
+  last_published_at?: string; published_version?: string; content_saved_at?: string; has_unpublished_changes?: boolean;
   status: string;
   version: string;
   error: string;

@@ -47,7 +47,7 @@ const form = reactive({
     description: "",
     url: "",
     avatarUrl: "",
-    accountUrl: "https://account.replow.org/"
+    accountUrl: "https://account.preview.replow.org/"
   },
   wallpaper: {
     mode: "banner",
@@ -193,7 +193,7 @@ function loadForm(config: FireflyConfig) {
       "https://cdn.replow.org/replow-org/images/tx.jpg"
   );
   form.friendSite.accountUrl = String(
-    friendSite.account_url || "https://account.replow.org/"
+    friendSite.account_url || "https://account.preview.replow.org/"
   );
 
   form.wallpaper.mode = String(wallpaper.mode || "banner");
@@ -740,7 +740,7 @@ onMounted(load);
                 <el-form-item label="Account 申请入口">
                   <el-input
                     v-model="form.friendSite.accountUrl"
-                    placeholder="https://account.replow.org/"
+                    placeholder="https://account.preview.replow.org/"
                   />
                 </el-form-item>
               </el-col>

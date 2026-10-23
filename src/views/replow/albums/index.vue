@@ -257,7 +257,7 @@ onMounted(load);
             ><el-button type="primary" @click="edit()">新建相册</el-button
             ><el-button
               tag="a"
-              href="https://www.replow.org/gallery/"
+              href="https://www.preview.replow.org/gallery/"
               target="_blank"
               rel="noopener"
               >查看主站相册</el-button
