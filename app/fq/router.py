@@ -113,7 +113,7 @@ def browser_session_token(request: Request, response: Response,
 
     host = (request.headers.get("host") or "").lower().split(":")[0]
     origin = (request.headers.get("origin") or "").rstrip("/").lower()
-    if host not in {"example.com", "www.example.com"} or origin != "https://" + host:
+    if ("https://" + host) not in {value.rstrip("/").lower() for value in get_settings().cors_origin_list} or origin != "https://" + host:
         raise HTTPException(status_code=403, detail="same_origin_required")
 
     no_store(response)

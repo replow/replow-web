@@ -12,6 +12,7 @@ from app.core.config import get_settings
 from app.core.security import decode_token
 from app.core.request_context import request_context
 from app.db.session import engine
+from app.fq.fqapp_state import router as fqapp_state_router
 from app.fq.router import router as fq_router
 from app.fq.admin import router as fq_admin_router
 
@@ -243,6 +244,7 @@ def verify_ownership_file():
 from app.fq.reading import router as reading_router
 app.include_router(reading_router)
 app.include_router(fq_router)
+app.include_router(fqapp_state_router)
 app.include_router(public.router, prefix=settings.api_prefix)
 app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(account.router, prefix=settings.api_prefix)
