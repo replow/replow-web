@@ -10,7 +10,7 @@ ExecStart=/usr/bin/python3 /data/replow-preview/preview-worker.py
 ExecStopPost=/usr/bin/python3 /data/replow-preview/preview-worker.py --finalize
 Environment=PATH=/data/replow-next/bin:/usr/local/bin:/usr/bin:/bin
 TimeoutStartSec=45min
-MemoryMax=480M
+MemoryMax=680M
 MemorySwapMax=2200M
 CPUQuota=70%
 Nice=15

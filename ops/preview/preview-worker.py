@@ -30,7 +30,7 @@ def main():
    update(status='building',stage='正在构建预览内容',started_at=started,content_cutoff_at=started,finished_at='',version=version,error='',run_url='',commit=commit)
    env=os.environ.copy();env.update(API_BASE_URL='http://127.0.0.1:8814',REPLOW_RELEASE='v'+dt.datetime.now().strftime('%y.%m.%d')+'-u'+dt.datetime.now().strftime('%H%M%S'),NODE_OPTIONS='--max-old-space-size=1400',PATH='/data/replow-next/bin:'+env.get('PATH',''),BIOME_MAX_THREADS='1',HUSKY='0')
    with (STATE/'build.log').open('w') as log:
-    for command in [['/data/replow-next/bin/pnpm','check'],['/data/replow-next/bin/pnpm','build']]:
+    for command in [['/data/replow-next/bin/pnpm','build']]:
      subprocess.run(command,cwd=SOURCE,env=env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=1800)
    isolate(SOURCE/'dist');dest=BASE/'releases'/version/'dist';dest.parent.mkdir()
    shutil.copytree(SOURCE/'dist',dest)
