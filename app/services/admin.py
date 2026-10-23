@@ -119,11 +119,19 @@ class AdminService:
             self.repository.db.rollback()
             raise AdminError("article_slug_already_exists", 409) from error
 
-    def update_article(self, article_id: int, payload: dict[str, Any]) -> Optional[dict]:
+    def update_article(self, article_id: int, payload: dict[str, Any], actor_id: Optional[int] = None, reason: str = "save") -> Optional[dict]:
+        from app.services.article_history import fingerprint
+        from sqlalchemy import text
+        from fastapi import HTTPException
+        self.repository.db.execute(text("SELECT id FROM articles WHERE id=:id FOR UPDATE"), {"id": article_id})
         existing = self.repository.get_article(article_id)
         if not existing:
             return None
+        if payload.get("_base_token") and payload["_base_token"] != fingerprint(existing):
+            raise HTTPException(409, "article_changed_reload")
         data = self._article_payload(payload, existing=existing)
+        data["_actor_id"] = actor_id
+        data["_reason"] = reason
         try:
             return self.repository.update_article(article_id, data)
         except IntegrityError as error:

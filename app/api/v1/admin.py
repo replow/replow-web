@@ -60,9 +60,9 @@ def get_admin_article(article_id: int, _: dict = Depends(require_admin), db: Ses
 
 
 @router.put("/articles/{article_id}")
-def update_article(article_id: int, payload: dict[str, Any], _: dict = Depends(require_admin), db: Session = Depends(get_db)):
+def update_article(article_id: int, payload: dict[str, Any], user: dict = Depends(require_admin), db: Session = Depends(get_db)):
     try:
-        article = AdminService(db).update_article(article_id, payload)
+        article = AdminService(db).update_article(article_id, payload, int(user["uid"]))
     except AdminError as error:
         _raise_admin_error(error)
     if not article:
@@ -229,7 +229,7 @@ def list_cloudflare_hostnames(
 ):
     """The Cloudflare for SaaS custom hostnames on the configured zone.
 
-    These are the names a purge will actually clear -- example.com / example.com are
+    These are the names a purge will actually clear -- replow.org / 4z.ink are
     custom hostnames riding on the isip.eu.cc zone, not zones of their own.
     """
     try:
@@ -276,12 +276,14 @@ def purge_cloudflare_cache(
 
 @router.get("/media")
 def admin_media(
+    trash: bool = False,
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
     _: dict = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    items, total = AdminService(db).media(limit, offset)
+    from app.services.media_trash import MediaTrash
+    items, total = MediaTrash(db).list(limit, offset, trashed=trash)
     return {"items": items, "total": total}
 
 
@@ -310,6 +312,34 @@ def get_media_storage_status(_: dict = Depends(require_admin), db: Session = Dep
     return {"data": MediaStorageService(db).status()}
 
 
+@router.post("/media/direct/prepare")
+def prepare_admin_media_direct(
+    payload: dict[str, Any],
+    response: Response,
+    user: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    response.headers["Cache-Control"] = "no-store"
+    try:
+        return {"data": MediaStorageService(db).prepare_direct_upload(payload, int(user["uid"]))}
+    except MediaError as error:
+        _raise_admin_error(error)
+
+
+@router.post("/media/direct/confirm")
+def confirm_admin_media_direct(
+    payload: dict[str, Any],
+    user: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    try:
+        return {"data": MediaStorageService(db).confirm_direct_upload(
+            str(payload.get("ticket") or ""), int(user["uid"])
+        )}
+    except MediaError as error:
+        _raise_admin_error(error)
+
+
 @router.post("/media/upload")
 def upload_admin_media(
     file: UploadFile = File(...),
@@ -328,11 +358,12 @@ def upload_admin_media(
 @router.delete("/media/{media_id}")
 def delete_admin_media(
     media_id: int,
-    _: dict = Depends(require_admin),
+    user: dict = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     try:
-        deleted = MediaStorageService(db).delete(media_id)
+        from app.services.media_trash import MediaTrash
+        deleted = MediaTrash(db).trash(media_id, int(user["uid"]))
     except MediaError as error:
         _raise_admin_error(error)
     if not deleted:
@@ -415,8 +446,8 @@ def admin_routes(_: dict = Depends(require_admin)):
 
 
 @router.get("/site/build")
-def get_site_build(_: dict = Depends(require_admin)):
-    return {"data": site_build_status()}
+def get_site_build(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
+    return {"data": site_build_status(db)}
 
 
 @router.post("/site/build")

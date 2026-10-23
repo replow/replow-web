@@ -265,6 +265,8 @@ class MediaStorageService:
         }
 
     def _backend_order(self, cfg, byte_size):
+        if os.getenv("APP_ENV") == "preview" and os.getenv("PREVIEW_LOCAL_UPLOADS") == "true":
+            return ["local"]
         used, _, _ = self.repository.media_storage_bytes()
         return backend_order(cfg.storage_mode, cfg.od_weight, cfg.r2_weight,
                              cfg.od_configured,
@@ -297,6 +299,8 @@ class MediaStorageService:
                     if candidate == "od":
                         from app.services.onedrive_storage import put_file
                         put_file(key, temp_path)
+                    elif candidate == "local":
+                        self._put_local(cfg, key, temp_path)
                     else:
                         self._put_r2(cfg, key, temp_path, content_type)
                     backend = candidate
@@ -306,7 +310,7 @@ class MediaStorageService:
                         raise MediaError("media_storage_upload_failed", 502) from None
             if not backend:
                 raise MediaError("media_storage_upload_failed", 502)
-            base_url = cfg.od_public_base_url if backend == "od" else cfg.r2_public_base_url
+            base_url = cfg.local_public_base_url if backend == "local" else cfg.od_public_base_url if backend == "od" else cfg.r2_public_base_url
             try:
                 return self.repository.create_media({
                     "object_key": key, "public_url": self._public_url(base_url, key),
@@ -679,6 +683,10 @@ class MediaStorageService:
         return updated
 
     def delete(self, media_id: int, actor_id: Optional[int] = None) -> bool:
+        from app.services.media_trash import MediaTrash
+        return MediaTrash(self.db, actor_id).trash(media_id, actor_id)
+
+    def purge(self, media_id: int, actor_id: Optional[int] = None) -> bool:
         item = self.repository.get_media(media_id)
         if not item:
             return False

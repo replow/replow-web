@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 
 from app.api.v1 import account, admin, admin_apikeys, admin_tools, auth, comments, dynamics, gallery, oauth, public
+from app.api.v1.content_tools import admin_router as content_admin, account_router as content_account
 from app.core.config import get_settings
 from app.core.security import decode_token
 from app.core.request_context import request_context
@@ -226,7 +227,7 @@ def oauth_consent_page():
 
 @app.get("/.well-known/replow-verify.txt")
 def verify_ownership_file():
-    """Serve the domain-ownership token for api.example.com itself.
+    """Serve the domain-ownership token for api.4z.ink itself.
 
     The HTTP verification channel checks ``<origin>/.well-known/replow-verify.txt``
     on the registrant's site. Publishing this API's own token at the same path
@@ -247,6 +248,8 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(account.router, prefix=settings.api_prefix)
 app.include_router(comments.router, prefix=settings.api_prefix)
 app.include_router(admin.router, prefix=settings.api_prefix)
+app.include_router(content_admin, prefix=settings.api_prefix)
+app.include_router(content_account, prefix=settings.api_prefix)
 app.include_router(fq_admin_router, prefix=settings.api_prefix)
 app.include_router(admin_tools.router, prefix=settings.api_prefix)
 app.include_router(gallery.router, prefix=settings.api_prefix)
@@ -256,7 +259,7 @@ app.include_router(admin_apikeys.router, prefix=settings.api_prefix)
 
 # OAuth is exposed twice on purpose. Every other new-stack contract stays
 # under /v1, but the product-facing authorization endpoint is published as
-# api.example.com/oauth so third-party clients get a short, memorable URL. The
+# api.4z.ink/oauth so third-party clients get a short, memorable URL. The
 # /v1 alias keeps the api_modules registry entry (/api/v1/oauth) honest.
 app.include_router(oauth.router)
 app.include_router(oauth.router, prefix=settings.api_prefix)

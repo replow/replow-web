@@ -116,12 +116,14 @@ def _media_failure(error: MediaError) -> None:
 
 @router.get("/media")
 def personal_media(
+    trash: bool = False,
     limit: int = Query(default=60, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     user: dict = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    items, total = MediaStorageService(db).list_owned(int(user["uid"]), limit, offset)
+    from app.services.media_trash import MediaTrash
+    items, total = MediaTrash(db, int(user["uid"])).list(limit, offset, trashed=trash)
     return {"items": items, "total": total, "limit": limit, "offset": offset}
 
 
@@ -194,7 +196,8 @@ def delete_personal_media(
     db: Session = Depends(get_db),
 ):
     try:
-        deleted = MediaStorageService(db).delete(media_id, actor_id=int(user["uid"]))
+        from app.services.media_trash import MediaTrash
+        deleted = MediaTrash(db, int(user["uid"])).trash(media_id, int(user["uid"]))
     except MediaError as error:
         _media_failure(error)
     if not deleted:
@@ -325,7 +328,7 @@ def update_article(
         raise HTTPException(status_code=404, detail="article_not_found")
     try:
         data = AdminService(db).update_article(
-            article_id, _account_article_payload(payload)
+            article_id, _account_article_payload(payload), int(user["uid"])
         )
         if not data:
             raise HTTPException(status_code=404, detail="article_not_found")

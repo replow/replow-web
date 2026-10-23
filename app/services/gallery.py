@@ -87,7 +87,7 @@ class GalleryService:
             if mid in seen:
                 raise HTTPException(422, "duplicate_album_photo")
             seen.add(mid)
-            media = self.db.execute(text("SELECT mime_type FROM media_objects WHERE id=:id"), {"id": mid}).scalar()
+            media = self.db.execute(text("SELECT mime_type FROM media_objects WHERE id=:id AND deleted_at IS NULL"), {"id": mid}).scalar()
             if not media or not media.startswith("image/") or media == "image/svg+xml":
                 raise HTTPException(422, "album_photo_must_be_image")
             normalized.append({"album": album_id, "media": mid,
