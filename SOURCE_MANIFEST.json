@@ -1,0 +1,161 @@
+{
+  "public_upstream": "https://github.com/ch6vip/fqapp",
+  "revision": "ed7976913ff79f4b50eaa1ea6fc002993a007ef6",
+  "files": [
+    {
+      "path": "vendor/fqapi_core/src/lib.rs",
+      "sha256": "25ac9396a1d415eb09d12da03e6f14503d64e6ec82719d73eb36792d235f424e",
+      "public_upstream_identical": false
+    },
+    {
+      "path": "vendor/fqapi_core/src/config.rs",
+      "sha256": "35bb2dc6139b45099d9ce2f609d469ffb095e2ab63721a00e887f52f631b5329",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/filter.rs",
+      "sha256": "71777e749495393526bade2f8b4769c82108543baa699e38d0ce39e4e1668628",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/timeutil.rs",
+      "sha256": "d42c0a9ff4f66ab45f219b63b23f6c63bf1e873e505637edebc054d28ce753d8",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/crypto.rs",
+      "sha256": "3cca48763bcf4fbcb855a8d03fe51687f9999b9cfa18bc3e7bdafe6250d1b5b7",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/error.rs",
+      "sha256": "65f856b4ff806857e310b2e1da2feec864539295bcfb9b56dd612147e4c46d30",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/json.rs",
+      "sha256": "25c6996019c789c269b4a3853ff00ec72a22eee6d76e049c9c1de16857f119ef",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/upstream/client.rs",
+      "sha256": "dde584cbd194415360f64a8f30ff03bd0dde7be81f6283b2c07753fbbaba5a04",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/upstream/dh.rs",
+      "sha256": "5d3984842732a59359532839ed6235b33925f848fbef621aafb115389079cfa4",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/upstream/mod.rs",
+      "sha256": "666cbdd7f3f5be0b2aaf092e66f1b95e89a5160c9db64f6e24e3c9fea5b1e3ff",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/upstream/http.rs",
+      "sha256": "5ba3dbf8bcb164d4c664f9b0102261bbaf569cfd704430c69e6f3824d1ae7976",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/upstream/cm.rs",
+      "sha256": "d78821ee00362e3cc08611be1c9e0e23544070272851e5f77319b00217f6d38f",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/device/register.rs",
+      "sha256": "e8cfba0955f140a5effc779a2bf544ebf0748b33d9406410a15b79d322d815a2",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/device/crypto.rs",
+      "sha256": "eef6a32645a8cc45de0f0550778ffaae2760d892dd3daa266f411c63aa4d06e2",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/device/mod.rs",
+      "sha256": "9b0615a995bd929a7c5855ee7885d095b99a7a924fa3d03a33e3fd7e07ac8d3e",
+      "public_upstream_identical": false
+    },
+    {
+      "path": "vendor/fqapi_core/src/device/pool_crypto.rs",
+      "sha256": "5d4c50e5ebe08bd14bf46024c5abcd2e9392671ea8b9c699a7d57cf87449bb3c",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/sign/protobuf.rs",
+      "sha256": "8699b04e5e747818e291fa4af0fb118a9658acb318e12525b8267d7e5e1e1228",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/sign/ladon.rs",
+      "sha256": "9c4be8eca286ac19e2ca7715bbda2e9b9a95a9139fd293e6527d1afe44dc3b67",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/sign/abogus.rs",
+      "sha256": "c22ba9441a8b9a235b253b6a324a283091009cc5f0de2c380a04f55f082ae9d6",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/sign/sm3.rs",
+      "sha256": "9749d4506398c94085a6352b99f382c3c6f915b35af5ba0f9364d8e8bde1f66d",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/sign/argus.rs",
+      "sha256": "77efa8834f64dcb51ebca6079cdb961d1d1b8745236c998ed7103967cb04fe0e",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/sign/gorgon.rs",
+      "sha256": "e09cfa57b7a1f665ae39d36f37e31cdb0c848a02ad9161e1f94ba22ba826ef9b",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/sign/mod.rs",
+      "sha256": "4832b7a540b6c5629732140b84cf254853d05c83c909710b3604444767395f97",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/sign/simon.rs",
+      "sha256": "a275090b25818b410457bcc296da1623b63003f5c3020e8f192962ad0ab700db",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/endpoints/base.rs",
+      "sha256": "11dc34a77937c6aef1b24c4d0a6f1d113947136a569784ef1cb7b2d9266463f7",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/endpoints/full.rs",
+      "sha256": "963a25adb543016eac223c4b12034b45192c949794dab6b5677ddd62e489958c",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/endpoints/search.rs",
+      "sha256": "505123198f0645a69a64d7f083a96d11ecae85666e73dc50dfe526145e384fa9",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/endpoints/content_util.rs",
+      "sha256": "3123e253a4e3ba2a3e81cb293715885ee023f2665691112b991fb25779bffa55",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/endpoints/util.rs",
+      "sha256": "68e8a505be07f9083aecb294e98043e001db9eaa3317d88ee9655f4161f63aad",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/endpoints/book.rs",
+      "sha256": "862d4b467590952ece725932e13dc8b2a68a68e34439c344002ddd0d97d1af17",
+      "public_upstream_identical": true
+    },
+    {
+      "path": "vendor/fqapi_core/src/endpoints/mod.rs",
+      "sha256": "0a8acfba2fde5367765fd34676c22f613d4e846b07d78abed54aea4b40da1d5f",
+      "public_upstream_identical": false
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[package]
+name = "silune-fq-parser"
+version = "26.10.23"
+edition = "2021"
+publish = false
+
+[dependencies]
+fqapi_core = { path = "vendor/fqapi_core" }
+vercel_runtime = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time", "fs"] }
+serde_json = "1"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls-no-provider"] }
+sha2 = "0.10"
+subtle = "2"
+url = "2"
+regex = "1"
+once_cell = "1"
+html-escape = "0.2"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+
+[[bin]]
+name = "index"
+path = "api/index.rs"
+
+[profile.release]
+opt-level = 2
+lto = "thin"
+codegen-units = 1
+strip = true
+
+[profile.dev]
+debug = 0
