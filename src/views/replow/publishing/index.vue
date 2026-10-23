@@ -11,7 +11,7 @@ const labels:Record<string,string>={idle:'尚未构建',queued:'等待构建',bu
 const label=computed(()=>labels[state.value?.status || 'idle'] || state.value?.status);
 const steps:Record<string,number>={idle:0,queued:1,building:2,deploying:3,success:4,failed:2};
 const step=computed(()=>steps[state.value?.status || 'idle'] || 0);
-const date=(v?:string)=>v?new Date(/[Z+]$/.test(v)?v:v+'Z').toLocaleString('zh-CN'):'—';
+const date=(v?:string)=>v?new Date(/(?:Z|[+-]\d{2}:\d{2})$/.test(v)?v:v+'Z').toLocaleString('zh-CN'):'—';
 async function refresh() {
   clearTimeout(timer);
   try { state.value=(await getSiteBuild()).data; error.value=''; }
