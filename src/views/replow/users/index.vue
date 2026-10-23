@@ -23,6 +23,10 @@ import { setToken } from "@/utils/auth";
 import { useUserStoreHook } from "@/store/modules/user";
 import { message } from "@/utils/message";
 import { sensitiveChanges, isOwnSession } from "@/utils/user-edit";
+import {
+  validNewPassword,
+  PASSWORD_POLICY_MESSAGE
+} from "@/utils/password-policy";
 import MediaPicker from "@/components/MediaPicker.vue";
 defineOptions({ name: "ReplowUsers" });
 const loading = ref(false),
@@ -191,7 +195,7 @@ function errorText(error: any) {
     cannot_change_own_admin_access: "不能停用或降级当前管理员",
     last_active_admin_required: "至少保留一名启用的管理员",
     cannot_delete_current_user: "不能删除当前登录账号",
-    invalid_password: "密码需要 8-128 位"
+    invalid_password: PASSWORD_POLICY_MESSAGE
   };
   return labels[error?.response?.data?.detail] || "保存失败，请检查输入后重试";
 }
@@ -204,11 +208,8 @@ async function save() {
     email: form.email.trim()
   };
   if (!data.password) delete data.password;
-  if (
-    data.password &&
-    (data.password.length < 8 || data.password.length > 128)
-  ) {
-    message("密码需要 8-128 位", { type: "warning" });
+  if (data.password && !validNewPassword(data.password)) {
+    message(PASSWORD_POLICY_MESSAGE, { type: "warning" });
     return;
   }
   const changes = sensitiveChanges(original.value, data);
@@ -493,6 +494,7 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", beforeUnload));
                 show-password
                 maxlength="128"
                 autocomplete="new-password"
+                :placeholder="PASSWORD_POLICY_MESSAGE"
                 placeholder="留空则不修改；新用户可使用验证码登录"
               /><el-button link type="primary" @click="generate"
                 >生成随机密码（保存后生效）</el-button
