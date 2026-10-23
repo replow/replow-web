@@ -53,13 +53,17 @@ for (const article of articles) {
 
 payload.firefly.koharuConfig = {
   heroTitle: 'Silver Wolf',
-  navbarTitle: 'Miro',
+  navbarTitle: 'Silune',
   headerIdleMs: 400,
   postCardImagePosition: 'alternating',
   motionLevel: 'lively',
   runtimeArticles: true,
   ...payload.firefly.koharuConfig,
 };
+// A legacy backend title should not reintroduce the retired public-facing brand.
+if (/^miro$/i.test(String(payload.firefly.koharuConfig.navbarTitle || '').trim())) {
+  payload.firefly.koharuConfig.navbarTitle = 'Silune';
+}
 
 payload.firefly.announcementConfig = { enable: payload.announcement.enabled, ...payload.firefly.announcementConfig };
 payload.announcement.enabled = payload.firefly.announcementConfig.enable !== false;
