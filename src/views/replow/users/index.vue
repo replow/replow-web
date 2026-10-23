@@ -494,8 +494,7 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", beforeUnload));
                 show-password
                 maxlength="128"
                 autocomplete="new-password"
-                :placeholder="PASSWORD_POLICY_MESSAGE"
-                placeholder="留空则不修改；新用户可使用验证码登录"
+                :placeholder="'留空则不修改；' + PASSWORD_POLICY_MESSAGE"
               /><el-button link type="primary" @click="generate"
                 >生成随机密码（保存后生效）</el-button
               ></el-form-item
@@ -661,3 +660,4 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", beforeUnload));
   overflow-wrap: anywhere;
 }
 </style>
+
