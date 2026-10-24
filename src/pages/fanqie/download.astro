@@ -11,6 +11,6 @@ interface Props {
 }
 const { locale = defaultLocale } = Astro.props;
 ---
-<Layout locale={locale} title="确认小说下载 | Miro" description="查看书名、作者、封面及小说简介，选择章节和下载格式。">
+<Layout locale={locale} title="确认小说下载 | Silune" description="查看书名、作者、封面及小说简介，选择章节和下载格式。">
   <TwoColumnLayout showPostFooter={false}><Cover slot="cover" title="准备好，带走这段故事" compact/><HomeSider slot="sider"/><Fanqie mode="confirm"/></TwoColumnLayout>
 </Layout>

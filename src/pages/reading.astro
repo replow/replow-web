@@ -11,6 +11,6 @@ interface Props {
 }
 const { locale = defaultLocale } = Astro.props;
 ---
-<Layout locale={locale} title="阅读与书架 | Miro" description="搜索番茄小说，管理个人书架，在浏览器本地阅读 EPUB。" articleTools={false}>
+<Layout locale={locale} title="阅读与书架 | Silune" description="搜索番茄小说，管理个人书架，在浏览器本地阅读 EPUB。" articleTools={false}>
   <TwoColumnLayout showPostFooter={false}><Cover slot="cover" title="在故事里，慢一点" compact/><HomeSider slot="sider"/><Reading/></TwoColumnLayout>
 </Layout>
