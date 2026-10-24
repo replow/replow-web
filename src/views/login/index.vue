@@ -145,7 +145,7 @@ useEventListener(document, "keydown", ({ code }) => {
       <div class="img">
         <img :src="MIRO_WALLPAPER" alt="Silver Wolf 银狼壁纸" />
         <div class="login-art-caption">
-          <strong>Miro</strong>
+          <strong>Silune</strong>
           <span>Silver Wolf · Replow Lv.999</span>
         </div>
       </div>
@@ -269,7 +269,7 @@ useEventListener(document, "keydown", ({ code }) => {
           <div class="account-links">
             <span>邮箱验证码登录无需设置密码</span>
           </div>
-          <p class="login-owner">Replow Lv.999 · Miro Admin</p>
+          <p class="login-owner">Silune · SilverCode Admin</p>
         </div>
       </div>
     </div>

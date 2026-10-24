@@ -74,7 +74,7 @@ onMounted(loadDashboard);
   <div v-loading="loading" class="replow-dashboard">
     <section class="hero-card">
       <div class="hero-copy">
-        <p class="eyebrow">MIRO / SILVER WOLF</p>
+        <p class="eyebrow">SILUNE / SILVERCODE</p>
         <h1>欢迎回来，{{ displayName }}</h1>
         <p>管理你的文章、照片与站点，继续记录新的灵感。</p>
       </div>
@@ -144,7 +144,7 @@ onMounted(loadDashboard);
       <el-card shadow="never" class="shortcuts-card">
         <template #header
           ><div class="section-heading">
-            <span>常用入口</span><span class="section-note">Miro Admin</span>
+            <span>常用入口</span><span class="section-note">SilverCode Admin</span>
           </div></template
         >
         <div class="shortcut-list">
@@ -171,7 +171,7 @@ onMounted(loadDashboard);
             rel="noopener noreferrer"
             class="site-link"
           >
-            查看 Miro 站点 <ArrowIcon aria-hidden="true" />
+            查看 Silune 站点 <ArrowIcon aria-hidden="true" />
           </a>
         </div>
       </el-card>

@@ -10,10 +10,10 @@ const year = new Date().getFullYear();
       href="https://www.preview.replow.org/"
       target="_blank"
       rel="noopener noreferrer"
-      >Miro</a
+      >Silune</a
     >
     <span class="footer-separator" aria-hidden="true">·</span>
-    <span>Replow Lv.999</span>
+    <span>SilverCode</span>
   </footer>
 </template>
 
