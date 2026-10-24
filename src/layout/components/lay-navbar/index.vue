@@ -52,7 +52,7 @@ const {
           <img
             :src="userAvatar"
             :style="avatarsStyle"
-            :alt="username || 'Miro 用户'"
+            :alt="username || 'Silune 用户'"
           />
           <p v-if="username" class="dark:text-white">{{ username }}</p>
         </span>

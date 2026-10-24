@@ -10,6 +10,11 @@ vm.runInContext(ts.transpileModule(
   { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }
 ).outputText, ctx);
 const valid = ctx.exports.validNewPassword;
+const validLogin = ctx.exports.validLoginPassword;
+for (const password of ["123456", "abcdef", "Ab12!@", "a".repeat(128)])
+  test("login accepts length " + password.length, () => assert.equal(validLogin(password), true));
+for (const password of ["", "12345", "a".repeat(129)])
+  test("login rejects length " + password.length, () => assert.equal(validLogin(password), false));
 for (const password of ["Ab1234", "AB12!@", "ab12!@", "ABcd!@", "Ab" + "1".repeat(126)])
   test("accepts valid policy fixture length " + password.length + " " + password.slice(0, 2), () => assert.equal(valid(password), true));
 for (const password of ["Ab12!", "abcdef", "ABCDEF", "123456", "Abcdef", "abc123", "Ab" + "1".repeat(127), "ab12 中"])

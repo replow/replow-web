@@ -3,7 +3,7 @@ import { MIRO_AVATAR } from "@/utils/miro-brand";
 </script>
 
 <template>
-  <img class="miro-brand-mark" :src="MIRO_AVATAR" alt="Miro · Silver Wolf" />
+  <img class="miro-brand-mark" :src="MIRO_AVATAR" alt="Silune · Silver Wolf" />
 </template>
 
 <style scoped>
