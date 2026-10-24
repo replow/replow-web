@@ -1,0 +1,258 @@
+---
+const siteInfo: Array<{ label: string; value: string; href?: string }> = [
+  { label: '站点', value: 'SilverCode Nexus' },
+  { label: '链接', value: 'https://www.replow.org/', href: 'https://www.replow.org/' },
+  {
+    label: '头像',
+    value: 'https://cdn.replow.org/media/site/39567bb1b9474e869fb4ee1c4343a7e8.png',
+  },
+  { label: '介绍', value: 'Silune的小站' },
+];
+---
+
+<section class="site-info-card" aria-labelledby="site-info-title">
+  <div class="site-info-header">
+    <div class="site-info-heading">
+      <p class="site-info-eyebrow">SITE INFO</p>
+      <h2 id="site-info-title">本站信息</h2>
+      <p class="site-info-description">申请友链时，可直接复制以下资料。</p>
+    </div>
+    <img
+      class="site-info-avatar"
+      src="https://cdn.replow.org/media/site/39567bb1b9474e869fb4ee1c4343a7e8.png"
+      alt="SilverCode Nexus 站点头像"
+      width="68"
+      height="68"
+      loading="eager"
+      decoding="async"
+    />
+  </div>
+
+  <dl class="site-info-fields">
+    {siteInfo.map((item) => (
+      <div class="site-info-field">
+        <dt class="site-info-label">{item.label}</dt>
+        <dd class="site-info-value-wrap">
+          {item.href ? (
+            <a class="site-info-value" href={item.href} target="_blank" rel="noopener noreferrer">{item.value}</a>
+          ) : (
+            <span class="site-info-value">{item.value}</span>
+          )}
+          <button
+            type="button"
+            class="site-info-copy"
+            data-site-info-copy
+            data-copy-value={item.value}
+            data-copy-label={item.label}
+            aria-label={'复制' + item.label}
+            title={'复制' + item.label}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="8" y="8" width="12" height="12" rx="2" />
+              <path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" />
+            </svg>
+            <span data-copy-label-text aria-live="polite">复制</span>
+          </button>
+        </dd>
+      </div>
+    ))}
+  </dl>
+</section>
+
+<script>
+  import './site-info-interactions';
+</script>
+
+<style>
+  .site-info-card {
+    padding: clamp(1rem, 2.8vw, 1.5rem);
+    border: 1px solid hsl(var(--border) / 0.65);
+    border-radius: 1.25rem;
+    background: color-mix(in oklab, hsl(var(--muted)) 28%, hsl(var(--card)));
+    box-shadow: 0 12px 32px -24px hsl(var(--foreground) / 0.24);
+  }
+
+  .site-info-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .site-info-heading {
+    min-width: 0;
+  }
+
+  .site-info-eyebrow {
+    margin: 0 0 0.25rem;
+    color: hsl(var(--primary));
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  .site-info-heading h2 {
+    margin: 0;
+    color: hsl(var(--foreground));
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .site-info-description {
+    margin: 0.25rem 0 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .site-info-avatar {
+    width: 4.25rem;
+    height: 4.25rem;
+    flex-shrink: 0;
+    border: 1px solid hsl(var(--border) / 0.65);
+    border-radius: 1.125rem;
+    object-fit: cover;
+    box-shadow: 0 6px 20px -10px hsl(var(--foreground) / 0.28);
+  }
+
+  .site-info-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin: 0;
+  }
+
+  .site-info-field {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid hsl(var(--border) / 0.55);
+    border-radius: 0.875rem;
+    background: color-mix(in oklab, hsl(var(--background)) 68%, hsl(var(--card)));
+  }
+
+  .site-info-label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .site-info-value-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .site-info-value {
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: anywhere;
+    color: hsl(var(--foreground));
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  a.site-info-value {
+    text-decoration-color: hsl(var(--border));
+    text-underline-offset: 3px;
+  }
+
+  a.site-info-value:hover {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+  }
+
+  .site-info-copy {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-height: 2rem;
+    padding: 0.375rem 0.625rem;
+    border: 1px solid hsl(var(--border) / 0.8);
+    border-radius: 0.625rem;
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background-color 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .site-info-copy svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .site-info-copy:hover:not(:disabled) {
+    border-color: hsl(var(--primary) / 0.6);
+    background: color-mix(in oklab, hsl(var(--primary)) 8%, hsl(var(--card)));
+  }
+
+  .site-info-copy:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .site-info-copy:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 3px;
+  }
+
+  .site-info-copy[data-copy-success='true'] {
+    border-color: color-mix(in oklab, hsl(var(--primary)) 50%, hsl(var(--border)));
+    background: color-mix(in oklab, hsl(var(--primary)) 12%, hsl(var(--card)));
+    color: hsl(var(--primary));
+  }
+
+  .site-info-copy:disabled {
+    cursor: default;
+    opacity: 0.9;
+  }
+
+  @media (max-width: 600px) {
+    .site-info-card {
+      border-radius: 1rem;
+    }
+
+    .site-info-avatar {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 0.875rem;
+    }
+
+    .site-info-field {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.375rem;
+      padding: 0.75rem;
+    }
+
+    .site-info-value-wrap {
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .site-info-copy {
+      padding-inline: 0.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-info-copy {
+      transition: none;
+    }
+  }
+</style>
