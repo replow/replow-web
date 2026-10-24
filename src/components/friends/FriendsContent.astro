@@ -1,6 +1,7 @@
 ---
 import PageIntro from '@components/common/PageIntro.astro';
 import FriendsGrid from '@components/friends/FriendsGrid.astro';
+import SiteInfoCard from '@components/friends/SiteInfoCard.astro';
 import { friendsData } from '@constants/friends-config';
 import { Comment } from '@/components/comment';
 import FriendRequestForm from '@/components/replow/FriendApplication.astro';
@@ -14,6 +15,7 @@ const { locale = defaultLocale } = Astro.props;
 
 <div class="index-surface shadow-box flex flex-col gap-8">
   <PageIntro className="page-intro-flush" stats={[{ value: friendsData.length, label: t(locale, 'friends.countUnit') }]} />
+  <SiteInfoCard />
   <FriendsGrid locale={locale} />
   <div class="mb-4">
     <FriendRequestForm />
