@@ -79,7 +79,7 @@ const isPostPage = stripLocaleFromPath(Astro.url.pathname).startsWith('/post/');
   /* Preview-only chrome; this branch must not affect the production site. */
   .preview-environment-badge {
     position: fixed;
-    right: max(12px, env(safe-area-inset-right, 0px));
+    right: max(72px, calc(env(safe-area-inset-right, 0px) + 72px));
     bottom: max(12px, env(safe-area-inset-bottom, 0px));
     z-index: 999999;
     padding: 6px 12px;
