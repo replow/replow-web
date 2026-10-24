@@ -2,6 +2,19 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { articleMarkdown, footerHtml, makeSiteConfig, validSlug } from './replow-data.mjs';
 
+function findNavigationItem(items, name) {
+  for (const item of items) {
+    if (item.name === name) return item;
+    const nested = findNavigationItem(item.children ?? [], name);
+    if (nested) return nested;
+  }
+  return undefined;
+}
+
+function flattenNavigation(items) {
+  return items.flatMap((item) => [item, ...flattenNavigation(item.children ?? [])]);
+}
+
 test('public permalinks and real cover survive theme conversion', () => {
   const output = articleMarkdown({
     title: '中文文章',
@@ -17,6 +30,7 @@ test('public permalinks and real cover survive theme conversion', () => {
   assert.throws(() => validSlug('../secret'));
   assert.throws(() => articleMarkdown({ status: 'draft' }));
 });
+
 test('footer updates status link, theme and release while preserving legal and uptime', () => {
   const output = footerHtml(
     'Theme Firefly | Power By Astro Version：v26.9.26 Update：2 <a href="https://api.4z.ink">API 站</a><a href="/privacy">隐私协议</a><time data-site-uptime></time>',
@@ -29,7 +43,8 @@ test('footer updates status link, theme and release while preserving legal and u
   assert.match(output, /href="https:\/\/status\.4z\.ink">Status<\/a>/);
   assert.doesNotMatch(output, /api\.4z\.ink|API 站/);
 });
-test('mapping removes sample content and preserves social order', () => {
+
+test('mapping groups header navigation and deduplicates preview account links', () => {
   const mapped = makeSiteConfig(
     { site: {}, content: {} },
     {
@@ -43,6 +58,9 @@ test('mapping removes sample content and preserves social order', () => {
           ],
         },
         koharuConfig: { postCardImagePosition: 'right' },
+        navBarConfig: {
+          links: [{ name: '账号中心', url: 'https://account.preview.replow.org/', external: true }],
+        },
       },
     },
     [],
@@ -51,7 +69,18 @@ test('mapping removes sample content and preserves social order', () => {
   assert.equal(mapped.content.postCardImagePosition, 'right');
   assert.deepEqual(mapped.featuredSeries, []);
   assert.deepEqual(mapped.friends.data, []);
-  const status = mapped.navigation.find((item) => item.name === 'Status');
+  assert.deepEqual(mapped.navigation.map((item) => item.name), ['主页', '文章', '阅读', '发现', '站点']);
+  assert.deepEqual(mapped.navigation.find((item) => item.name === '文章')?.children?.map((item) => item.name), [
+    '归档',
+    '分类',
+    '标签',
+  ]);
+  const status = findNavigationItem(mapped.navigation, 'Status');
   assert.equal(status?.path, 'https://status.4z.ink');
   assert.equal(status?.localeIndependent, true);
+  const accountLinks = flattenNavigation(mapped.navigation).filter((item) =>
+    /account(?:\.preview)?\.replow\.org/.test(item.path ?? ''),
+  );
+  assert.equal(accountLinks.length, 1);
+  assert.equal(accountLinks[0].path, 'https://account.replow.org/');
 });
