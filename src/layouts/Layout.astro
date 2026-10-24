@@ -64,6 +64,7 @@ const isPostPage = stripLocaleFromPath(Astro.url.pathname).startsWith('/post/');
     <slot name="head" />
   </head>
   <body>
+    <div class="preview-environment-badge" role="note" aria-label="Preview 测试环境">PREVIEW · 测试环境</div>
     <AppShell articleTools={articleTools} post={post} siderType={siderType} isPostPage={isPostPage}>
       <slot />
     </AppShell>
@@ -75,6 +76,46 @@ const isPostPage = stripLocaleFromPath(Astro.url.pathname).startsWith('/post/');
 </html>
 
 <style is:global>
+  /* Preview-only chrome; this branch must not affect the production site. */
+  .preview-environment-badge {
+    position: fixed;
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    z-index: 999999;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #78350f;
+    font: 12px/1.5 system-ui, sans-serif;
+    font-weight: 600;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Footer HTML is refreshed by the API: use styling that survives replacements. */
+  .replow-footer .footer-version-line::after {
+    content: 'Preview';
+    order: 1;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #78350f;
+    font-size: .75rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .replow-footer .footer-version-line::before {
+    content: '预览不代表最终品质';
+    order: 2;
+    flex: 0 0 100%;
+    margin-top: .2rem;
+    color: hsl(var(--muted-foreground));
+    font-size: .78rem;
+    font-weight: 400;
+    text-align: center;
+  }
+
   /* Progressive enhancement: scroll-state is experimental, browsers that don't support it will just not show the feather mask */
   @supports (container-type: scroll-state) {
     .scroll-feather-mask {
