@@ -47,9 +47,10 @@ const { friend } = Astro.props;
   <Icon name="ri:arrow-right-up-line" class="friend-arrow" aria-hidden="true" />
 </a>
 
-<style>
+<style is:global>
   /* A name card on a neutral surface: the configured color rings the avatar and floods in on hover. */
   .friend-card {
+    --friend-color: hsl(var(--primary));
     position: relative;
     display: flex;
     align-items: center;
@@ -81,6 +82,13 @@ const { friend } = Astro.props;
     box-shadow:
       0 0 0 2px hsl(var(--card)),
       0 0 0 3.5px color-mix(in oklab, var(--friend-color) 70%, transparent);
+  }
+
+  .friend-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .friend-copy {
@@ -151,7 +159,7 @@ const { friend } = Astro.props;
       color: color-mix(in oklab, var(--friend-color) 65%, hsl(var(--foreground)));
     }
 
-    :global(html:not(.dark)) .friend-card:hover .friend-name {
+    html:not(.dark) .friend-card:hover .friend-name {
       color: color-mix(in oklab, var(--friend-color) 35%, hsl(var(--foreground)));
     }
 
@@ -161,20 +169,20 @@ const { friend } = Astro.props;
 
     /* Micro-interactions: the avatar leans in as its ring brightens, the arrow slides out of the corner. */
     @media (prefers-reduced-motion: no-preference) {
-      :global(html:not([data-motion='reduced'])) .friend-avatar {
+      html:not([data-motion='reduced']) .friend-avatar {
         transition:
           transform 420ms cubic-bezier(0.34, 1.4, 0.64, 1),
           box-shadow 240ms ease;
       }
 
-      :global(html:not([data-motion='reduced'])) .friend-arrow {
+      html:not([data-motion='reduced']) .friend-arrow {
         transform: translate(-4px, 4px);
         transition:
           transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
           opacity 200ms ease;
       }
 
-      :global(html:not([data-motion='reduced'])) .friend-card:hover .friend-avatar {
+      html:not([data-motion='reduced']) .friend-card:hover .friend-avatar {
         transform: rotate(-8deg) scale(1.06);
         box-shadow:
           0 0 0 2px hsl(var(--card)),
@@ -182,18 +190,18 @@ const { friend } = Astro.props;
           0 6px 16px -6px color-mix(in oklab, var(--friend-color) 80%, transparent);
       }
 
-      :global(html:not([data-motion='reduced'])) .friend-card:hover .friend-arrow {
+      html:not([data-motion='reduced']) .friend-card:hover .friend-arrow {
         transform: translate(0, 0);
       }
     }
   }
 
   @media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference) {
-    :global(html:is([data-motion='lively'], [data-motion='subtle'])) .friend-card {
+    html:is([data-motion='lively'], [data-motion='subtle']) .friend-card {
       transition: transform 180ms ease-out;
     }
 
-    :global(html:is([data-motion='lively'], [data-motion='subtle'])) .friend-card:active {
+    html:is([data-motion='lively'], [data-motion='subtle']) .friend-card:active {
       transform: scale(0.98);
     }
   }
