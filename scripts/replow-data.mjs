@@ -90,23 +90,60 @@ export function makeSiteConfig(base, payload, friends) {
   }
   yaml.navigation = [
     { name: '主页', path: '/', icon: 'ri:home-4-line' },
-    { name: '归档', path: '/archives', icon: 'ri:archive-line' },
-    { name: '番茄小说', path: '/fanqie', icon: 'ri:book-open-line' },
-    { name: '阅读书架', path: '/reading', icon: 'ri:book-shelf-line' },
-    { name: '分类', path: '/categories', icon: 'ri:folder-line' },
-    { name: '标签', path: '/tags', icon: 'ri:price-tag-3-line' },
-    ...(oldSite.pages?.dynamic !== false ? [{ name: '动态', path: '/dynamic', icon: 'ri:chat-3-line' }] : []),
-    ...(oldSite.pages?.friends !== false ? [{ name: '友链', path: '/friends', icon: 'ri:links-line' }] : []),
-    { name: '相册', path: '/gallery', icon: 'ri:gallery-line' },
-    { name: '关于', path: '/about', icon: 'ri:information-line' },
-    { name: 'Status', path: 'https://status.4z.ink', icon: 'ri:heart-pulse-line', localeIndependent: true },
-    { name: '账号中心', path: 'https://account.replow.org/', icon: 'ri:account-circle-line', localeIndependent: true },
+    {
+      name: '文章',
+      icon: 'ri:article-line',
+      children: [
+        { name: '归档', path: '/archives', icon: 'ri:archive-line' },
+        { name: '分类', path: '/categories', icon: 'ri:folder-line' },
+        { name: '标签', path: '/tags', icon: 'ri:price-tag-3-line' },
+      ],
+    },
+    {
+      name: '阅读',
+      icon: 'ri:book-open-line',
+      children: [
+        { name: '番茄小说', path: '/fanqie', icon: 'ri:book-open-line' },
+        { name: '阅读书架', path: '/reading', icon: 'ri:book-shelf-line' },
+      ],
+    },
+    {
+      name: '发现',
+      icon: 'ri:compass-3-line',
+      children: [
+        ...(oldSite.pages?.dynamic !== false ? [{ name: '动态', path: '/dynamic', icon: 'ri:chat-3-line' }] : []),
+        ...(oldSite.pages?.friends !== false ? [{ name: '友链', path: '/friends', icon: 'ri:links-line' }] : []),
+        { name: '相册', path: '/gallery', icon: 'ri:gallery-line' },
+      ],
+    },
+    {
+      name: '站点',
+      icon: 'ri:global-line',
+      children: [
+        { name: '关于', path: '/about', icon: 'ri:information-line' },
+        { name: 'Status', path: 'https://status.4z.ink', icon: 'ri:heart-pulse-line', localeIndependent: true },
+        { name: '账号中心', path: 'https://account.replow.org/', icon: 'ri:account-circle-line', localeIndependent: true },
+      ],
+    },
   ];
+  // The preview build rewrites the canonical account URL to account.preview.replow.org.
+  // Treat both hosts as the same navigation destination so the API-provided preview link
+  // does not create a duplicate top-level entry.
+  const canonicalNavPath = (value) => {
+    const canonical = value.replace(/^https:\/\/account\.preview\.replow\.org\/?$/, 'https://account.replow.org');
+    return canonical === '/' ? '/' : canonical.replace(/\/+$/, '');
+  };
+  const hasNavPath = (items, path) =>
+    items.some(
+      (item) =>
+        (typeof item.path === 'string' && canonicalNavPath(item.path) === canonicalNavPath(path)) ||
+        hasNavPath(item.children || [], path),
+    );
   for (const link of f.navBarConfig?.links || []) {
     if (
       typeof link.url === 'string' &&
       /^(https?:\/\/|\/(?!\/))/.test(link.url) &&
-      !yaml.navigation.some((item) => item.path === link.url)
+      !hasNavPath(yaml.navigation, link.url)
     ) {
       yaml.navigation.push({
         name: link.name || link.url,
