@@ -11,11 +11,16 @@ import {
   type ArticlePayload
 } from "@/api/replow";
 import { message } from "@/utils/message";
+import { useArticleDraft } from "@/composables/useArticleDraft";
+import ArticleVersions from "@/components/ArticleVersions.vue";
+import { getToken } from "@/utils/auth";
+import { contentError } from "@/api/contentTools";
 import MediaPicker from "@/components/MediaPicker.vue";
 
 defineOptions({ name: "ReplowArticles" });
 
 type ArticleForm = {
+  _base_token: string;
   title: string;
   slug: string;
   excerpt: string;
@@ -41,6 +46,7 @@ const formRef = ref<FormInstance>();
 const fileInput = ref<HTMLInputElement>();
 
 const emptyForm = (): ArticleForm => ({
+  _base_token: "",
   title: "",
   slug: "",
   excerpt: "",
@@ -54,6 +60,18 @@ const emptyForm = (): ArticleForm => ({
 });
 
 const form = reactive<ArticleForm>(emptyForm());
+const revisionToken = ref("");
+const draft = useArticleDraft(form, dialogVisible, editingId, () => {
+  try { return JSON.parse(atob(getToken().accessToken.split(".")[1])).sub; } catch { return "unknown"; }
+}, async () => {
+  try { await ElMessageBox.confirm("发现尚未提交的自动保存草稿，是否恢复到编辑器？", "恢复草稿", {confirmButtonText:"恢复草稿",cancelButtonText:"使用当前文章"}); return true; } catch { return false; }
+});
+async function restored(article: Record<string,unknown>) {
+  applyArticle(article as ArticleItem);
+  await draft.clear();
+  await load();
+  await draft.begin();
+}
 const rules = {
   title: [{ required: true, message: "请输入文章标题", trigger: "blur" }],
   body_markdown: [{ required: true, message: "请输入 Markdown 正文", trigger: "blur" }]
@@ -80,6 +98,8 @@ function resetForm() {
 }
 
 function applyArticle(article: ArticleItem) {
+  revisionToken.value = article.revision_token || "";
+  form._base_token = revisionToken.value;
   Object.assign(form, {
     title: article.title || "",
     slug: article.slug || "",
@@ -94,9 +114,10 @@ function applyArticle(article: ArticleItem) {
   });
 }
 
-function openCreate() {
-  resetForm();
+async function openCreate() {
+  resetForm(); revisionToken.value = "";
   dialogVisible.value = true;
+  await draft.begin();
 }
 
 async function openEdit(row: ArticleItem) {
@@ -108,6 +129,7 @@ async function openEdit(row: ArticleItem) {
   try {
     const result = await getAdminArticle(row.id);
     if (result.data) applyArticle(result.data);
+    await draft.begin();
   } catch {
     message("文章详情读取失败，已显示列表中的内容", { type: "warning" });
   } finally {
@@ -131,6 +153,7 @@ function handleTitleInput() {
 
 function payload(): ArticlePayload {
   return {
+    _base_token: form._base_token || undefined,
     title: form.title.trim(),
     slug: form.slug.trim() || slugify(form.title),
     excerpt: form.excerpt.trim(),
@@ -156,7 +179,7 @@ function errorText(error: any, fallback: string) {
     invalid_article_status: "文章状态无效",
     title_required: "文章标题不能为空"
   };
-  return labels[detail] || fallback;
+  return labels[detail] || contentError(error, fallback);
 }
 
 async function save() {
@@ -172,6 +195,7 @@ async function save() {
       await createArticle(data);
       message("文章已创建", { type: "success" });
     }
+    await draft.clear();
     dialogVisible.value = false;
     await load();
   } catch (error) {
@@ -282,7 +306,8 @@ onMounted(load);
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="editingId ? '编辑文章' : '新建文章'" width="min(94vw, 920px)" destroy-on-close>
-      <el-form ref="formRef" v-loading="editingLoading" :model="form" :rules="rules" label-position="top" class="article-form">
+      <el-alert :title="draft.status.value" type="info" :closable="false" style="margin-bottom:14px" />
+      <el-form ref="formRef" :disabled="saving || editingLoading" v-loading="editingLoading" :model="form" :rules="rules" label-position="top" class="article-form">
         <el-row :gutter="18">
           <el-col :xs="24" :md="14"><el-form-item label="标题" prop="title"><el-input v-model="form.title" maxlength="200" show-word-limit @input="handleTitleInput" /></el-form-item></el-col>
           <el-col :xs="24" :md="10"><el-form-item label="Slug"><el-input v-model="form.slug" maxlength="220" @input="slugTouched = true"><template #append><el-button @click="form.slug = slugify(form.title); slugTouched = true">生成</el-button></template></el-input></el-form-item></el-col>
@@ -299,7 +324,7 @@ onMounted(load);
           <el-col :span="24"><el-form-item label="Markdown 正文" prop="body_markdown"><el-input v-model="form.body_markdown" type="textarea" :rows="18" placeholder="在这里编写文章正文…" /></el-form-item></el-col>
         </el-row>
       </el-form>
-      <template #footer><el-button @click="dialogVisible = false">取消</el-button><el-button type="primary" :loading="saving" @click="save">保存文章</el-button></template>
+      <template #footer><ArticleVersions v-if="editingId" :article-id="editingId" :current="form" :token="form._base_token" @restored="restored"/><el-button @click="dialogVisible = false">取消</el-button><el-button type="primary" :loading="saving" @click="save">保存文章</el-button></template>
     </el-dialog>
   </div>
 </template>
