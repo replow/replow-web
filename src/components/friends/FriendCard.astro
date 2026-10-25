@@ -9,14 +9,14 @@ interface Props {
 }
 
 const { friend } = Astro.props;
-const normalizeUrl = (url: string) => url.replace(/\\/+$/, '');
+const normalizeUrl = (url: string) => url.replace(/\/+$/, '');
 const fallback = snapshot.friends.find((item) => normalizeUrl(item.website_url) === normalizeUrl(friend.url));
 const latestTitle = fallback?.latest_article_title?.trim() ?? '';
-const latestUrl = /^https?:\\/\\//i.test(fallback?.latest_article_url ?? '') ? fallback?.latest_article_url : '';
+const latestUrl = /^https?:\/\//i.test(fallback?.latest_article_url ?? '') ? fallback?.latest_article_url : '';
 const showLatest = Boolean(latestTitle && latestUrl);
 const friendDomain = (() => {
   try {
-    return new URL(friend.url).hostname.replace(/^www\\./i, '');
+    return new URL(friend.url).hostname.replace(/^www\./i, '');
   } catch {
     return friend.url;
   }
@@ -215,7 +215,7 @@ const friendDomain = (() => {
       transform 200ms ease;
   }
 
-  .friend-arrow :global(svg) {
+  .friend-arrow svg {
     width: 0.875rem;
     height: 0.875rem;
   }
@@ -267,7 +267,7 @@ const friendDomain = (() => {
     background: color-mix(in oklab, var(--friend-color) 15%, hsl(var(--card)));
   }
 
-  .friend-rss-icon :global(svg),
+  .friend-rss-icon svg,
   .friend-latest-arrow {
     width: 0.875rem;
     height: 0.875rem;
