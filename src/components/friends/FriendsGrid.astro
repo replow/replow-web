@@ -48,7 +48,7 @@ const sections = groupFriendLinks(friendsData, friendGroups).map(({ group, frien
           {section.description && <p class="friends-section-desc">{section.description}</p>}
           {section.friends.length > 0 ? (
             <div class="friends-grid grid">
-              {section.friends.map((friend) => <FriendCard friend={friend} />)}
+              {section.friends.map((friend, index) => <FriendCard friend={friend} id={section.id + '-' + index} />)}
             </div>
           ) : (
             <div class="friends-section-empty">
@@ -61,7 +61,7 @@ const sections = groupFriendLinks(friendsData, friendGroups).map(({ group, frien
     </>
   ) : (
     <div class="friends-grid grid">
-      {friendsData.map((friend) => <FriendCard friend={friend} />)}
+      {friendsData.map((friend, index) => <FriendCard friend={friend} id={'ungrouped-' + index} />)}
     </div>
   )}
 </div>
