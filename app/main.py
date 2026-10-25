@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 
 from app.api.v1 import account, admin, admin_apikeys, admin_tools, auth, comments, dynamics, gallery, oauth, public
+from app.api.v1.content_tools import admin_router as content_admin, account_router as content_account
 from app.core.config import get_settings
 from app.core.security import decode_token
 from app.core.request_context import request_context
@@ -247,6 +248,8 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(account.router, prefix=settings.api_prefix)
 app.include_router(comments.router, prefix=settings.api_prefix)
 app.include_router(admin.router, prefix=settings.api_prefix)
+app.include_router(content_admin, prefix=settings.api_prefix)
+app.include_router(content_account, prefix=settings.api_prefix)
 app.include_router(fq_admin_router, prefix=settings.api_prefix)
 app.include_router(admin_tools.router, prefix=settings.api_prefix)
 app.include_router(gallery.router, prefix=settings.api_prefix)
@@ -270,6 +273,8 @@ if settings.api_prefix != "/v1":
     app.include_router(account.router, prefix="/v1")
     app.include_router(comments.router, prefix="/v1")
     app.include_router(admin.router, prefix="/v1")
+    app.include_router(content_admin, prefix="/v1")
+    app.include_router(content_account, prefix="/v1")
     app.include_router(fq_admin_router, prefix="/v1")
     app.include_router(admin_tools.router, prefix="/v1")
     app.include_router(gallery.router, prefix="/v1")

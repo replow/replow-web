@@ -679,6 +679,10 @@ class MediaStorageService:
         return updated
 
     def delete(self, media_id: int, actor_id: Optional[int] = None) -> bool:
+        from app.services.media_trash import MediaTrash
+        return MediaTrash(self.db, actor_id).trash(media_id, actor_id)
+
+    def purge(self, media_id: int, actor_id: Optional[int] = None) -> bool:
         item = self.repository.get_media(media_id)
         if not item:
             return False

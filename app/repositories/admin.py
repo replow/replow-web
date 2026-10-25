@@ -5,6 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.repositories.public import article_row
+from app.services.article_history import record_version
 
 
 class AdminRepository:
@@ -95,13 +96,16 @@ class AdminRepository:
             ),
             self._article_params(data, actor_id),
         )
+        article_id = int(result.lastrowid)
+        record_version(self.db, article_id, self.get_article(article_id), actor_id, "create")
         self.db.commit()
-        return self.get_article(int(result.lastrowid)) or {}
+        return self.get_article(article_id) or {}
 
     def update_article(self, article_id: int, data: dict[str, Any]) -> Optional[dict]:
         existing = self.get_article(article_id)
         if not existing:
             return None
+        record_version(self.db, article_id, existing, data.get("_actor_id"), "before_save")
         params = {
             "article_id": article_id,
             "title": data.get("title", existing["title"]),
@@ -132,6 +136,7 @@ class AdminRepository:
             ),
             params,
         )
+        record_version(self.db, article_id, self.get_article(article_id), data.get("_actor_id"), data.get("_reason", "save"))
         self.db.commit()
         return self.get_article(article_id)
 
@@ -277,7 +282,7 @@ class AdminRepository:
         return result.rowcount > 0
 
     def media(self, limit: int = 100, offset: int = 0) -> tuple[list[dict], int]:
-        total = int(self.db.execute(text("SELECT COUNT(*) FROM media_objects")).scalar_one())
+        total = int(self.db.execute(text("SELECT COUNT(*) FROM media_objects WHERE deleted_at IS NULL")).scalar_one())
         rows = self.db.execute(
             text(
                 """
@@ -288,6 +293,7 @@ class AdminRepository:
                        u.username AS uploader_username
                 FROM media_objects AS m
                 LEFT JOIN users AS u ON u.uid = m.uploader_id
+                WHERE m.deleted_at IS NULL
                 ORDER BY m.created_at DESC, m.id DESC
                 LIMIT :limit OFFSET :offset
                 """
@@ -300,13 +306,13 @@ class AdminRepository:
         """Privacy boundary: ownership filtering happens in SQL, before pagination."""
         params = {"uid": uploader_id, "limit": limit, "offset": offset}
         total = int(self.db.execute(
-            text("SELECT COUNT(*) FROM media_objects WHERE uploader_id=:uid"), params
+            text("SELECT COUNT(*) FROM media_objects WHERE uploader_id=:uid AND deleted_at IS NULL"), params
         ).scalar_one())
         rows = self.db.execute(text("""
             SELECT id, object_key, public_url, original_name, mime_type,
                    byte_size, category, storage_backend, sha256, created_at, uploader_id
             FROM media_objects
-            WHERE uploader_id=:uid
+            WHERE uploader_id=:uid AND deleted_at IS NULL
             ORDER BY created_at DESC, id DESC
             LIMIT :limit OFFSET :offset
         """), params).mappings().all()
@@ -315,7 +321,7 @@ class AdminRepository:
     def rename_owned_media(self, media_id: int, uploader_id: int, name: str) -> Optional[dict]:
         result = self.db.execute(text("""
             UPDATE media_objects SET original_name=:name
-            WHERE id=:id AND uploader_id=:uid
+            WHERE id=:id AND uploader_id=:uid AND deleted_at IS NULL
         """), {"name": name, "id": media_id, "uid": uploader_id})
         if not result.rowcount:
             self.db.rollback()

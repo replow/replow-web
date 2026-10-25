@@ -25,7 +25,11 @@ def _tags(value: Any) -> list[str]:
 
 def article_row(row: dict[str, Any]) -> dict[str, Any]:
     published = row.get("published_at") or row.get("updated_at") or row.get("created_at")
+    from app.services.article_history import fingerprint
+    normalized = dict(row)
+    normalized["tags"] = _tags(row.get("tags"))
     return {
+        "revision_token": fingerprint(normalized),
         "id": int(row.get("id") or 0),
         "title": str(row.get("title") or ""),
         "slug": str(row.get("slug") or ""),
