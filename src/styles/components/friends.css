@@ -26,10 +26,10 @@
   cursor: pointer;
   text-align: left;
   transition:
-    background-color 280ms ease,
-    box-shadow 280ms ease,
-    transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 280ms ease;
+    background-color 360ms ease,
+    box-shadow 360ms ease,
+    transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 360ms ease;
 }
 
 .friend-card-summary:focus-visible {
@@ -112,9 +112,9 @@
   transform: translate(-50%, -50%) scale(0.88);
   transform-origin: center;
   transition:
-    opacity 300ms ease,
-    transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    visibility 0s linear 480ms;
+    opacity 380ms ease,
+    transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 650ms;
   visibility: hidden;
 }
 
