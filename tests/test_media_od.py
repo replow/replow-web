@@ -112,12 +112,30 @@ class MediaODTests(unittest.TestCase):
                 self.s.confirm_direct_upload(prepared["ticket"],10001)
             call.assert_not_called()
 
-    def test_od_delete_failure_keeps_database_record(self):
+    def test_soft_delete_uses_trash_without_cloud_deletion(self):
+        from app.services.media_trash import MediaTrash
+        with patch.object(MediaTrash, "item", return_value={"deleted_at": None}), \
+             patch.object(MediaTrash, "references", return_value={"total": 0, "items": []}), \
+             patch("app.services.media_storage.od_call") as cloud:
+            self.assertTrue(self.s.delete(1))
+        cloud.assert_not_called()
+        self.s.repository.delete_media.assert_not_called()
+        self.db.commit.assert_called_once()
+
+    def test_od_purge_failure_keeps_database_record(self):
         self.s.repository.get_media.return_value={"storage_backend":"od","object_key":b"media/site/fixture.txt"}
         with patch("app.services.media_storage.od_call", side_effect=OneDriveStorageError("fixture")):
             with self.assertRaises(MediaError):
-                self.s.delete(1)
+                self.s.purge(1)
         self.s.repository.delete_media.assert_not_called()
+
+    def test_od_purge_success_removes_database_record(self):
+        self.s.repository.get_media.return_value={"storage_backend":"od","object_key":b"media/site/fixture.txt"}
+        self.s.repository.delete_media.return_value = True
+        with patch("app.services.media_storage.od_call") as cloud:
+            self.assertTrue(self.s.purge(1))
+        cloud.assert_called_once_with("delete", key="media/site/fixture.txt")
+        self.s.repository.delete_media.assert_called_once_with(1)
 
     def test_pdf_and_archive_allowed_but_executable_blocked(self):
         self.assertEqual(self.s._direct_content_type("application/pdf","fixture.pdf"),"application/pdf")
