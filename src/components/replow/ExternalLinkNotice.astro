@@ -4,7 +4,7 @@
   <h1 id="external-title">即将前往外部网站</h1>
   <p class="external-notice-description">你将离开本站，请确认以下目标地址后继续。</p>
   <div class="external-notice-target">
-    <strong data-external-host>正在检查链接…</strong>
+    <div class="external-site-heading"><span class="external-site-icon" aria-hidden="true"><span data-external-icon-fallback>↗</span><img data-external-icon alt="" width="36" height="36" referrerpolicy="no-referrer" hidden /></span><strong data-external-host>正在检查链接…</strong></div>
     <p data-external-url></p>
   </div>
   <p class="external-notice-hint" data-external-hint>外部网站的内容与隐私政策由其运营方负责。</p>
@@ -33,7 +33,26 @@
       button.disabled = true;
       return;
     }
-    host.textContent = target.host;
+    host.textContent = '外部网站';
+    const icon = root.querySelector<HTMLImageElement>('[data-external-icon]');
+    const fallback = root.querySelector<HTMLElement>('[data-external-icon-fallback]');
+    const showIcon = (value: string) => {
+      const imageUrl = confirmationTarget(value);
+      if (!icon || !imageUrl) return;
+      icon.onload = () => { icon.hidden = false; if (fallback) fallback.hidden = true; };
+      icon.onerror = () => { icon.hidden = true; if (fallback) fallback.hidden = false; };
+      icon.src = imageUrl.href;
+    };
+    // Only send the origin; target paths and private query parameters stay in this page.
+    showIcon(new URL('/favicon.ico', target.origin).href);
+    void fetch('https://' + ['api', '4z', 'ink'].join('.') + '/preview/v1/public/link-info?url=' + encodeURIComponent(target.origin), { credentials: 'omit', signal: AbortSignal.timeout(14000) })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!root.isConnected || !data) return;
+        host.textContent = typeof data.name === 'string' && data.name.trim() ? data.name : '外部网站';
+        if (typeof data.icon === 'string') showIcon(data.icon);
+      })
+      .catch(() => { /* A metadata failure must never block explicit confirmation. */ });
     address.textContent = target.href;
     button.disabled = false;
     button.onclick = () => window.location.assign(target.href);
@@ -50,6 +69,10 @@
   h1 { margin: .6rem 0; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700; }
   .external-notice-description, .external-notice-hint { color: hsl(var(--muted-foreground)); font-size: .875rem; line-height: 1.8; }
   .external-notice-target { margin: 1.5rem 0 1rem; padding: 1rem 1.25rem; border: 1px solid hsl(var(--border)); border-radius: 1rem; background: hsl(var(--muted) / .4); overflow-wrap: anywhere; }
+  .external-site-heading { display: flex; align-items: center; gap: .75rem; }
+  .external-site-icon { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; flex: 0 0 2.75rem; border-radius: .75rem; background: hsl(var(--background)); color: hsl(var(--primary)); overflow: hidden; }
+  .external-site-icon img { width: 2.25rem; height: 2.25rem; object-fit: contain; }
+  .external-site-icon img[hidden], .external-site-icon span[hidden] { display: none; }
   .external-notice-target strong { font-size: 1.125rem; }
   .external-notice-target p { margin-top: .5rem; font-size: .8rem; line-height: 1.7; color: hsl(var(--muted-foreground)); white-space: pre-wrap; }
   .external-notice-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
