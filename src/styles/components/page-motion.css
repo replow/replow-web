@@ -1,0 +1,65 @@
+/* Shared motion for utility and index pages. Keep readers and modal positioning untouched. */
+@media (prefers-reduced-motion: no-preference) {
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off)
+    :is(.page-intro, .gallery-toolbar, .dynamic-toolbar, .reading-heading, .fq-page-heading) {
+    --rise-y: 1rem;
+    animation: motion-rise 1100ms var(--ease-out-expo) backwards;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) :is(.index-tabs, .fq-steps, .reading-storage-note) {
+    --rise-y: 0.6rem;
+    animation: motion-rise 1000ms var(--ease-out-expo) 140ms backwards;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) :is(.gallery-lightbox, .reading-dialog)[open] {
+    animation: motion-fade 550ms var(--ease-out-quart) backwards;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off)
+    :is(.gallery-lightbox, .reading-dialog)[open]::backdrop {
+    animation: motion-fade 650ms ease-out backwards;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off)
+    :is(.gallery-album, .fq-results .fq-book, .reading-book) {
+    transition:
+      transform 750ms var(--ease-out-expo),
+      box-shadow 750ms var(--ease-out-quart),
+      border-color 550ms ease;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off)
+    :is(.gallery-album > img, .gallery-photo img, .dynamic-images img) {
+    transition: transform 1200ms var(--ease-out-expo);
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) .post-row {
+    transition:
+      background-color 550ms var(--ease-out-quart),
+      transform 650ms var(--ease-out-expo);
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) .post-row::before {
+    transition:
+      opacity 500ms ease,
+      transform 750ms var(--ease-out-expo);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off)
+      :is(.gallery-album, .fq-results .fq-book, .reading-book):is(:hover, :focus-within) {
+      transform: translateY(calc(-5px * var(--motion-travel)));
+      border-color: hsl(var(--primary) / 0.35);
+      box-shadow: 0 14px 30px -18px hsl(var(--primary) / 0.35);
+    }
+
+    html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off)
+      :is(.gallery-album:hover > img, .gallery-photo:hover img, .dynamic-images a:hover img) {
+      transform: scale(1.045);
+    }
+
+    html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) .post-row:has(.post-row-title:hover) {
+      transform: translateX(calc(3px * var(--motion-travel)));
+    }
+  }
+}

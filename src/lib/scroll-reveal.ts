@@ -12,7 +12,7 @@
 import type { MotionLevel } from '@lib/config/types';
 import { readMotionLevel, subscribeMotionLevel } from '@lib/motion-level';
 
-const REVEAL_SELECTOR = '.motion-reveal';
+const REVEAL_SELECTOR = '.motion-reveal, .gallery-album, .gallery-photo, .dynamic-entry, .fq-book, .reading-book';
 const PROSE_SELECTOR = '.motion-reveal-lively > *';
 const REVEAL_ANIMATIONS = new Set(['motion-rise', 'motion-fade']);
 const INSTANT_BATCH = 3;
