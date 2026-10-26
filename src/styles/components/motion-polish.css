@@ -37,7 +37,7 @@
 }
 
 @media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  html:is([data-motion="lively"], [data-motion="subtle"]) .post-item-cover::after {
+  html:is([data-motion="lively"], [data-motion="subtle"]) :is(.post-item-cover, .replow-live-cover)::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -47,7 +47,9 @@
     transition: transform 1200ms var(--ease-out-quart);
   }
 
-  html:is([data-motion="lively"], [data-motion="subtle"]) .post-item-card:is(:hover, :focus-within) .post-item-cover::after {
+  html:is([data-motion="lively"], [data-motion="subtle"])
+    .post-item-card:is(:hover, :focus-within)
+    :is(.post-item-cover, .replow-live-cover)::after {
     transform: translateX(120%);
   }
 
@@ -64,5 +66,29 @@
 
   html:is([data-motion="lively"], [data-motion="subtle"]) .index-tabs button:hover {
     translate: 0 -2px;
+  }
+}
+
+/* API-refreshed cards use independent markup and must keep the same motion. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) .replow-live-card {
+    transition:
+      transform var(--dur-slow) var(--ease-out-quart),
+      box-shadow var(--dur-slow) var(--ease-out-quart);
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) .replow-live-cover {
+    position: relative;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) .replow-live-cover img {
+    transition: transform 1200ms var(--ease-out-quart);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    html:is([data-motion="lively"], [data-motion="subtle"]):not(.motion-off) .replow-live-card:is(:hover, :focus-within) {
+      transform: translateY(calc(-4px * var(--motion-travel)));
+      box-shadow: 0 18px 36px -18px hsl(var(--primary) / 0.35);
+    }
   }
 }

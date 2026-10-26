@@ -18,7 +18,7 @@ function articleCard(article: PublicArticle, index: number) {
   const position = snapshot.firefly.koharuConfig.postCardImagePosition;
   const left = position === 'left' || (position !== 'right' && index % 2 === 0);
   return (
-    '<article class="post-item-card replow-live-card shadow-card" data-api-slug="' +
+    '<article class="post-item-card replow-live-card motion-reveal shadow-card" data-api-slug="' +
     escapeHtml(article.slug) +
     '">' +
     '<a class="replow-live-cover ' +
