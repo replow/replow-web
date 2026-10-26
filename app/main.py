@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 
+from app.api.v1.link_info import router as link_info_router
 from app.api.v1 import account, admin, admin_apikeys, admin_tools, auth, comments, dynamics, gallery, oauth, public
 from app.api.v1.content_tools import admin_router as content_admin, account_router as content_account
 from app.core.config import get_settings
@@ -53,6 +54,7 @@ def _public_path(path: str) -> bool:
     if path == "/healthz":
         return True
     public_exact = {
+        "/v1/public/link-info",
         "/v1/public/site",
         "/v1/public/articles",
         "/v1/public/friends",
@@ -245,6 +247,7 @@ from app.fq.reading import router as reading_router
 app.include_router(reading_router)
 app.include_router(fq_router)
 app.include_router(fqapp_state_router)
+app.include_router(link_info_router)
 app.include_router(public.router, prefix=settings.api_prefix)
 app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(account.router, prefix=settings.api_prefix)
