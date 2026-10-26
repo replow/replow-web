@@ -75,7 +75,7 @@ def parse_metadata(text, page_url):
     p = urlsplit(icon)
     if p.scheme not in ("http", "https") or p.username or p.password:
         icon = urljoin(page_url, "/favicon.ico")
-    return {"name": re.sub(r"\\s+", " ", parser.site or parser.title).strip()[:160], "icon": icon}
+    return {"name": re.sub(r"\s+", " ", parser.site or parser.title).strip()[:160], "icon": icon}
 
 
 def fetch_metadata(value):
@@ -104,7 +104,7 @@ def fetch_metadata(value):
                 if response.status != 200 or "html" not in response.getheader("Content-Type", "").lower():
                     break
                 payload = response.read(262144)
-                match = re.search(r"charset=([\\w-]+)", response.getheader("Content-Type", ""), re.I)
+                match = re.search(r"charset=([\w-]+)", response.getheader("Content-Type", ""), re.I)
                 encoding = match.group(1) if match else "utf-8"
                 result = parse_metadata(payload.decode(encoding, errors="replace"), url)
                 break
