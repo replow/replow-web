@@ -52,6 +52,9 @@
     0 0 0 3.5px color-mix(in oklab, var(--friend-color) 70%, transparent);
 }
 
+.dark .friend-avatar {
+  background: #000;
+}
 
 .friend-avatar img {
   position: relative;
