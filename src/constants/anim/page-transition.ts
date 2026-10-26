@@ -8,8 +8,8 @@ import { animation } from '../design-tokens';
  * keep the two snapshots synchronized throughout the longer page transition.
  */
 const crossFade: TransitionAnimationPair = {
-  old: { name: 'astroFadeOut', duration: '600ms', easing: animation.easing['out-quart'], fillMode: 'both' },
-  new: { name: 'astroFadeIn', duration: '600ms', easing: animation.easing['out-quart'], fillMode: 'both' },
+  old: { name: 'astroFadeOut', duration: '680ms', easing: animation.easing['out-quart'], fillMode: 'both' },
+  new: { name: 'astroFadeIn', duration: '680ms', easing: animation.easing['out-quart'], fillMode: 'both' },
 };
 
 export const pageTransition: TransitionDirectionalAnimations = {

@@ -23,8 +23,8 @@
   --dur-instant: 120ms;
   --dur-fast: 200ms;
   --dur-base: 320ms;
-  --dur-slow: 650ms;
-  --dur-enter: 1100ms;
+  --dur-slow: 720ms;
+  --dur-enter: 1150ms;
 
   /* Scales entrance travel and blur; the subtle level halves it. */
   --motion-travel: 1;

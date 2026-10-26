@@ -47,7 +47,7 @@
     transition: transform 1200ms var(--ease-out-quart);
   }
 
-  html:is([data-motion="lively"], [data-motion="subtle"]) .post-item-card:hover .post-item-cover::after {
+  html:is([data-motion="lively"], [data-motion="subtle"]) .post-item-card:is(:hover, :focus-within) .post-item-cover::after {
     transform: translateX(120%);
   }
 

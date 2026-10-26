@@ -22,6 +22,7 @@
 @import "./theme/encrypted-block.css";
 @import "./components/wave.css";
 @import "./components/cover.css";
+@import "./components/site-motion.css";
 @import "./components/header.css";
 @import "./components/segmented.css";
 @import "./components/drawer.css";

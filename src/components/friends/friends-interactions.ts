@@ -96,7 +96,7 @@ function init() {
     for (const tab of tabs) tab.setAttribute('aria-pressed', String(tab.dataset.friendsFilter === id));
     if (readMotionLevel() !== 'reduced') {
       for (const section of sections) {
-        if (!section.hidden) section.animate({ opacity: [0, 1] }, { duration: 180, easing: 'ease-out' });
+        if (!section.hidden) section.animate({ opacity: [0, 1] }, { duration: 650, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' });
       }
     }
   };

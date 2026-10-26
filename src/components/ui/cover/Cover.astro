@@ -159,32 +159,6 @@ const copyFailedLabel = t(locale, 'common.copyFailed');
 </div>
 
 <script>
-  import { readMotionLevel, subscribeMotionLevel } from '@lib/motion-level';
-
-  /**
-   * First visit only: the banner settles from a slight zoom without hiding its first paint.
-   * A cached banner is painted before this module runs, so animating it would visibly jump.
-   */
-  function settleBanner() {
-    const image = document.querySelector<HTMLImageElement>('#banner-box img');
-    if (!image || image.complete || readMotionLevel() === 'reduced') return;
-    image.addEventListener(
-      'load',
-      () => {
-        if (readMotionLevel() === 'reduced') return;
-        const easing = 'cubic-bezier(0.25, 1, 0.5, 1)';
-        const animations = [
-          image.animate({ scale: [1.08, 1] }, { duration: 1800, easing }),
-        ];
-        const unsubscribe = subscribeMotionLevel(() => {
-          if (readMotionLevel() === 'reduced') animations.forEach((animation) => animation.cancel());
-        });
-        void Promise.allSettled(animations.map((animation) => animation.finished)).then(unsubscribe);
-      },
-      { once: true },
-    );
-  }
-
   function installCoverCopyButtons() {
     document.querySelectorAll<HTMLButtonElement>('.cover-copy-link:not([data-copy-ready])').forEach((button) => {
       button.dataset.copyReady = 'true';
@@ -208,7 +182,6 @@ const copyFailedLabel = t(locale, 'common.copyFailed');
     });
   }
 
-  settleBanner();
   installCoverCopyButtons();
   document.addEventListener('astro:page-load', installCoverCopyButtons);
 </script>

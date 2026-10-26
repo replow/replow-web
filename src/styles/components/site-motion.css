@@ -1,0 +1,80 @@
+/* Decorative accents share the existing motion levels and never gate interaction. */
+@keyframes silune-cover-settle {
+  from {
+    scale: calc(1 + 0.055 * var(--motion-travel));
+  }
+  to {
+    scale: 1;
+  }
+}
+
+@keyframes silune-title-line {
+  from {
+    opacity: 0;
+    scale: 0 1;
+  }
+  to {
+    opacity: 0.8;
+    scale: 1 1;
+  }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  /* Animate the picture wrapper so the image retains its scroll parallax. CSS also
+     handles cached artwork before first paint; persisted banners do not restart. */
+  html:is([data-motion="lively"], [data-motion="subtle"]) #banner-box picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+    animation: silune-cover-settle 2600ms var(--ease-out-quart) both;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]) [data-runtime-hero-title] {
+    position: relative;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]) [data-runtime-hero-title]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 20%;
+    bottom: -0.7rem;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, #fff, #f7b9d3, transparent);
+    box-shadow: 0 0 12px rgb(255 205 229 / 0.5);
+    pointer-events: none;
+    animation: silune-title-line 1400ms var(--ease-out-expo) 400ms both;
+  }
+
+  /* Details arrive in a short cascade after the friend card begins to expand. */
+  html:is([data-motion="lively"], [data-motion="subtle"]) .friend-card-details > * {
+    opacity: 0;
+    translate: 0 calc(0.5rem * var(--motion-travel));
+    transition:
+      opacity 550ms var(--ease-out-quart),
+      translate 800ms var(--ease-out-expo);
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"])
+    .friend-card:is(:hover, :focus-within, [data-friend-expanded="true"])
+    .friend-card-details
+    > * {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: 90ms;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"])
+    .friend-card:is(:hover, :focus-within, [data-friend-expanded="true"])
+    .friend-card-details
+    > :nth-child(2) {
+    transition-delay: 150ms;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"])
+    .friend-card:is(:hover, :focus-within, [data-friend-expanded="true"])
+    .friend-card-details
+    > :nth-child(n + 3) {
+    transition-delay: 220ms;
+  }
+}
