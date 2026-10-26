@@ -1,0 +1,12 @@
+---
+import { getLocaleStaticPaths } from '../_shared/utils';
+import GoPage from '../go.astro';
+export const getStaticPaths = getLocaleStaticPaths;
+
+interface Props {
+  locale: string;
+}
+
+const { locale } = Astro.props;
+---
+<GoPage locale={locale} />

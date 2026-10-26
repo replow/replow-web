@@ -1,0 +1,61 @@
+<section class="external-notice motion-rise" aria-labelledby="external-title" data-external-notice>
+  <div class="external-notice-icon" aria-hidden="true">↗</div>
+  <p class="external-notice-eyebrow">LEAVING SILUNE</p>
+  <h1 id="external-title">即将前往外部网站</h1>
+  <p class="external-notice-description">你将离开本站，请确认以下目标地址后继续。</p>
+  <div class="external-notice-target">
+    <strong data-external-host>正在检查链接…</strong>
+    <p data-external-url></p>
+  </div>
+  <p class="external-notice-hint" data-external-hint>外部网站的内容与隐私政策由其运营方负责。</p>
+  <div class="external-notice-actions">
+    <a href="/">留在本站</a>
+    <button type="button" data-external-confirm disabled>确认跳转 ↗</button>
+  </div>
+  <noscript>请启用 JavaScript 以验证目标地址并确认跳转。</noscript>
+</section>
+
+<script>
+  import { confirmationTarget } from '@/lib/replow/external-link';
+  function initExternalNotice() {
+    const root = document.querySelector<HTMLElement>('[data-external-notice]');
+    if (!root) return;
+    const host = root.querySelector<HTMLElement>('[data-external-host]');
+    const address = root.querySelector<HTMLElement>('[data-external-url]');
+    const hint = root.querySelector<HTMLElement>('[data-external-hint]');
+    const button = root.querySelector<HTMLButtonElement>('[data-external-confirm]');
+    const target = confirmationTarget(new URLSearchParams(window.location.search).get('url') ?? '');
+    if (!host || !address || !hint || !button) return;
+    if (!target) {
+      host.textContent = '链接无效';
+      hint.textContent = '仅支持有效的 HTTP 或 HTTPS 地址，且地址不能包含账号密码。';
+      address.textContent = '';
+      button.disabled = true;
+      return;
+    }
+    host.textContent = target.host;
+    address.textContent = target.href;
+    button.disabled = false;
+    button.onclick = () => window.location.assign(target.href);
+  }
+  if (document.readyState !== 'loading') initExternalNotice();
+  else document.addEventListener('DOMContentLoaded', initExternalNotice, { once: true });
+  document.addEventListener('astro:page-load', initExternalNotice);
+</script>
+
+<style>
+  .external-notice { width: min(100% - 2rem, 38rem); margin: 8rem auto 4rem; padding: clamp(1.5rem, 5vw, 3rem); border: 1px solid hsl(var(--border)); border-radius: 1.75rem; background: hsl(var(--card)); color: hsl(var(--foreground)); box-shadow: 0 24px 80px -48px hsl(var(--primary) / .45); }
+  .external-notice-icon { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; margin-bottom: 1.5rem; border-radius: 1rem; background: hsl(var(--primary) / .1); color: hsl(var(--primary)); font-size: 2rem; }
+  .external-notice-eyebrow { color: hsl(var(--primary)); font-size: .7rem; font-weight: 700; letter-spacing: .16em; }
+  h1 { margin: .6rem 0; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700; }
+  .external-notice-description, .external-notice-hint { color: hsl(var(--muted-foreground)); font-size: .875rem; line-height: 1.8; }
+  .external-notice-target { margin: 1.5rem 0 1rem; padding: 1rem 1.25rem; border: 1px solid hsl(var(--border)); border-radius: 1rem; background: hsl(var(--muted) / .4); overflow-wrap: anywhere; }
+  .external-notice-target strong { font-size: 1.125rem; }
+  .external-notice-target p { margin-top: .5rem; font-size: .8rem; line-height: 1.7; color: hsl(var(--muted-foreground)); white-space: pre-wrap; }
+  .external-notice-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+  .external-notice-actions a, button { display: inline-flex; justify-content: center; align-items: center; min-height: 2.75rem; padding: .75rem 1.25rem; border-radius: .875rem; font-size: .875rem; font-weight: 600; }
+  .external-notice-actions a { background: hsl(var(--muted)); }
+  button { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); cursor: pointer; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  a:focus-visible, button:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 4px; }
+</style>

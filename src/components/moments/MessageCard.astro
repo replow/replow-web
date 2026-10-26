@@ -133,6 +133,7 @@ const railDate = publishedDate?.slice(5);
 </article>
 
 <script>
+  import { guardedLink } from '@lib/replow/external-link';
   const cardInteractiveSelector =
     'a, button, input, select, textarea, summary, video, audio, spoiler-span, [data-static-spoiler], [role="button"], [contenteditable="true"]';
   type TooltipElement = HTMLElement & {
@@ -158,7 +159,7 @@ const railDate = publishedDate?.slice(5);
       const card = event.target.closest<HTMLElement>('.moments-message-card[data-message-href]');
       const selection = window.getSelection();
       if (!card?.dataset.messageHref || (selection && !selection.isCollapsed)) return;
-      const url = new URL(card.dataset.messageHref, window.location.href).href;
+      const url = guardedLink(new URL(card.dataset.messageHref, window.location.href).href, window.location.href);
       if (event.metaKey || event.ctrlKey) window.open(url, '_blank', 'noopener');
       else window.location.assign(url);
     }, { signal });

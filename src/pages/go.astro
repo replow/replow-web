@@ -1,0 +1,14 @@
+---
+import ExternalLinkNotice from '@/components/replow/ExternalLinkNotice.astro';
+import Layout from '@/layouts/Layout.astro';
+
+interface Props {
+  locale?: string;
+}
+const { locale } = Astro.props;
+---
+<Layout title="外部链接跳转 | Silune" locale={locale} articleTools={false}>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+  <meta slot="head" name="referrer" content="no-referrer" />
+  <ExternalLinkNotice />
+</Layout>

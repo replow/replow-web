@@ -1,4 +1,5 @@
 import { readMotionLevel } from '@lib/motion-level';
+import { guardedLink } from '@lib/replow/external-link';
 import { normalizeFriendHostname, safeFriendUrl } from '@lib/replow/friend-card';
 
 interface StatusMonitor {
@@ -127,13 +128,13 @@ function init() {
           return;
         }
         event.preventDefault();
-        window.open(url, '_blank', 'noopener,noreferrer');
+        window.open(guardedLink(url, window.location.href), '_blank', 'noopener,noreferrer');
         return;
       }
 
       if (summary) {
         event.preventDefault();
-        window.open(url, '_blank', 'noopener,noreferrer');
+        window.open(guardedLink(url, window.location.href), '_blank', 'noopener,noreferrer');
       }
     },
     { signal: controller.signal },
