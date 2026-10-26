@@ -53,6 +53,7 @@ const { post, siderType, isPostPage, articleTools = true } = Astro.props;
 </div>
 
 <script>
+  import { installExternalLinkGuard } from '@/lib/replow/external-link-client';
   import { motionConfig } from '@constants/site-config';
   import { setupArrivalRender } from '@lib/arrival-render';
   import { setupHeaderContinuity } from '@lib/header-continuity';
@@ -70,6 +71,7 @@ const { post, siderType, isPostPage, articleTools = true } = Astro.props;
     }
   });
 
+  installExternalLinkGuard();
   setupMorphTransitions();
   setupHeaderContinuity();
   setupArrivalRender();
