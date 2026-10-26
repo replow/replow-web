@@ -45,6 +45,7 @@
   flex: 0 0 3.5rem;
   overflow: hidden;
   border-radius: 50%;
+  /* Transparent avatar pixels use a plain white backing. */
   background: #fff;
   box-shadow:
     0 0 0 2px hsl(var(--card)),
