@@ -45,12 +45,6 @@ function renderAvatar(value: unknown) {
     : '';
   return (
     '<span class="friend-avatar">' +
-    '<svg class="friend-avatar-fallback" viewBox="0 0 100 100" aria-hidden="true">' +
-    '<rect width="100" height="100" fill="hsl(var(--primary))" />' +
-    '<g fill="hsl(var(--card))"><circle cx="30" cy="45" r="6" /><circle cx="70" cy="45" r="6" /></g>' +
-    '<path d="M 35 65 Q 50 75 65 65" stroke="hsl(var(--card))" stroke-width="4" fill="none" stroke-linecap="round" />' +
-    '<g fill="hsl(var(--card))" opacity="0.5"><circle cx="20" cy="55" r="6" /><circle cx="80" cy="55" r="6" /></g>' +
-    '</svg>' +
     image +
     '</span>'
   );
