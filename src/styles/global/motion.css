@@ -23,8 +23,8 @@
   --dur-instant: 120ms;
   --dur-fast: 200ms;
   --dur-base: 320ms;
-  --dur-slow: 480ms;
-  --dur-enter: 760ms;
+  --dur-slow: 650ms;
+  --dur-enter: 1100ms;
 
   /* Scales entrance travel and blur; the subtle level halves it. */
   --motion-travel: 1;
@@ -60,7 +60,7 @@ html[data-motion="subtle"] {
   /* Load-time entrance: stagger with `--i` (and an optional `--rise-delay` offset). */
   html:is([data-motion="lively"], [data-motion="subtle"]) .motion-rise {
     animation: motion-rise var(--dur-enter) var(--ease-out-expo) both;
-    animation-delay: calc(var(--rise-delay, 0ms) + var(--i, 0) * var(--stagger, 90ms));
+    animation-delay: calc(var(--rise-delay, 0ms) + var(--i, 0) * var(--stagger, 120ms));
   }
 
   /* Scroll reveals; src/lib/scroll-reveal.ts marks which elements wait and when they play. */
@@ -70,7 +70,7 @@ html[data-motion="subtle"] {
 
   html:is([data-motion="lively"], [data-motion="subtle"]) [data-reveal="in"] {
     animation: motion-rise var(--dur-enter) var(--ease-out-expo) backwards;
-    animation-delay: calc(var(--reveal-i, 0) * 70ms);
+    animation-delay: calc(var(--reveal-i, 0) * 110ms);
   }
 
   /* Prose only fades: a moving block suppresses scroll anchoring while embeds above it are still growing. */
@@ -81,7 +81,7 @@ html[data-motion="subtle"] {
 
 /* Shared-element morphs (e.g. post card title → cover title) between ClientRouter pages. */
 ::view-transition-group(*) {
-  animation-duration: 520ms;
+  animation-duration: 800ms;
   animation-timing-function: var(--ease-in-out-quart);
 }
 

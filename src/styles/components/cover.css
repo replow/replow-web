@@ -22,8 +22,8 @@
 .cover-copy {
   --rise-y: 1.75rem;
   --rise-blur: 10px;
-  --rise-delay: 120ms;
-  --stagger: 110ms;
+  --rise-delay: 160ms;
+  --stagger: 180ms;
 }
 
 .cover-copy :is(h1, h2) {

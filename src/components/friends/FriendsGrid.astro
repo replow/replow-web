@@ -39,7 +39,7 @@ const sections = groupFriendLinks(friendsData, friendGroups).map(({ group, frien
         <p class="text-muted-foreground text-sm">{t(locale, 'friends.emptyDesc')}</p>
       </div>}
       {sections.map((section) => (
-        <section id={`friends-${section.id}`} class="friends-section" data-friends-section={section.id} data-empty={section.friends.length === 0 || undefined} tabindex="-1">
+        <section id={`friends-${section.id}`} class="friends-section motion-reveal" data-friends-section={section.id} data-empty={section.friends.length === 0 || undefined} tabindex="-1">
           <h2 class="year-rule friends-section-rule">
             <SakuraSVG className="year-rule-bloom" />
             <span>{section.title}</span>

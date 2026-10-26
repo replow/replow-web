@@ -6,6 +6,7 @@
 @import "./christmas/christmas-theme.css";
 @import "./global/animate.css";
 @import "./global/motion.css";
+@import "./components/motion-polish.css";
 @import "./global/tailwind.css";
 @import "./global/scrollbar.css";
 
