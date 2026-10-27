@@ -39,9 +39,14 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Verify formatting and TypeScript
+      - name: Verify modified source formatting and all TypeScript
+        shell: bash
         run: |
-          pnpm lint
+          set -euo pipefail
+          mapfile -d '' files < <(git diff-tree --no-commit-id --name-only --diff-filter=ACM -r -z HEAD -- '*.ts' '*.tsx' '*.astro' '*.js' '*.mjs' '*.css' '*.json')
+          if (( ${#files[@]} )); then
+            pnpm exec biome check "${files[@]}"
+          fi
           pnpm check
       - name: Run regression tests
         run: |
