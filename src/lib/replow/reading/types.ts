@@ -32,3 +32,16 @@ export interface Progress {
   chapter: string;
   updated: number;
 }
+
+export interface ReadingBookmark {
+  id: string;
+  cfi: string;
+  chapter: string;
+  percentage: number;
+  created: number;
+}
+
+export interface ReadingStats {
+  seconds: number;
+  updated: number;
+}

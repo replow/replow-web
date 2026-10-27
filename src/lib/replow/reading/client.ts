@@ -6,8 +6,17 @@ import { chapterCounts } from './chapter-progress';
 import { prepareBook } from './download';
 import { inspectEpub } from './epub';
 import { waitForReading } from './loading';
-import { localFile, localProgress, localShelf, removeLocalBook, saveFile, saveShelf } from './storage';
-import type { LocalFile, ShelfBook } from './types';
+import {
+  localFile,
+  localProgress,
+  localReadingStats,
+  localShelf,
+  removeLocalBook,
+  saveFile,
+  saveProgress,
+  saveShelf,
+} from './storage';
+import type { LocalFile, Progress, ShelfBook } from './types';
 import './style.css';
 
 const active = new Map<HTMLElement, () => void>();
@@ -95,12 +104,28 @@ function mount(root: HTMLElement) {
     setTab('shelf');
     const ticket = revision;
     content.replaceChildren(el('p', 'fq-muted', '正在读取本机书籍…'));
-    const [availability, progressValues] = await Promise.all([
+    const [availability, progressValues, readingTimes] = await Promise.all([
       Promise.all(books.map((b) => localFile(uid, b.id))),
       Promise.all(books.map((b) => localProgress(uid, b.id))),
+      Promise.all(books.map((b) => localReadingStats(uid, b.id))),
     ]);
+    const conflicts = new Map<string, { local: Progress; remote: Progress; localNewer: boolean }>();
     books.forEach((item, index) => {
       const local = progressValues[index];
+      if (local?.cfi && item.cfi && local.cfi !== item.cfi) {
+        conflicts.set(item.id, {
+          local,
+          remote: {
+            cfi: item.cfi,
+            chapter: item.chapter,
+            percentage: item.percentage,
+            read_chapters: item.read_chapters,
+            total_chapters: item.total_chapters,
+            updated: item.updated_at * 1000,
+          },
+          localNewer: local.updated > item.updated_at * 1000,
+        });
+      }
       if (local && local.updated > item.updated_at * 1000) Object.assign(item, local, { updated_at: local.updated / 1000 });
     });
     if (ticket !== revision || controller.signal.aborted) return;
@@ -136,6 +161,8 @@ function mount(root: HTMLElement) {
       }
       const chapterCount = el('p', 'reading-chapter-count', chapterText(item, cached));
       info.append(chapterCount);
+      const minutes = Math.floor((readingTimes[index]?.seconds || 0) / 60);
+      if (minutes) info.append(el('p', 'reading-time', `本设备累计阅读 ${minutes} 分钟`));
       if (!item.total_chapters) pendingCounts.push({ item, cached, node: chapterCount });
       const progress = el('progress');
       progress.max = 100;
@@ -149,6 +176,27 @@ function mount(root: HTMLElement) {
           item.chapter ? `${item.chapter} · 约 ${item.percentage.toFixed(1)}%` : '还未开始，故事正等着你',
         ),
       );
+      const conflict = conflicts.get(item.id);
+      if (conflict) {
+        const note = el(
+          'p',
+          'reading-sync-conflict',
+          `本机和云端的阅读位置不同，已优先使用${conflict.localNewer ? '本机' : '云端'}较新的进度。`,
+        );
+        const choose = button(
+          conflict.localNewer ? '改用云端进度' : '恢复本机进度',
+          () => {
+            void run(async () => {
+              const selected = conflict.localNewer ? conflict.remote : conflict.local;
+              await saveProgress(uid, item.id, { ...selected, updated: Date.now() });
+              await showShelf();
+            });
+          },
+          true,
+        );
+        note.append(' ', choose);
+        info.append(note);
+      }
       const actions = el('div', 'reading-book-actions');
       const continueButton = button(
         cached ? '继续阅读' : item.source === 'fanqie' ? '保存到本机并阅读' : '重新导入 EPUB',
@@ -163,6 +211,29 @@ function mount(root: HTMLElement) {
       continueButton.classList.add('reading-read-button');
       continueButton.setAttribute('aria-label', continueButton.textContent || '继续阅读');
       actions.append(continueButton);
+      if (item.source === 'fanqie') {
+        actions.append(
+          button(
+            '检查目录更新',
+            () => {
+              void run(async () => {
+                const result = await client.request<{ total_chapters: number }>(`/books/${item.source_id}/toc`);
+                const latest = Number(result.total_chapters || 0);
+                if (!latest) throw new Error('暂时无法获取最新目录，请稍后再试。');
+                const added = Math.max(0, latest - (item.total_chapters || 0));
+                if (latest !== item.total_chapters) {
+                  item.total_chapters = latest;
+                  await client.request(`/reading/shelf/${item.id}/progress`, { total_chapters: latest });
+                  await saveShelf(uid, books);
+                }
+                statusLine(root, added ? `发现 ${added} 个新目录条目，下次保存 EPUB 时可更新。` : '目录已是最新。');
+                chapterCount.textContent = chapterText(item, cached);
+              });
+            },
+            true,
+          ),
+        );
+      }
       if (cached)
         actions.append(
           button(

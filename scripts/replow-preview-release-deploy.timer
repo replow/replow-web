@@ -1,0 +1,11 @@
+[Unit]
+Description=Poll verified Silune preview release every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=replow-preview-release-deploy.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,89 @@
+name: Verify preview and auto-publish
+
+on:
+  push:
+    branches: [preview]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: preview-auto-publish
+  cancel-in-progress: false
+
+jobs:
+  verify-and-publish:
+    if: github.ref == 'refs/heads/preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      API_BASE_URL: https://api.4z.ink
+      REPLOW_RELEASE: v26.10.28-u${{ github.run_number }}
+      NODE_OPTIONS: --max-old-space-size=4096
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout preview with history
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Install pnpm
+        uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
+        with:
+          version: 10.28.2
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.20.0'
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify formatting and TypeScript
+        run: |
+          pnpm lint
+          pnpm check
+      - name: Run regression tests
+        run: |
+          pnpm test:replow
+          pnpm test:gallery
+          pnpm test:dynamics
+          node --import tsx --test src/lib/replow/reading/*.test.ts
+      - name: Build preview from public production data
+        run: pnpm build
+      - name: Smoke-check routes and package immutable release
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in index.html reading/index.html fanqie/index.html friends/index.html pagefind/pagefind.js; do
+            test -s "dist/$path"
+          done
+          tar -C dist -czf preview-astro.tar.gz .
+          sha256sum preview-astro.tar.gz > preview-astro.tar.gz.sha256
+      - name: Publish preview artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="preview-build-${GITHUB_RUN_NUMBER}"
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$tag" preview-astro.tar.gz preview-astro.tar.gz.sha256 \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Preview static build #${GITHUB_RUN_NUMBER}" \
+              --notes "Validated preview build from commit ${GITHUB_SHA}; SHA-256 manifest included." \
+              --prerelease
+          fi
+      - name: Fast-forward production after every gate passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git merge-base --is-ancestor origin/main HEAD || {
+            echo 'Production diverged from preview; refusing automatic merge.' >&2
+            exit 1
+          }
+          if [ "$(git rev-parse origin/main)" != "$(git rev-parse HEAD)" ]; then
+            git push origin HEAD:main
+          fi
+      - name: Dispatch verified production build
+        run: gh workflow run astro-build.yml --repo "$GITHUB_REPOSITORY" --ref main

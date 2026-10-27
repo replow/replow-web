@@ -3,9 +3,11 @@ import type { NavItem } from 'epubjs/types/navigation';
 import type { Location } from 'epubjs/types/rendition';
 import type { FqClient } from '../fanqie/api';
 import { button, el } from '../fanqie/view';
+import { createBookmarkControls } from './bookmark-controls';
 import { inspectEpub } from './epub';
 import { waitForReading } from './loading';
-import { localProgress, saveProgress } from './storage';
+import { createReadingTimeCounter } from './read-time';
+import { localProgress, localReadingStats, saveProgress, saveReadingStats } from './storage';
 import { bindPageSwipe } from './swipe';
 import type { Progress, ShelfBook } from './types';
 
@@ -29,6 +31,7 @@ export async function openReader(
   let opening = true;
   let saveTimer = 0;
   let current: Progress | undefined;
+  let readTime: ReturnType<typeof createReadingTimeCounter> | undefined;
   const listeners = new AbortController();
   const dialog = el('dialog', 'reading-dialog');
   dialog.setAttribute('aria-label', `${item.title} EPUB 阅读器`);
@@ -84,9 +87,14 @@ export async function openReader(
     flow.append(option);
   }
   try {
-    const old = JSON.parse(localStorage.getItem(`miro.reader.settings.${uid}`) || '{}') as { size?: number; theme?: string };
+    const old = JSON.parse(localStorage.getItem(`miro.reader.settings.${uid}`) || '{}') as {
+      size?: number;
+      theme?: string;
+      flow?: string;
+    };
     if (old.size) size.value = String(Math.min(32, Math.max(14, old.size)));
     if (old.theme && old.theme in palettes) theme.value = old.theme;
+    if (old.flow === 'paginated' || old.flow === 'scrolled-doc') flow.value = old.flow;
   } catch {
     /* Defaults work when browser settings are unavailable. */
   }
@@ -95,6 +103,13 @@ export async function openReader(
   const sync = el('span', 'reading-sync', '进度保存在本机');
   async function flush() {
     window.clearTimeout(saveTimer);
+    if (readTime) {
+      try {
+        await saveReadingStats(uid, item.id, { seconds: readTime.seconds(), updated: Date.now() });
+      } catch {
+        /* Reading progress can still be synced even if statistics fail. */
+      }
+    }
     if (!current) return;
     const snapshot = { ...current };
     try {
@@ -119,6 +134,7 @@ export async function openReader(
     if (closed) return;
     closed = true;
     window.clearTimeout(saveTimer);
+    if (readTime) void saveReadingStats(uid, item.id, { seconds: readTime.seconds(), updated: Date.now() }).catch(() => {});
     observer.disconnect();
     listeners.abort();
     if (!opening) epub.destroy();
@@ -196,6 +212,7 @@ export async function openReader(
       flow: 'paginated',
       allowScriptedContent: false,
     });
+    if (flow.value === 'scrolled-doc') rendition.flow('scrolled-doc');
     const spine = await epub.loaded.spine;
     const navigation = await epub.loaded.navigation;
     const chapterIndices: number[] = [];
@@ -249,7 +266,10 @@ export async function openReader(
       });
       sizeValue.value = size.value;
       try {
-        localStorage.setItem(`miro.reader.settings.${uid}`, JSON.stringify({ size: Number(size.value), theme: theme.value }));
+        localStorage.setItem(
+          `miro.reader.settings.${uid}`,
+          JSON.stringify({ size: Number(size.value), theme: theme.value, flow: flow.value }),
+        );
       } catch {
         /* Reading still works. */
       }
@@ -371,6 +391,32 @@ export async function openReader(
       status.textContent = '原阅读位置已失效，已从开头打开。';
     }
     if (closed) return;
+    const stats = await localReadingStats(uid, item.id).catch(() => undefined);
+    if (closed) return;
+    readTime = createReadingTimeCounter(stats?.seconds || 0);
+    if (document.hidden) readTime.pause();
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        if (document.hidden) readTime?.pause();
+        else readTime?.resume();
+      },
+      { signal: listeners.signal },
+    );
+    const bookmarks = await createBookmarkControls({
+      uid,
+      bookId: item.id,
+      getProgress: () => current,
+      onNavigate: (cfi) => {
+        void navigate(() => display(cfi));
+      },
+      onMessage: (message) => {
+        if (!closed) status.textContent = message;
+      },
+    });
+    if (closed) return;
+    controls.append(bookmarks.add, bookmarks.toggle);
+    viewport.before(bookmarks.panel);
     toc.addEventListener('change', () => {
       void navigate(() => display(toc.value || undefined));
     });

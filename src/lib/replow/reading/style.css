@@ -92,6 +92,27 @@
   font-size: 11px;
   margin-block: 4px 9px;
 }
+.reading-time {
+  margin: 0.25rem 0 0.6rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+}
+.reading-sync-conflict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem;
+  background: hsl(var(--primary) / 0.08);
+  color: hsl(var(--foreground));
+  font-size: 0.75rem;
+}
+.reading-sync-conflict .fq-button {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.72rem;
+}
 .reading-description {
   color: hsl(var(--muted-foreground));
   font-size: 12px;
@@ -263,6 +284,49 @@
 }
 .reading-settings[hidden] {
   display: none;
+}
+.reading-bookmark-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex-shrink: 0;
+  max-height: 35dvh;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #8883;
+  background: #8881;
+}
+.reading-bookmark-panel[hidden] {
+  display: none;
+}
+.reading-bookmark-panel h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.reading-bookmark-list {
+  display: grid;
+  gap: 0.5rem;
+}
+.reading-bookmark-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #8882;
+  font-size: 0.8rem;
+}
+.reading-bookmark-row > span {
+  flex: 1;
+  min-width: 10rem;
+}
+.reading-bookmark-row .fq-button {
+  border: 1px solid #8885;
+  background: transparent;
+  color: inherit;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
 }
 .reading-setting {
   display: flex;
