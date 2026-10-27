@@ -1,5 +1,4 @@
 ---
-import HomeQuickAccess from '@components/layout/HomeQuickAccess.astro';
 import HomeSider from '@components/layout/HomeSider.astro';
 import PostList from '@components/post/PostList.astro';
 import Cover from '@components/ui/cover/Cover.astro';
@@ -62,7 +61,6 @@ const page: Page<BlogPost> = {
     <div
       class={`bg-gradient-start shadow-box tablet:shadow-none flex flex-col gap-4 overflow-clip ${CONTENT_PADDING.standard}`}
     >
-      <HomeQuickAccess locale={locale} />
       <div id="home-posts" data-replow-home-posts>
       {stickyPosts.length > 0 && (
         <>
