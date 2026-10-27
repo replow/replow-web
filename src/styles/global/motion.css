@@ -23,8 +23,8 @@
   --dur-instant: 120ms;
   --dur-fast: 200ms;
   --dur-base: 320ms;
-  --dur-slow: 480ms;
-  --dur-enter: 760ms;
+  --dur-slow: 560ms;
+  --dur-enter: 880ms;
 
   /* Scales entrance travel and blur; the subtle level halves it. */
   --motion-travel: 1;
@@ -47,6 +47,14 @@ html[data-motion="subtle"] {
   }
 }
 
+/* A light page-surface entrance: opacity + translate stay on the compositor. */
+@keyframes motion-surface-enter {
+  from {
+    opacity: 0;
+    translate: 0 calc(0.9rem * var(--motion-travel));
+  }
+}
+
 /* Rise with a focus pull; reserve for a few large elements, blur is costly and flattens 3D children. */
 @keyframes motion-rise-focus {
   from {
@@ -61,6 +69,15 @@ html[data-motion="subtle"] {
   html:is([data-motion="lively"], [data-motion="subtle"]) .motion-rise {
     animation: motion-rise var(--dur-enter) var(--ease-out-expo) both;
     animation-delay: calc(var(--rise-delay, 0ms) + var(--i, 0) * var(--stagger, 90ms));
+  }
+
+  /* Shared rhythm for archive, search, tools, reading and other main surfaces. */
+  html:is([data-motion="lively"], [data-motion="subtle"]) .index-surface {
+    animation: motion-surface-enter var(--dur-enter) var(--ease-out-expo) both;
+  }
+
+  html:is([data-motion="lively"], [data-motion="subtle"]) [data-replow-home-posts] {
+    animation: motion-surface-enter var(--dur-enter) var(--ease-out-expo) 100ms both;
   }
 
   /* Scroll reveals; src/lib/scroll-reveal.ts marks which elements wait and when they play. */
@@ -81,7 +98,7 @@ html[data-motion="subtle"] {
 
 /* Shared-element morphs (e.g. post card title → cover title) between ClientRouter pages. */
 ::view-transition-group(*) {
-  animation-duration: 520ms;
+  animation-duration: 620ms;
   animation-timing-function: var(--ease-in-out-quart);
 }
 

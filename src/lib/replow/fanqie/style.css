@@ -86,6 +86,38 @@
   opacity: 0.55;
   cursor: wait;
 }
+.fq-submit-wait {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-block: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid hsl(var(--fq-primary) / 0.2);
+  border-radius: 0.9rem;
+  background: hsl(var(--fq-primary) / 0.055);
+}
+.fq-submit-wait p {
+  margin: 0;
+}
+.fq-submit-spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  border: 2px solid hsl(var(--fq-primary) / 0.2);
+  border-top-color: hsl(var(--fq-primary));
+  border-radius: 50%;
+  animation: fq-submit-spin 850ms linear infinite;
+}
+@keyframes fq-submit-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fq-submit-spinner {
+    animation: none;
+  }
+}
 .fq-secondary {
   background: hsl(var(--fq-bg));
   border-color: hsl(var(--fq-line));
@@ -664,9 +696,37 @@
 }
 
 /* Live per-task download timing */
-.fq-timing { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 4px 0 8px; }
-.fq-timing > div { display:flex; flex-direction:column; gap:5px; padding:12px 14px; border-radius:12px; background:hsl(var(--fq-primary) / .045); border:1px solid hsl(var(--fq-line)); min-width:0; }
-.fq-timing small { color:hsl(var(--fq-muted)); font-size:12px; }
-.fq-timing strong { font-variant-numeric:tabular-nums; font-size:15px; overflow-wrap:anywhere; }
-.fq-speed { margin:0 0 12px; font-size:12px; }
-@media (max-width:380px) { .fq-timing { grid-template-columns:1fr; } }
+.fq-timing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 4px 0 8px;
+}
+.fq-timing > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: hsl(var(--fq-primary) / 0.045);
+  border: 1px solid hsl(var(--fq-line));
+  min-width: 0;
+}
+.fq-timing small {
+  color: hsl(var(--fq-muted));
+  font-size: 12px;
+}
+.fq-timing strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.fq-speed {
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+@media (max-width: 380px) {
+  .fq-timing {
+    grid-template-columns: 1fr;
+  }
+}

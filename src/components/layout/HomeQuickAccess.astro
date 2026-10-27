@@ -1,0 +1,152 @@
+---
+import { Icon } from 'astro-icon/components';
+import { localizedPath } from '@/i18n';
+
+interface Props {
+  locale: string;
+}
+
+const { locale } = Astro.props;
+const destinations = [
+  { label: '最新文章', description: '看看最近记录了什么', href: '#home-posts', icon: 'ri:article-line', accent: 'rose' },
+  {
+    label: '番茄下载器',
+    description: '寻找下一本喜欢的小说',
+    href: localizedPath('/fanqie/', locale),
+    icon: 'ri:book-2-line',
+    accent: 'peach',
+  },
+  {
+    label: '阅读书架',
+    description: '从上次的章节继续',
+    href: localizedPath('/reading/', locale),
+    icon: 'ri:book-open-line',
+    accent: 'violet',
+  },
+  {
+    label: '个人动态',
+    description: '收集日常与小小灵感',
+    href: localizedPath('/dynamic/', locale),
+    icon: 'ri:chat-smile-3-line',
+    accent: 'blue',
+  },
+] as const;
+---
+
+<section class="home-quick-access motion-rise" aria-labelledby="home-quick-title">
+  <div class="home-quick-heading">
+    <div>
+      <p class="home-quick-eyebrow">EXPLORE · SILUNE</p>
+      <h2 id="home-quick-title">从这里，开始探索</h2>
+    </div>
+    <p class="home-quick-intro">文字、故事，还有一些有趣的小工具。</p>
+  </div>
+  <nav class="home-quick-grid" aria-label="站点快捷入口">
+    {
+      destinations.map((item) => (
+        <a class="home-quick-card" data-accent={item.accent} href={item.href}>
+          <span class="home-quick-icon" aria-hidden="true"><Icon name={item.icon} /></span>
+          <span class="home-quick-copy">
+            <strong>{item.label}</strong>
+            <small>{item.description}</small>
+          </span>
+          <Icon name="ri:arrow-right-up-line" class="home-quick-arrow" aria-hidden="true" />
+        </a>
+      ))
+    }
+  </nav>
+</section>
+
+<style>
+  .home-quick-access {
+    position: relative;
+    isolation: isolate;
+    margin-bottom: 0.5rem;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border: 1px solid hsl(var(--border) / 0.55);
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.075), transparent 56%), hsl(var(--card) / 0.7);
+  }
+  .home-quick-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin-bottom: 1.125rem;
+  }
+  .home-quick-eyebrow {
+    margin-bottom: 0.3rem;
+    color: hsl(var(--badge-primary));
+    font-size: 0.65rem;
+    font-weight: 750;
+    letter-spacing: 0.18em;
+  }
+  .home-quick-heading h2 {
+    font-size: clamp(1.15rem, 2.3vw, 1.45rem);
+    font-weight: 750;
+    letter-spacing: -0.03em;
+  }
+  .home-quick-intro {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.78rem;
+  }
+  .home-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+  .home-quick-card {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem;
+    border: 1px solid hsl(var(--border) / 0.62);
+    border-radius: 0.9rem;
+    background: hsl(var(--card) / 0.85);
+    box-shadow: 0 8px 20px -18px hsl(var(--foreground) / 0.18);
+    color: hsl(var(--foreground));
+    text-decoration: none;
+    transition:
+      translate var(--dur-slow) var(--ease-out-expo),
+      border-color var(--dur-base) var(--ease-out-quart),
+      box-shadow var(--dur-slow) var(--ease-out-quart),
+      background-color var(--dur-base) var(--ease-out-quart);
+  }
+  .home-quick-card:is(:hover, :focus-visible) {
+    translate: 0 -0.2rem;
+    border-color: hsl(var(--primary) / 0.45);
+    background: hsl(var(--card));
+    box-shadow: 0 14px 25px -16px hsl(var(--primary) / 0.27);
+  }
+  .home-quick-card:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
+  .home-quick-icon {
+    display: grid;
+    width: 2.6rem;
+    height: 2.6rem;
+    flex: 0 0 2.6rem;
+    place-items: center;
+    border-radius: 0.8rem;
+    background: hsl(var(--primary) / 0.11);
+    color: hsl(var(--badge-primary));
+    font-size: 1.25rem;
+  }
+  .home-quick-card[data-accent='peach'] .home-quick-icon { background: hsl(30 95% 65% / 0.14); color: hsl(24 79% 49%); }
+  .home-quick-card[data-accent='violet'] .home-quick-icon { background: hsl(270 90% 70% / 0.14); color: hsl(269 65% 63%); }
+  .home-quick-card[data-accent='blue'] .home-quick-icon { background: hsl(207 90% 67% / 0.14); color: hsl(207 75% 58%); }
+  .home-quick-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 0.2rem; }
+  .home-quick-copy strong { font-size: 0.9rem; font-weight: 700; }
+  .home-quick-copy small { color: hsl(var(--muted-foreground)); font-size: 0.72rem; line-height: 1.5; }
+  .home-quick-arrow { flex: 0 0 auto; align-self: flex-start; color: hsl(var(--muted-foreground) / 0.7); font-size: 1rem; transition: translate var(--dur-slow) var(--ease-out-expo); }
+  .home-quick-card:is(:hover, :focus-visible) .home-quick-arrow { translate: 0.15rem -0.15rem; color: hsl(var(--primary)); }
+  @media (max-width: 540px) {
+    .home-quick-grid { grid-template-columns: 1fr; }
+    .home-quick-card { padding: 0.7rem 0.8rem; }
+    .home-quick-heading { margin-bottom: 0.85rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .home-quick-card, .home-quick-arrow { transition: none; }
+    .home-quick-card:is(:hover, :focus-visible), .home-quick-card:is(:hover, :focus-visible) .home-quick-arrow { translate: none; }
+  }
+</style>

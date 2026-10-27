@@ -45,8 +45,13 @@ const publicApiBase = (import.meta.env.PUBLIC_API_BASE_URL || import.meta.env.PU
         if (publicSession) localStorage.setItem(sessionKey, JSON.stringify({ ...publicSession, verifiedAt: Date.now() }));
         else localStorage.removeItem(sessionKey);
       } catch { /* Private browsing may disable localStorage. */ }
+      const previous = window.__replowAuthSession;
       window.__replowAuthSession = publicSession;
-      document.dispatchEvent(new CustomEvent("replow:auth", { detail: publicSession }));
+      // Periodic verification refreshes the timestamp without repeatedly
+      // rebuilding the avatar/menu when public metadata has not changed.
+      if (JSON.stringify(previous) !== JSON.stringify(publicSession)) {
+        document.dispatchEvent(new CustomEvent("replow:auth", { detail: publicSession }));
+      }
     };
 
     const sync = async (force = false) => {
@@ -92,6 +97,7 @@ const publicApiBase = (import.meta.env.PUBLIC_API_BASE_URL || import.meta.env.PU
 
     // Cached metadata is for instant navbar display only: it is never
     // accepted as proof of authentication by the API.
+    let restoredSession = false;
     try {
       const cached = JSON.parse(localStorage.getItem(sessionKey) || "null");
       if (cached && typeof cached.username === "string" && cached.username &&
@@ -105,10 +111,15 @@ const publicApiBase = (import.meta.env.PUBLIC_API_BASE_URL || import.meta.env.PU
           expires: null
         };
         window.__replowAuthSession = preview;
+        restoredSession = true;
         document.dispatchEvent(new CustomEvent("replow:auth", { detail: preview }));
       }
     } catch { /* No usable cached metadata. */ }
-    sync();
+    // Cached identity is visible immediately; its network recheck can wait
+    // until the first frame is painted. A first-time login still checks now.
+    if (restoredSession && "requestIdleCallback" in window) {
+      window.requestIdleCallback(() => void sync(), { timeout: 600 });
+    } else void sync();
     window.addEventListener("storage", (event) => {
       if (event.key === null || (event.key === sessionKey && !event.newValue)) {
         revision++;
@@ -117,6 +128,8 @@ const publicApiBase = (import.meta.env.PUBLIC_API_BASE_URL || import.meta.env.PU
       } else if (event.key === sessionKey) void sync(true);
     });
     document.addEventListener("visibilitychange", () => void sync(true));
+    document.addEventListener("replow:account-open", () => void sync());
+    window.addEventListener("online", () => void sync(true));
     window.addEventListener("pageshow", (event) => { if (event.persisted) void sync(true); });
     document.addEventListener("astro:page-load", () => void sync());
     window.setInterval(sync, 60_000);

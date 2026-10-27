@@ -32,6 +32,7 @@ export function mountSearch({
   let closed = false;
   let queryController = new AbortController();
   let coverController = new AbortController();
+  let coverObserver: IntersectionObserver | null = null;
   let prefetchTimer = 0;
   const form = el('form', 'fq-search-form');
   const label = el('label', '', '书名、作者或书籍 ID');
@@ -66,9 +67,12 @@ export function mountSearch({
 
   async function search(scroll = false) {
     const ticket = ++revision;
+    const startedAt = performance.now();
     const term = query;
     const requestedPage = page;
     coverController.abort();
+    coverObserver?.disconnect();
+    coverObserver = null;
     coverController = new AbortController();
     const coverSignal = coverController.signal;
     const querySignal = queryController.signal;
@@ -78,6 +82,9 @@ export function mountSearch({
     results.setAttribute('aria-busy', 'true');
     for (const node of navigation.querySelectorAll('button')) node.disabled = true;
     statusLine(root, '正在寻找这本书…');
+    const slowTimer = window.setTimeout(() => {
+      if (current()) statusLine(root, '搜索仍在进行，正在等待小说服务响应…');
+    }, 3000);
     try {
       const data = await client.search(term, requestedPage, { signal: querySignal });
       if (!current()) return;
@@ -96,7 +103,7 @@ export function mountSearch({
       statusLine(
         root,
         data.books.length
-          ? `第 ${requestedPage} 页 · ${data.books.length} 本小说 · 每页 10 本，封面逐步加载`
+          ? `第 ${requestedPage} 页 · ${data.books.length} 本小说 · 查询耗时 ${((performance.now() - startedAt) / 1000).toFixed(1)} 秒 · 封面按需加载`
           : '没有找到这本书，试试其他书名或直接输入书籍 ID。',
       );
       const turn = (next: number) => {
@@ -108,55 +115,73 @@ export function mountSearch({
       if (data.hasMore) navigation.append(button('下一页', () => turn(requestedPage + 1), true));
       if (scroll) results.scrollIntoView({ block: 'start', behavior: 'auto' });
 
-      // Let all text cards paint before starting any cover processing.
+      // Only fetch missing covers near the viewport, two at a time. On mobile,
+      // eager cover requests used to contend with foreground book/API requests.
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
           if (!current()) return;
-          let index = 0;
-          async function loadVisible() {
-            while (current() && index < cards.length) {
-              const { book, card } = cards[index++];
-              if (book.cover || !book.coverPending) continue;
-              try {
-                const url = await client.cover(book.id, { signal: coverSignal });
-                if (!current()) return;
-                book.cover = url;
-                if (url) card.querySelector('.fq-cover')?.replaceWith(cover(url, book.title));
-              } catch {
-                /* A missing cover must never hide the title or actions. */
-              }
+          const queue: typeof cards = [];
+          let running = 0;
+          const pump = () => {
+            while (current() && running < 2 && queue.length) {
+              const { book, card } = queue.shift()!;
+              running++;
+              void client
+                .cover(book.id, { signal: coverSignal })
+                .then((url) => {
+                  if (!current()) return;
+                  book.cover = url;
+                  if (url) card.querySelector('.fq-cover')?.replaceWith(cover(url, book.title));
+                })
+                .catch(() => {
+                  /* Missing artwork must never hide a book. */
+                })
+                .finally(() => {
+                  running--;
+                  pump();
+                });
             }
+          };
+          const missing = cards.filter(({ book }) => !book.cover && book.coverPending);
+          if ('IntersectionObserver' in window) {
+            const candidates = new Map(missing.map(({ book, card }) => [card, book]));
+            coverObserver = new IntersectionObserver(
+              (entries, observer) => {
+                for (const entry of entries) {
+                  if (!entry.isIntersecting || !current()) continue;
+                  const card = entry.target as HTMLElement;
+                  const book = candidates.get(card);
+                  observer.unobserve(card);
+                  candidates.delete(card);
+                  if (book) queue.push({ book, card });
+                }
+                pump();
+              },
+              { rootMargin: '180px 0px' },
+            );
+            for (const { card } of missing) coverObserver.observe(card);
+          } else {
+            queue.push(...missing);
+            pump();
           }
-          const visibleCovers = Promise.all([loadVisible(), loadVisible()]);
           if (!data.hasMore || (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return;
           prefetchTimer = window.setTimeout(() => {
             void (async () => {
               if (!current() || document.hidden) return;
               try {
-                const next = await client.search(term, requestedPage + 1, { signal: querySignal, priority: 'low' });
-                await visibleCovers;
-                // Warm following-page covers one at a time after visible covers.
-                for (const book of next.books) {
-                  if (!current() || document.hidden) return;
-                  if (book.cover || !book.coverPending) continue;
-                  try {
-                    const url = await client.cover(book.id, { signal: coverSignal, priority: 'low' });
-                    if (!current()) return;
-                    book.cover = url;
-                  } catch {
-                    /* Background work is best effort and has no UI errors. */
-                  }
-                }
+                // Warm only the next page's text; its artwork waits until viewed.
+                await client.search(term, requestedPage + 1, { signal: querySignal, priority: 'low' });
               } catch {
                 /* Foreground navigation can retry a failed prefetch. */
               }
             })();
-          }, 350);
+          }, 700);
         }),
       );
     } catch (error) {
       if (current()) onError(error);
     } finally {
+      window.clearTimeout(slowTimer);
       if (current()) {
         results.removeAttribute('aria-busy');
         for (const node of navigation.querySelectorAll('button')) node.disabled = false;
@@ -182,5 +207,6 @@ export function mountSearch({
     window.clearTimeout(prefetchTimer);
     queryController.abort();
     coverController.abort();
+    coverObserver?.disconnect();
   };
 }

@@ -1,7 +1,7 @@
 import { createFqClient, errorMessage, LoginRequired } from './api';
 import { mountSearch } from './search';
 import type { Book, Chapter, History, Job, Updates, ViewMode } from './types';
-import { bookCard, button, date, el, jobProgress, link, statusLine, updateJobTiming } from './view';
+import { bookCard, button, date, duration, el, jobProgress, link, statusLine, updateJobTiming } from './view';
 import './style.css';
 
 const active = new Map<HTMLElement, () => void>();
@@ -285,6 +285,22 @@ export function mountFanqie(root: HTMLElement, mode: ViewMode) {
         return statusLine(root, `请输入 1—${toc.total_chapters} 范围内的有效章节序号。`, true);
       submit.disabled = true;
       void run(async () => {
+        const startedAt = performance.now();
+        const waiting = el('section', 'fq-submit-wait');
+        waiting.setAttribute('aria-live', 'polite');
+        const waitingText = el('p', 'fq-muted');
+        const updateWaiting = () => {
+          const elapsed = (performance.now() - startedAt) / 1000;
+          waitingText.textContent =
+            elapsed < 5
+              ? `正在提交下载任务 · 已等待 ${duration(elapsed)}`
+              : `小说服务仍在处理请求 · 已等待 ${duration(elapsed)}，请稍候…`;
+        };
+        waiting.append(el('span', 'fq-submit-spinner'), waitingText);
+        progress.replaceChildren(waiting);
+        statusLine(root, '正在联系下载服务，任务建立后会立即显示进度。');
+        updateWaiting();
+        const waitingTimer = window.setInterval(updateWaiting, 1000);
         try {
           const selected = form.querySelector<HTMLInputElement>('input[name="format"]:checked');
           const job = await client.request<Job>('', {
@@ -295,7 +311,11 @@ export function mountFanqie(root: HTMLElement, mode: ViewMode) {
           });
           statusLine(root, '任务已保存。离开页面后仍会继续，可到用户中心查看。');
           await track(job, progress);
+        } catch (error) {
+          progress.replaceChildren();
+          throw error;
         } finally {
+          window.clearInterval(waitingTimer);
           submit.disabled = false;
         }
       });
