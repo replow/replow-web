@@ -16,7 +16,7 @@ export function isOwnHostname(hostname: string): boolean {
 
 export function guardedLink(value: string, base: string): string {
   const url = parseWebUrl(value, base);
-  if (!url || isOwnHostname(url.hostname)) return value;
+  if (!url || url.origin === parseWebUrl(base)?.origin || isOwnHostname(url.hostname)) return value;
   return '/go/?url=' + encodeURIComponent(url.href);
 }
 

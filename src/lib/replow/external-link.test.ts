@@ -25,3 +25,13 @@ test('confirmation rejects executable, malformed, relative and credential-bearin
   for (const value of ['javascript:alert(1)', 'data:text/html,hi', '/friends/', '', 'https://user:password@example.com'])
     assert.equal(confirmationTarget(value), null);
 });
+
+test('local preview links stay unchanged and external confirmation is idempotent', () => {
+  const base = 'http://terminal.local:4173/music/';
+  for (const href of ['/', '/music/', '#lyrics', 'http://terminal.local:4173/friends/']) {
+    assert.equal(guardedLink(href, base), href);
+  }
+  const once = guardedLink('https://example.com/music', base);
+  assert.equal(guardedLink(once, base), once);
+  assert.ok(guardedLink('http://terminal.local:9999/', base).startsWith('/go/?url='));
+});
