@@ -155,10 +155,10 @@ async function fetchEnhancedJson(path: string, params: Record<string, string>): 
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
 
   const response = await fetch(url, { credentials: 'omit' });
-  if (!response.ok) throw new Error(\`NetEase API error: \${response.status}\`);
+  if (!response.ok) throw new Error(`NetEase API error: ${response.status}`);
 
   const data: EnhancedResponse = await response.json();
-  if (data.code !== 200) throw new Error(\`NetEase API error: \${data.code ?? 'invalid response'}\`);
+  if (data.code !== 200) throw new Error(`NetEase API error: ${data.code ?? 'invalid response'}`);
   return data;
 }
 
@@ -188,7 +188,7 @@ function toMetingSong(track: EnhancedTrack): MetingSong {
 
 /** Fetch full NetEase metadata; audio links are resolved lazily via the 302 endpoint. */
 export async function fetchNeteaseEnhanced(type: string, id: string): Promise<MetingSong[]> {
-  const cacheKey = \`netease-enhanced:v1:\${type}:\${id}\`;
+  const cacheKey = `netease-enhanced:v1:${type}:${id}`;
   const cached = getFromCache(cacheKey);
   if (cached) return cached;
 
