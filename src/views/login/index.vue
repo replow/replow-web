@@ -27,6 +27,18 @@ defineOptions({
 
 const router = useRouter();
 const loading = ref(false);
+const restrictionMessage = ref("");
+function loginError(error: unknown, fallback: string) {
+  const detail = (error as { response?: { data?: { detail?: string } } })
+    ?.response?.data?.detail;
+  if (typeof detail === "string" && detail.startsWith("账号封禁：")) {
+    restrictionMessage.value = detail;
+    return detail;
+  }
+  return detail === "registration_email_not_allowed"
+    ? "此邮箱后缀未开放注册，请使用站点允许的邮箱或联系管理员"
+    : fallback;
+}
 const disabled = ref(false);
 const ruleFormRef = ref<FormInstance>();
 const loginMode = ref<"password" | "code">("password");
@@ -82,8 +94,10 @@ const onLogin = async (formEl: FormInstance | undefined) => {
         })
       );
     }
-  } catch {
-    message("登录失败，请检查账号、密码或验证码", { type: "error" });
+  } catch (error) {
+    message(loginError(error, "登录失败，请检查账号、密码或验证码"), {
+      type: "error"
+    });
   } finally {
     loading.value = false;
   }
@@ -105,8 +119,10 @@ async function sendLoginCode() {
     await sendVerificationCode({ email: ruleForm.email, purpose: "login" });
     startCountdown(codeCountdown, 60);
     message("验证码已发送", { type: "success" });
-  } catch {
-    message("验证码发送失败，请检查邮件配置", { type: "error" });
+  } catch (error) {
+    message(loginError(error, "验证码发送失败，请检查邮件配置"), {
+      type: "error"
+    });
   } finally {
     codeSending.value = false;
   }
@@ -162,6 +178,14 @@ useEventListener(document, "keydown", ({ code }) => {
             <el-radio-button label="code">邮箱验证码</el-radio-button>
           </el-radio-group>
 
+          <el-alert
+            v-if="restrictionMessage"
+            :title="restrictionMessage"
+            type="error"
+            :closable="false"
+            show-icon
+            style="margin: 16px 0; overflow-wrap: anywhere"
+          />
           <el-form
             ref="ruleFormRef"
             :model="ruleForm"
