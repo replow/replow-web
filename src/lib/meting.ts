@@ -1,11 +1,12 @@
 /**
- * Meting API client — resolves music platform URLs to playable audio streams.
- *
- * Ported from Shoka player.js URL parsing + Meting API integration.
- * Supports NetEase Cloud Music and QQ Music.
+ * Music URL resolver. NetEase uses our Enhanced API with its server-side
+ * default Cookie; QQ Music and explicitly configured Meting endpoints retain
+ * the original Meting integration.
  */
 
 const DEFAULT_API = 'https://163.hyc.moe/';
+const NETEASE_API = 'https://api.replow.org/';
+const NETEASE_QUALITY = 'exhigh';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export interface MetingSong {
@@ -115,8 +116,10 @@ export async function fetchMeting(server: string, type: string, id: string, apiU
   const cached = getFromCache(cacheKey);
   if (cached) return normalizeMediaUrls(cached, url);
 
-  const params = new URLSearchParams({ server, type, id });
-  url.search = params.toString();
+  // Keep configured endpoint parameters (for example a backend-side auth selector).
+  url.searchParams.set('server', server);
+  url.searchParams.set('type', type);
+  url.searchParams.set('id', id);
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Meting API error: ${response.status}`);
 
@@ -127,15 +130,123 @@ export async function fetchMeting(server: string, type: string, id: string, apiU
   return songs;
 }
 
+
+interface EnhancedTrack {
+  id: number | string;
+  name: string;
+  ar?: { name: string }[];
+  artists?: { name: string }[];
+  al?: { picUrl?: string };
+  album?: { picUrl?: string };
+}
+
+interface EnhancedResponse {
+  code?: number;
+  songs?: EnhancedTrack[];
+  playlist?: {
+    tracks?: EnhancedTrack[];
+    trackIds?: { id: number | string }[];
+  };
+}
+
+/** Enhanced API reads NETEASE_COOKIE on the server when no client Cookie is provided. */
+async function fetchEnhancedJson(path: string, params: Record<string, string>): Promise<EnhancedResponse> {
+  const url = new URL(path, NETEASE_API);
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+
+  const response = await fetch(url, { credentials: 'omit' });
+  if (!response.ok) throw new Error(\`NetEase API error: \${response.status}\`);
+
+  const data: EnhancedResponse = await response.json();
+  if (data.code !== 200) throw new Error(\`NetEase API error: \${data.code ?? 'invalid response'}\`);
+  return data;
+}
+
+function isEnhancedTrack(value: unknown): value is EnhancedTrack {
+  if (typeof value !== 'object' || value === null) return false;
+  const track = value as Record<string, unknown>;
+  return (typeof track.id === 'number' || typeof track.id === 'string') && typeof track.name === 'string';
+}
+
+function toMetingSong(track: EnhancedTrack): MetingSong {
+  const audio = new URL('/song/url/v1/302', NETEASE_API);
+  audio.searchParams.set('id', String(track.id));
+  audio.searchParams.set('level', NETEASE_QUALITY);
+
+  const lyrics = new URL('/lyric', NETEASE_API);
+  lyrics.searchParams.set('id', String(track.id));
+
+  const artists = track.ar ?? track.artists ?? [];
+  return {
+    name: track.name,
+    artist: artists.map((artist) => artist.name).filter(Boolean).join(' / '),
+    url: audio.href,
+    pic: track.al?.picUrl ?? track.album?.picUrl ?? '',
+    lrc: lyrics.href,
+  };
+}
+
+/** Fetch full NetEase metadata; audio links are resolved lazily via the 302 endpoint. */
+export async function fetchNeteaseEnhanced(type: string, id: string): Promise<MetingSong[]> {
+  const cacheKey = \`netease-enhanced:v1:\${type}:\${id}\`;
+  const cached = getFromCache(cacheKey);
+  if (cached) return cached;
+
+  let tracks: EnhancedTrack[] = [];
+  if (type === 'song') {
+    const data = await fetchEnhancedJson('/song/detail', { ids: id });
+    tracks = (data.songs ?? []).filter(isEnhancedTrack);
+  } else if (type === 'albumlist') {
+    const data = await fetchEnhancedJson('/album', { id });
+    tracks = (data.songs ?? []).filter(isEnhancedTrack);
+  } else if (type === 'playlist') {
+    const data = await fetchEnhancedJson('/playlist/detail', { id });
+    const playlist = data.playlist;
+    if (!playlist) throw new Error('NetEase playlist response has no playlist');
+
+    // Unauthenticated playlist responses may omit tracks, while trackIds remains complete.
+    const byId = new Map(
+      (playlist.tracks ?? []).filter(isEnhancedTrack).map((track) => [String(track.id), track] as const),
+    );
+    const ids = (playlist.trackIds ?? []).map((entry) => String(entry.id));
+    if (ids.length === 0) ids.push(...byId.keys());
+
+    const missingIds = ids.filter((trackId) => !byId.has(trackId));
+    for (let offset = 0; offset < missingIds.length; offset += 200) {
+      const batch = missingIds.slice(offset, offset + 200);
+      const detail = await fetchEnhancedJson('/song/detail', { ids: batch.join(',') });
+      for (const track of (detail.songs ?? []).filter(isEnhancedTrack)) byId.set(String(track.id), track);
+    }
+    tracks = ids.flatMap((trackId) => {
+      const track = byId.get(trackId);
+      return track ? [track] : [];
+    });
+  } else {
+    return [];
+  }
+
+  const songs = tracks.map(toMetingSong);
+  if (songs.length > 0) setCache(cacheKey, songs);
+  return songs;
+}
+
 /** Resolve multiple music URLs into a flat song list. */
 export async function resolvePlaylist(urls: string[], apiUrl?: string): Promise<MetingSong[]> {
   const results = await Promise.allSettled(
     urls.map((url) => {
       const parsed = parseMusicUrl(url);
       if (!parsed) return Promise.resolve([]);
-      return fetchMeting(parsed.server, parsed.type, parsed.id, apiUrl);
+      const useEnhanced = parsed.server === 'netease' && (!apiUrl || new URL(apiUrl).origin === NETEASE_API.slice(0, -1));
+      return useEnhanced
+        ? fetchNeteaseEnhanced(parsed.type, parsed.id)
+        : fetchMeting(parsed.server, parsed.type, parsed.id, apiUrl);
     }),
   );
 
-  return results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
+  const songs = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
+  if (songs.length === 0) {
+    const failure = results.find((r) => r.status === 'rejected');
+    if (failure?.status === 'rejected') throw failure.reason;
+  }
+  return songs;
 }
