@@ -17,6 +17,7 @@ import {
   type FriendApplication,
   type NotificationItem,
   type Profile,
+  type Restriction,
   type SessionData
 } from "./api";
 
@@ -30,6 +31,22 @@ const session = ref<SessionData | null>(getSession());
 const booting = ref(Boolean(session.value));
 const busy = ref(false);
 const section = ref<Section>("overview");
+const restrictions = ref<Restriction[]>([]);
+const restrictionLoginMessage = ref("");
+function restrictionText(item: Restriction) {
+  const date = (value: string) => new Date(value).toLocaleString("zh-CN", {timeZone: "Asia/Shanghai", hour12: false});
+  return `${item.label}：${item.reason}；开始日期：${date(item.started_at)}；解除日期：${item.until ? date(item.until) : "永久（需管理员解除）"}（北京时间）`;
+}
+function sessionEnded(event: Event) {
+  const detail = String((event as CustomEvent).detail || "");
+  clearSession(); session.value = null; profile.value = null; restrictions.value = [];
+  if (detail.startsWith("账号封禁：")) restrictionLoginMessage.value = detail;
+}
+async function refreshRestrictions() {
+  if (!session.value || document.visibilityState !== "visible") return;
+  try { restrictions.value = (await request<{items: Restriction[]}>("/account/restrictions")).items; }
+  catch { /* Authentication failures are handled by the shared request handler. */ }
+}
 const mobileMenuOpen = ref(false);
 const authMode = ref<AuthMode>("login");
 // Code login is the default: it is the only path that works for someone who
@@ -191,12 +208,13 @@ function returnToDownloader() {
   if (!value || setupOpen.value) return;
   try {
     const target = new URL(value);
-    if (['https://www.example.com', 'https://example.com'].includes(target.origin) &&
+    if (['https://www.replow.org', 'https://replow.org'].includes(target.origin) &&
         (/^\/(?:fanqie|post|posts)(?:\/|$)/.test(target.pathname))) window.location.assign(target.href);
   } catch { /* Ignore invalid external return URLs. */ }
 }
 
 function notify(text: string, error = false) {
+  if (text.startsWith("账号封禁：")) restrictionLoginMessage.value = text;
   window.clearTimeout(toastTimer);
   toast.text = text;
   toast.error = error;
@@ -265,6 +283,7 @@ async function saveSetup() {
   try {
     const result = await authApi.setupAccount(username, setupForm.password);
     saveSession(result.data);
+    restrictionLoginMessage.value = "";
     session.value = result.data;
     setupOpen.value = false;
     setupForm.password = "";
@@ -284,6 +303,7 @@ async function skipSetup() {
   try {
     const result = await authApi.skipAccountSetup();
     saveSession(result.data);
+    restrictionLoginMessage.value = "";
     session.value = result.data;
     setupOpen.value = false;
     setupForm.password = "";
@@ -403,6 +423,7 @@ async function loadAll() {
   try {
     const overview = await request<any>("/account/overview");
     profile.value = overview.data.profile;
+    restrictions.value = overview.data.restrictions || [];
     Object.assign(counts, overview.data.counts || {});
     notifications.value = overview.data.notifications || [];
     syncProfileForm();
@@ -500,7 +521,8 @@ async function changePassword() {
     });
     if (result.data) {
       saveSession(result.data);
-      session.value = result.data;
+      restrictionLoginMessage.value = "";
+    session.value = result.data;
     }
     Object.assign(passwordForm, { old_password: "", new_password: "", confirm: "" });
     notify("密码已更新");
@@ -780,7 +802,7 @@ function logout() {
 }
 
 function goAdmin() {
-  window.location.href = "https://admin.example.com/";
+  window.location.href = "https://admin.replow.org/";
 }
 
 let sessionSyncTimer: number | undefined;
@@ -798,12 +820,15 @@ async function syncSharedSession() {
       clearSession();
       session.value = null;
       profile.value = null;
-      notify("登录状态已失效，请重新登录", true);
+      if (error.detail.startsWith("账号封禁：")) restrictionLoginMessage.value = error.detail;
+      notify(humanError(error), true);
     }
   }
 }
 
 onMounted(async () => {
+  window.addEventListener("silvercode-session-ended", sessionEnded);
+  document.addEventListener("visibilitychange", refreshRestrictions);
   const url = new URL(window.location.href);
   const initialSection = url.searchParams.get("section");
   if (navItems.some(item => item.key === initialSection)) section.value = initialSection as Section;
@@ -828,9 +853,10 @@ onMounted(async () => {
   try {
     const restored = await authApi.session();
     session.value = restored;
-  } catch {
+  } catch (error) {
     clearSession();
     session.value = null;
+    if (error instanceof ApiError && error.detail.startsWith("账号封禁：")) restrictionLoginMessage.value = error.detail;
   }
 
   if (session.value) {
@@ -842,10 +868,12 @@ onMounted(async () => {
   document.addEventListener("visibilitychange", syncSharedSession);
   sessionSyncTimer = window.setInterval(syncSharedSession, 60_000);
   document.addEventListener("visibilitychange", refreshNotifications);
-  notificationTimer = window.setInterval(refreshNotifications, 30_000);
+  notificationTimer = window.setInterval(() => { void refreshNotifications(); void refreshRestrictions(); }, 15_000);
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener("silvercode-session-ended", sessionEnded);
+  document.removeEventListener("visibilitychange", refreshRestrictions);
   document.removeEventListener("visibilitychange", syncSharedSession);
   if (sessionSyncTimer) window.clearInterval(sessionSyncTimer);
   document.removeEventListener("visibilitychange", refreshNotifications);
@@ -867,6 +895,7 @@ onBeforeUnmount(() => {
     </section>
 
     <section class="auth-panel">
+      <div v-if="restrictionLoginMessage" class="restriction-notice" role="alert">{{ restrictionLoginMessage }}</div>
       <div class="auth-theme"><ThemePicker /></div>
       <div class="auth-card">
         <img class="login-avatar-logo" src="/avatar.svg" alt="" />
@@ -911,7 +940,7 @@ onBeforeUnmount(() => {
 
           <div class="auth-links">
             <button @click="setAuthMode('reset')">忘记密码？</button>
-            <a href="https://www.example.com/">返回主站</a>
+            <a href="https://www.replow.org/">返回主站</a>
           </div>
         </template>
 
@@ -983,7 +1012,7 @@ onBeforeUnmount(() => {
       </div>
       <div class="top-actions">
         <ThemePicker />
-        <a class="top-action-link hide-mobile" href="https://www.example.com/"><span class="material-symbols-rounded btn-icon" aria-hidden="true">home</span>返回主站</a>
+        <a class="top-action-link hide-mobile" href="https://www.replow.org/"><span class="material-symbols-rounded btn-icon" aria-hidden="true">home</span>返回主站</a>
         <button v-if="isAdmin" class="top-action-link hide-mobile" @click="goAdmin"><span class="material-symbols-rounded btn-icon" aria-hidden="true">admin_panel_settings</span>管理后台</button>
         <div class="header-user">
           <div class="avatar">
@@ -998,6 +1027,7 @@ onBeforeUnmount(() => {
 
     <div class="shell-grid">
       <section class="content">
+        <div v-for="item in restrictions" :key="item.kind" class="restriction-notice" role="alert">{{ restrictionText(item) }}</div>
         <template v-if="section === 'overview'">
           <div class="page-heading">
             <div><h1>你好，{{ displayName }}</h1><p>这里是你的 SilverCode 账号概览。</p></div>

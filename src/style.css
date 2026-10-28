@@ -1829,3 +1829,5 @@ a.list-item:hover,
   .my-media-item > img, .my-media-file { height: 110px; }
   .my-media-details { display: grid; }
 }
+
+.restriction-notice { padding: 14px 18px; margin: 12px 0; border: 1px solid #d99424; border-radius: 12px; background: #b97d1418; color: var(--text, inherit); overflow-wrap: anywhere; white-space: pre-wrap; line-height: 1.7; }

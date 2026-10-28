@@ -2,8 +2,8 @@
 // domain. Whenever this app is served from a domain that proxies the API on
 // its own origin, use that same-origin path so the browser actually sends the
 // cookie back. Anything else falls back to the public API host.
-const FALLBACK_API_BASE = (import.meta.env.VITE_API_BASE_URL || "https://api.example.com/v1").replace(/\/$/, "");
-const SAME_ORIGIN_API_DOMAINS = ["example.com", "example.com"];
+const FALLBACK_API_BASE = (import.meta.env.VITE_API_BASE_URL || "https://api.4z.ink/v1").replace(/\/$/, "");
+const SAME_ORIGIN_API_DOMAINS = ["replow.org", "4z.ink"];
 
 function resolveApiBase(): string {
   if (typeof window === "undefined") return FALLBACK_API_BASE;
@@ -27,6 +27,8 @@ export type SessionData = {
   roles: string[];
   permissions: string[];
 };
+
+export type Restriction = {kind: "ban" | "mute" | "publish"; label: string; reason: string; started_at: string; until: string | null};
 
 export type Profile = {
   uid: string;
@@ -202,7 +204,15 @@ export async function request<T>(
   if (response.status === 401 && auth && retry) {
     if (await ensureRefresh()) return request<T>(path, options, auth, false);
   }
-  return (await parseResponse(response)) as T;
+  try {
+    return (await parseResponse(response)) as T;
+  } catch (error) {
+    if (auth && error instanceof ApiError && error.status === 401) {
+      clearSession();
+      window.dispatchEvent(new CustomEvent("silvercode-session-ended", { detail: error.detail }));
+    }
+    throw error;
+  }
 }
 
 export const authApi = {
@@ -294,6 +304,7 @@ export function humanError(error: unknown): string {
     invalid_username: "用户名需为 3–32 位字母、数字或常用符号",
     username_already_exists: "用户名已存在",
     registration_disabled: "当前暂未开放注册",
+    registration_email_not_allowed: "此邮箱后缀未开放注册，请使用站点允许的邮箱或联系管理员",
     verification_code_invalid: "验证码不正确",
     verification_code_expired: "验证码已过期，请重新获取",
     verification_code_locked: "验证码错误次数过多，请重新获取",
@@ -317,5 +328,6 @@ export function humanError(error: unknown): string {
     friend_verification_invalid_or_used: "友情链接认证地址无效、已使用或已失效",
     friend_verification_expired: "友情链接认证地址已过期，请登录账号中心重新发送"
   };
+  if (detail.startsWith("账号封禁：") || detail.startsWith("禁言：") || detail.startsWith("禁止发布文章：")) return detail;
   return messages[detail] || (detail ? "操作失败：" + detail : "操作失败，请稍后再试");
 }
