@@ -1,0 +1,24 @@
+---
+import Footer from '@components/layout/Footer.astro';
+import MusicPlayer from '@components/music';
+import Layout from '@layouts/Layout.astro';
+import { defaultLocale } from '@/i18n';
+
+interface Props {
+  locale?: string;
+}
+const { locale = defaultLocale } = Astro.props;
+---
+
+<Layout locale={locale} title="音乐 | Silune" description="给日常，留一点旋律。在 Silune 搜索网易云音乐，听歌、看歌词、收藏播放队列。" articleTools={false}>
+  <div class="music-page">
+    <MusicPlayer client:load />
+    <noscript>启用 JavaScript 后即可搜索和播放网易云音乐。</noscript>
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .music-page { width: min(1200px, calc(100% - 48px)); margin: 104px auto 48px; }
+  @media (max-width: 700px) { .music-page { width: calc(100% - 28px); margin-top: 84px; } }
+</style>

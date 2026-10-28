@@ -112,6 +112,7 @@ export function makeSiteConfig(base, payload, friends) {
       icon: 'ri:compass-3-line',
       children: [
         ...(oldSite.pages?.dynamic !== false ? [{ name: '动态', path: '/dynamic', icon: 'ri:chat-3-line' }] : []),
+        { name: '音乐', path: '/music', icon: 'ri:music-2-line' },
         ...(oldSite.pages?.friends !== false ? [{ name: '友链', path: '/friends', icon: 'ri:links-line' }] : []),
         { name: '相册', path: '/gallery', icon: 'ri:gallery-line' },
       ],
@@ -140,11 +141,7 @@ export function makeSiteConfig(base, payload, friends) {
         hasNavPath(item.children || [], path),
     );
   for (const link of f.navBarConfig?.links || []) {
-    if (
-      typeof link.url === 'string' &&
-      /^(https?:\/\/|\/(?!\/))/.test(link.url) &&
-      !hasNavPath(yaml.navigation, link.url)
-    ) {
+    if (typeof link.url === 'string' && /^(https?:\/\/|\/(?!\/))/.test(link.url) && !hasNavPath(yaml.navigation, link.url)) {
       yaml.navigation.push({
         name: link.name || link.url,
         path: link.url,

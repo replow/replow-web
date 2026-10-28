@@ -232,6 +232,9 @@ navigation:
   - name: 发现
     icon: ri:compass-3-line
     children:
+      - name: 音乐
+        path: /music
+        icon: ri:music-2-line
       - name: 动态
         path: /dynamic
         icon: ri:chat-3-line
