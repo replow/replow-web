@@ -19,6 +19,10 @@ const { locale = defaultLocale } = Astro.props;
 </Layout>
 
 <style>
+  :global(body:has(.music-page) #site-header), :global(body:has(.music-page) #mobile-menu-container) { color: #302d40; text-shadow: none; }
+  :global(body:has(.music-page) #site-header) { background: rgb(250 248 253 / 90%); backdrop-filter: blur(16px); }
+  :global(.dark body:has(.music-page) #site-header), :global(.dark body:has(.music-page) #mobile-menu-container) { color: #eeebf7; }
+  :global(.dark body:has(.music-page) #site-header) { background: rgb(30 27 38 / 90%); }
   .music-page { width: min(1200px, calc(100% - 48px)); margin: 104px auto 48px; }
   @media (max-width: 700px) { .music-page { width: calc(100% - 28px); margin-top: 84px; } }
 </style>
