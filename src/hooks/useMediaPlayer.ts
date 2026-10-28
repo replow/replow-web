@@ -61,18 +61,28 @@ export function useMediaPlayer<T>({ tracks, getUrl, getElement }: UseMediaPlayer
   });
   const stateRef = useRef(state);
 
+  const handlePlayError = useCallback((error: unknown) => {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    setState((s) => ({
+      ...s,
+      playing: false,
+      loading: false,
+      error: error instanceof Error ? error.message : 'Failed to start playback',
+    }));
+  }, []);
+
   const loadAndPlay = useCallback(
     (index: number) => {
       const el = getElementRef.current();
       const currentTracks = tracksRef.current;
       if (!el || !currentTracks[index]) return;
       el.src = getUrlRef.current(currentTracks[index]);
-      el.play().catch(() => {});
+      el.play().catch(handlePlayError);
       $activePlayerId.set(playerId);
       timeStore.reset();
       setState((s) => ({ ...s, currentIndex: index, loading: true, error: null }));
     },
-    [playerId, timeStore],
+    [playerId, timeStore, handlePlayError],
   );
 
   useLayoutEffect(() => {
@@ -180,11 +190,11 @@ export function useMediaPlayer<T>({ tracks, getUrl, getElement }: UseMediaPlayer
       if (index != null || !el.src) {
         loadAndPlay(targetIndex);
       } else {
-        el.play().catch(() => {});
+        el.play().catch(handlePlayError);
         $activePlayerId.set(playerId);
       }
     },
-    [state.currentIndex, loadAndPlay, playerId],
+    [state.currentIndex, loadAndPlay, playerId, handlePlayError],
   );
 
   const pause = useCallback(() => {
