@@ -27,8 +27,15 @@ import {
   validNewPassword,
   PASSWORD_POLICY_MESSAGE
 } from "@/utils/password-policy";
+import UserRestrictions from "@/components/UserRestrictions.vue";
 import MediaPicker from "@/components/MediaPicker.vue";
 defineOptions({ name: "ReplowUsers" });
+const moderationVisible = ref(false);
+const moderationTarget = ref<UserItem | null>(null);
+function moderate(row: UserItem) {
+  moderationTarget.value = { ...row };
+  moderationVisible.value = true;
+}
 const loading = ref(false),
   saving = ref(false),
   dialogVisible = ref(false),
@@ -348,15 +355,28 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", beforeUnload));
             }}</el-tag></template
           ></el-table-column
         >
-        <el-table-column label="状态" width="90"
+        <el-table-column label="状态 / 限制" min-width="170"
           ><template #default="{ row }"
             ><el-tag :type="row.status === 'active' ? 'success' : 'warning'">{{
               row.status === "active" ? "启用" : "停用"
-            }}</el-tag></template
+            }}</el-tag
+            ><el-tag
+              v-for="item in row.restrictions || []"
+              :key="item.kind"
+              type="danger"
+              size="small"
+              >{{ item.label }}</el-tag
+            ></template
           ></el-table-column
         >
-        <el-table-column label="操作" width="150" fixed="right"
+        <el-table-column label="操作" width="220" fixed="right"
           ><template #default="{ row }"
+            ><el-button
+              text
+              type="warning"
+              :disabled="isCurrent(row)"
+              @click="moderate(row)"
+              >限制</el-button
             ><el-button text type="primary" @click="open(row)">编辑</el-button
             ><el-button
               text
@@ -388,8 +408,17 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", beforeUnload));
             >
           </div>
           <p>{{ row.email }}</p>
+          <el-tag
+            v-for="item in row.restrictions || []"
+            :key="item.kind"
+            type="danger"
+            size="small"
+            >{{ item.label }}</el-tag
+          >
           <div class="card-actions">
-            <el-button @click="open(row)">编辑用户</el-button
+            <el-button :disabled="isCurrent(row)" @click="moderate(row)"
+              >限制管理</el-button
+            ><el-button @click="open(row)">编辑用户</el-button
             ><el-button
               type="danger"
               plain
@@ -405,6 +434,11 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", beforeUnload));
         description="没有匹配的用户"
       />
     </el-card>
+    <UserRestrictions
+      v-model="moderationVisible"
+      :user="moderationTarget"
+      @changed="load"
+    />
     <el-dialog
       v-model="dialogVisible"
       :title="original ? '编辑用户' : '新增用户'"
@@ -660,4 +694,3 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", beforeUnload));
   overflow-wrap: anywhere;
 }
 </style>
-

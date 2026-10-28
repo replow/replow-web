@@ -68,7 +68,32 @@ export type FriendItem = {
 
 export type FriendPayload = Omit<FriendItem, "id" | "updated_at">;
 
+export type Restriction = {
+  kind: "ban" | "mute" | "publish";
+  label: string;
+  started_at: string;
+  until: string | null;
+  reason: string;
+};
+
+export const updateRestrictions = (
+  uid: string,
+  data: {
+    kind: string;
+    enabled: boolean;
+    reason: string;
+    until: string | null;
+    confirmed: boolean;
+  }
+) =>
+  http.request<{
+    success: boolean;
+    email_status: string;
+    restrictions: Restriction[];
+  }>("put", `/admin/users/${uid}/restrictions`, { data });
+
 export type UserItem = {
+  restrictions: Restriction[];
   // UUID_SHORT() exceeds Number.MAX_SAFE_INTEGER; keep it lossless.
   uid: string;
   username: string;
@@ -224,6 +249,7 @@ export const updateFireflyConfig = (config: FireflyConfig) =>
   );
 
 export type AccountSettings = {
+  registration_email_domains: string[];
   registration_enabled: boolean;
   email_verification_enabled: boolean;
   mail: {
@@ -339,7 +365,11 @@ export type MediaStorageStatus = {
   next_backend: "od" | "r2" | "balanced" | "unavailable";
 };
 
-export const getAdminMedia = (params?: { limit?: number; offset?: number; trash?: boolean }) =>
+export const getAdminMedia = (params?: {
+  limit?: number;
+  offset?: number;
+  trash?: boolean;
+}) =>
   http.request<{ items: MediaItem[]; total: number }>("get", "/admin/media", {
     params
   });
@@ -704,8 +734,15 @@ export const getApiModules = () =>
   http.request<{ data: ModuleItem[] }>("get", "/admin/access-keys/modules");
 
 export type SiteBuildStatus = {
-  environment?: string; site_url?: string; stage?: string; run_url?: string; commit?: string;
-  last_published_at?: string; published_version?: string; content_saved_at?: string; has_unpublished_changes?: boolean;
+  environment?: string;
+  site_url?: string;
+  stage?: string;
+  run_url?: string;
+  commit?: string;
+  last_published_at?: string;
+  published_version?: string;
+  content_saved_at?: string;
+  has_unpublished_changes?: boolean;
   status: string;
   version: string;
   error: string;
@@ -721,6 +758,19 @@ export const startSiteBuild = () =>
   );
 
 export type AuditItem = {
+  description: string;
+  target_name: string;
+  request_details?: {
+    path: string;
+    method: string;
+    operation: string;
+    query: unknown;
+    payload: unknown;
+    user_agent: string;
+    actor?: { display_name?: string; email?: string };
+    error?: unknown;
+    result: string;
+  } | null;
   id: number;
   actor_uid: string | null;
   actor_name: string;

@@ -4,6 +4,12 @@ import { getAuditLogs, type AuditItem } from "@/api/replow";
 import { localTime } from "@/utils/replow-time";
 import { message } from "@/utils/message";
 defineOptions({ name: "ReplowAudit" });
+const detail = ref<AuditItem | null>(null);
+const detailVisible = ref(false);
+function showDetail(row: AuditItem) {
+  detail.value = row;
+  detailVisible.value = true;
+}
 const rows = ref<AuditItem[]>([]),
   total = ref(0),
   page = ref(1),
@@ -21,11 +27,25 @@ const labels: Record<string, string> = {
   role: "角色",
   status: "状态",
   password: "密码",
-  enabled: "开放下载",
   paused: "暂停下载队列",
   user_queue_limit: "每用户排队上限",
   global_queue_limit: "全局排队上限",
-  removed_files: "清理过期文件数"
+  removed_files: "清理过期文件数",
+  restriction: "用户限制",
+  reason: "理由",
+  until: "解除日期",
+  enabled: "启用",
+  kind: "限制类型",
+  registration_email_domains: "注册邮箱后缀",
+  title: "标题",
+  body_markdown: "正文",
+  excerpt: "摘要",
+  registration_enabled: "允许注册",
+  email_verification_enabled: "启用邮箱验证",
+  mail: "邮件配置",
+  mute: "禁言",
+  ban: "封号",
+  publish: "禁止发布文章"
 };
 const resources: Record<string, string> = {
   users: "用户",
@@ -120,8 +140,11 @@ onMounted(() => load());
           ></el-table-column
         ><el-table-column label="操作" min-width="150"
           ><template #default="{ row }"
-            >{{ row.action }} · {{ resources[row.resource] || row.resource }}
-            {{ row.target_id }}</template
+            >{{ row.description || resources[row.resource] || row.resource }}
+            <small class="actor-uid">{{
+              row.target_name ||
+              (row.target_id ? "目标 ID " + row.target_id : "配置 / 系统操作")
+            }}</small></template
           ></el-table-column
         ><el-table-column label="结果" width="90"
           ><template #default="{ row }"
@@ -132,7 +155,14 @@ onMounted(() => load());
         ><el-table-column
           prop="ip_address"
           label="IP"
-          min-width="140" /></el-table
+          min-width="140"
+        /><el-table-column label="详情" width="85" fixed="right"
+          ><template #default="{ row }"
+            ><el-button link type="primary" @click="showDetail(row)"
+              >查看详情</el-button
+            ></template
+          ></el-table-column
+        ></el-table
       ><el-empty
         v-if="!loading && !rows.length"
         description="暂无操作记录" /><el-pagination
@@ -142,9 +172,93 @@ onMounted(() => load());
         layout="prev,pager,next"
         @current-change="load()"
     /></el-card>
+    <el-drawer
+      v-model="detailVisible"
+      title="操作日志详情"
+      size="min(94vw,760px)"
+    >
+      <template v-if="detail">
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="操作">{{
+            detail.description
+          }}</el-descriptions-item>
+          <el-descriptions-item label="请求人"
+            >{{
+              detail.request_details?.actor?.display_name ||
+              detail.actor_name ||
+              "未登录 / 未识别"
+            }}（@{{ detail.actor_name || "—" }}，UID
+            {{ detail.actor_uid || "—" }}）</el-descriptions-item
+          >
+          <el-descriptions-item label="请求人邮箱">{{
+            detail.request_details?.actor?.email || "历史日志未记录"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="目标"
+            >{{ detail.target_name || "历史名称未记录或配置操作" }} ·
+            {{ resources[detail.resource] || detail.resource }}
+            {{ detail.target_id }}</el-descriptions-item
+          >
+          <el-descriptions-item label="请求时间">{{
+            localTime(detail.created_at)
+          }}</el-descriptions-item>
+          <el-descriptions-item label="请求方式">{{
+            detail.action
+          }}</el-descriptions-item>
+          <el-descriptions-item label="请求地址">{{
+            detail.request_details?.path || "历史日志未记录"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="来源 IP">{{
+            detail.ip_address || "—"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="设备">{{
+            detail.request_details?.user_agent || "历史日志未记录"
+          }}</el-descriptions-item>
+          <el-descriptions-item label="执行结果"
+            >{{ detail.status_code < 400 ? "成功" : "失败" }}（HTTP
+            {{ detail.status_code }}）</el-descriptions-item
+          >
+        </el-descriptions>
+        <template v-if="detail.request_details">
+          <h3>请求参数</h3>
+          <pre class="request-data">{{
+            JSON.stringify(detail.request_details.query, null, 2)
+          }}</pre>
+          <h3>请求内容</h3>
+          <pre class="request-data">{{
+            JSON.stringify(detail.request_details.payload, null, 2)
+          }}</pre>
+          <template v-if="detail.request_details.error"
+            ><h3>失败原因</h3>
+            <pre class="request-data">{{ detail.request_details.error }}</pre>
+          </template>
+        </template>
+        <el-alert
+          v-else
+          type="info"
+          title="此历史日志产生于详情功能上线前，未记录原始请求，无法补回。"
+          :closable="false"
+        />
+        <h3>变更详情</h3>
+        <div class="changes">
+          <div v-for="(change, index) in detail.changes" :key="index">
+            <strong>{{ labels[change.field] || change.field }}</strong
+            ><span>{{ change.before || "—" }} → {{ change.after || "—" }}</span>
+          </div>
+          <p v-if="!detail.changes.length">未记录字段变更。</p>
+        </div>
+        <p class="muted">密码、验证码、令牌及密钥会隐藏；超长内容会截断。</p>
+      </template>
+    </el-drawer>
   </div>
 </template>
 <style scoped>
+.request-data {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--el-fill-color-light);
+  padding: 14px;
+  border-radius: 8px;
+}
 .audit-toolbar,
 .filters {
   display: flex;

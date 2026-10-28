@@ -100,6 +100,7 @@ const form = reactive({
   footerHtml: "",
   account: {
     registrationEnabled: true,
+    emailDomains: "",
     emailVerificationEnabled: true
   },
   mail: {
@@ -422,6 +423,9 @@ async function load() {
 
 function applyAccount(value: AccountSettings) {
   form.account.registrationEnabled = value.registration_enabled;
+  form.account.emailDomains = (value.registration_email_domains || []).join(
+    "\n"
+  );
   form.account.emailVerificationEnabled = value.email_verification_enabled;
   form.mail.smtpHost = value.mail.smtp_host;
   form.mail.smtpPort = value.mail.smtp_port;
@@ -475,6 +479,7 @@ async function saveAccount() {
   try {
     const result = await updateAccountSettings({
       registration_enabled: form.account.registrationEnabled,
+      registration_email_domains: form.account.emailDomains,
       email_verification_enabled: form.account.emailVerificationEnabled,
       mail: {
         smtp_host: form.mail.smtpHost,
@@ -490,8 +495,10 @@ async function saveAccount() {
     form.mail.smtpPassword = "";
     applyAccount(result.data);
     message("SilverCode 账号设置已保存", { type: "success" });
-  } catch {
-    message("账号设置保存失败", { type: "error" });
+  } catch (error) {
+    message(cloudflareErrorDetail(error) || "账号设置保存失败", {
+      type: "error"
+    });
   } finally {
     accountSaving.value = false;
   }
@@ -608,7 +615,7 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="page-wrap" v-loading="loading">
+  <div v-loading="loading" class="page-wrap">
     <el-card shadow="never">
       <template #header>
         <div class="toolbar">
@@ -912,6 +919,18 @@ onMounted(load);
                 ><el-switch v-model="form.account.emailVerificationEnabled"
               /></el-form-item>
             </div>
+            <el-form-item label="注册允许的邮箱后缀">
+              <el-input
+                v-model="form.account.emailDomains"
+                type="textarea"
+                :rows="8"
+                placeholder="每行一个，例如 qq.com、gmail.com、outlook.com"
+              />
+              <small
+                >每行一个，也可用逗号分隔；不带
+                @。仅精确匹配，子域名需单独添加。修改只影响新注册，不影响已有账号登录。</small
+              >
+            </el-form-item>
             <el-alert
               title="注册流程：用户名 / 显示名称 / 邮箱 → 邮箱验证码 → 可选设置密码；未设置密码的账号只能使用邮箱验证码登录。"
               type="info"
