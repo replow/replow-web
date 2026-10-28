@@ -39,7 +39,21 @@ function useLrcText(lrcSource: string | undefined): string {
     if (lrcSource.startsWith('http')) {
       const controller = new AbortController();
       fetch(lrcSource, { signal: controller.signal })
-        .then((r) => r.text())
+        .then(async (response) => {
+          if (!response.ok) throw new Error('Failed to load lyrics');
+          const body = await response.text();
+          // NeteaseCloudMusicApiEnhanced /lyric returns JSON, unlike Meting's plain LRC.
+          try {
+            const data: unknown = JSON.parse(body);
+            if (typeof data === 'object' && data !== null && 'lrc' in data) {
+              const lyric = (data as { lrc?: { lyric?: unknown } }).lrc?.lyric;
+              return typeof lyric === 'string' ? lyric : '';
+            }
+          } catch {
+            // Regular LRC text is not JSON.
+          }
+          return body;
+        })
         .then(setText)
         .catch((error: unknown) => {
           if (!(error instanceof DOMException && error.name === 'AbortError')) setText('');

@@ -24,6 +24,7 @@ interface PlayerPlaylistProps {
   tracks: MetingSong[];
   groups: PlaylistGroup[];
   currentIndex: number;
+  playing: boolean;
   timeStore: PlaybackTimeStore;
   activeTab: number;
   onTabChange: (tab: number) => void;
@@ -40,6 +41,7 @@ export const PlayerPlaylist = memo(function PlayerPlaylist({
   tracks,
   groups,
   currentIndex,
+  playing,
   timeStore,
   activeTab,
   onTabChange,
@@ -55,11 +57,12 @@ export const PlayerPlaylist = memo(function PlayerPlaylist({
   usePlaybackProgress(timeStore, progressBgRef);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>, globalIdx: number) => {
-    if (globalIdx === currentIndex) {
-      // Click on current track → seek by position percentage
+    const duration = timeStore.getDuration();
+    if (globalIdx === currentIndex && playing && Number.isFinite(duration) && duration > 0) {
+      // Seek only after playback has actually started; the initial first song must be playable.
       const rect = e.currentTarget.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      onSeek(ratio * timeStore.getDuration());
+      onSeek(ratio * duration);
     } else {
       onTrackSelect(globalIdx);
     }

@@ -164,10 +164,16 @@ export function AudioPlayer({ element }: AudioPlayerProps) {
         onSetVolume={player.setVolume}
         onToggleMute={player.toggleMute}
       />
+      {player.state.error && (
+        <div className="audio-player-error" role="alert">
+          {t('audio.loadError', { error: player.state.error })}
+        </div>
+      )}
       <PlayerPlaylist
         tracks={tracks}
         groups={groups}
         currentIndex={player.state.currentIndex}
+        playing={player.state.playing}
         timeStore={player.timeStore}
         activeTab={activeTab}
         onTabChange={setActiveTab}
