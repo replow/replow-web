@@ -1,9 +1,15 @@
-name: Verify preview and auto-publish
+name: Verify preview (production promotion opt-in)
 
 on:
   push:
     branches: [preview]
   workflow_dispatch:
+    inputs:
+      publish_to_main:
+        description: 'After verification, fast-forward main and trigger a production build'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -79,6 +85,7 @@ jobs:
               --prerelease
           fi
       - name: Fast-forward production after every gate passes
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_to_main == true
         shell: bash
         run: |
           set -euo pipefail
@@ -91,4 +98,5 @@ jobs:
             git push origin HEAD:main
           fi
       - name: Dispatch verified production build
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_to_main == true
         run: gh workflow run astro-build.yml --repo "$GITHUB_REPOSITORY" --ref main
