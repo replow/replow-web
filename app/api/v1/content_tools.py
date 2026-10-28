@@ -39,6 +39,8 @@ def make_router(prefix, dependency):
     @router.post('/articles/{article_id}/versions/{version_id}/restore')
     def restore_article(article_id: int, version_id: int, payload: dict,
                         user=Depends(dependency), db: Session=Depends(get_db)):
+        from app.core.moderation import require_publish
+        require_publish(user)
         return {'data': ArticleHistory(db, user if prefix == '/admin' else {**user, 'role': 'user'}).restore(article_id, version_id, payload.get('_base_token'))}
 
     @router.get('/article-drafts/{key}')

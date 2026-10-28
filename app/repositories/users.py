@@ -38,7 +38,7 @@ class UserRepository:
                 """
                 SELECT uid, username, email, password_hash, display_name, avatar_url,
                        bio, website_url, role, status, locked_until, last_login_at,
-                       password_changed_at, session_version, setup_completed, created_at
+                       password_changed_at, session_version, setup_completed, ban_started_at, ban_until, ban_reason, mute_started_at, mute_until, mute_reason, publish_started_at, publish_until, publish_reason, created_at
                 FROM users
                 WHERE uid = :user_id
                 LIMIT 1
@@ -54,7 +54,7 @@ class UserRepository:
                 """
                 SELECT uid, username, email, password_hash, display_name, avatar_url,
                        bio, website_url, role, status, locked_until, last_login_at,
-                       password_changed_at, session_version, setup_completed, created_at
+                       password_changed_at, session_version, setup_completed, ban_started_at, ban_until, ban_reason, mute_started_at, mute_until, mute_reason, publish_started_at, publish_until, publish_reason, created_at
                 FROM users
                 WHERE LOWER(username) = LOWER(:identity)
                    OR LOWER(email) = LOWER(:identity)
@@ -71,7 +71,7 @@ class UserRepository:
                 """
                 SELECT uid, username, email, password_hash, display_name, avatar_url,
                        bio, website_url, role, status, locked_until, last_login_at,
-                       password_changed_at, session_version, setup_completed, created_at
+                       password_changed_at, session_version, setup_completed, ban_started_at, ban_until, ban_reason, mute_started_at, mute_until, mute_reason, publish_started_at, publish_until, publish_reason, created_at
                 FROM users
                 WHERE LOWER(email) = LOWER(:email)
                 LIMIT 1
@@ -413,7 +413,7 @@ class UserRepository:
             text(
                 """
                 SELECT uid, username, email, display_name, avatar_url, bio, website_url,
-                       role, status, password_hash, last_login_at, created_at, updated_at
+                       role, status, password_hash, ban_started_at, ban_until, ban_reason, mute_started_at, mute_until, mute_reason, publish_started_at, publish_until, publish_reason, last_login_at, created_at, updated_at
                 FROM users
                 ORDER BY uid ASC
                 LIMIT :limit OFFSET :offset
@@ -522,7 +522,7 @@ class UserRepository:
     def active_admin_count(self) -> int:
         return int(
             self.db.execute(
-                text("SELECT COUNT(*) FROM users WHERE role = 'admin' AND status = 'active'")
+                text("SELECT COUNT(*) FROM users WHERE role = 'admin' AND status = 'active' AND (ban_started_at IS NULL OR (ban_until IS NOT NULL AND ban_until<=UTC_TIMESTAMP()))")
             ).scalar_one()
         )
 
@@ -534,6 +534,11 @@ class UserRepository:
         if not row:
             return {}
         result = dict(row)
+        from app.core.moderation import restrictions
+        result["restrictions"] = restrictions(result)
+        for key in list(result):
+            if any(key.startswith(k + "_") for k in ("ban", "mute", "publish")):
+                result.pop(key)
         password_hash = str(result.pop("password_hash", "") or "")
         result["password_configured"] = bool(password_hash and password_hash != "!password-unset!")
         if result.get("uid") is not None:

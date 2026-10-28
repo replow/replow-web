@@ -107,6 +107,16 @@ class AccountService:
         value = self.public.settings(["registration_enabled"]).get("registration_enabled")
         return _bool_value(value, True)
 
+    def registration_domains(self):
+        from app.core.email_policy import DEFAULT_DOMAINS, normalize_domains
+        value = self.public.settings(["registration_email_domains"]).get("registration_email_domains")
+        return normalize_domains(value if value is not None else DEFAULT_DOMAINS)
+
+    def check_registration_email(self, email):
+        from app.core.email_policy import allowed
+        if not allowed(email, self.registration_domains()):
+            raise AccountError("registration_email_not_allowed", 403)
+
     @staticmethod
     def _identity_hash(action: str, identity: str) -> str:
         return hashlib.sha256(f"{action}:{identity}".encode("utf-8")).hexdigest()
@@ -150,6 +160,8 @@ class AccountService:
         email = _clean_email(email)
 
         user = self.users.find_by_email(email)
+        if purpose == "register" or (not user and purpose in {"login", "friend_link"}):
+            self.check_registration_email(email)
         if purpose == "register":
             if not self._registration_enabled():
                 raise AccountError("registration_disabled", 403)
@@ -223,6 +235,7 @@ class AccountService:
     ) -> dict[str, Any]:
         email = _clean_email(email)
         username = _clean_username(username)
+        self.check_registration_email(email)
         if not code or len(code.strip()) != 6:
             raise AccountError("verification_code_invalid", 422)
         if not self._registration_enabled():
@@ -272,6 +285,9 @@ class AccountService:
         unset; the account console asks the person to finish both right after
         signing in. ``setup_completed = 0`` is what drives that prompt.
         """
+        self.check_registration_email(email)
+        if not self._registration_enabled():
+            raise AccountError("registration_disabled", 403)
         username = self._generate_unique_username()
         try:
             user = self.users.create_verified_user(
@@ -387,6 +403,8 @@ class AccountService:
         user = self.users.get_by_id(user_id)
         if not user:
             raise AccountError("account_unavailable", 401)
+        from app.core.moderation import enforce
+        enforce(user)
         self.users.mark_login(user_id)
         return self.issue_tokens(user, new_session=True)
 
@@ -460,10 +478,18 @@ class AccountService:
             "email_verification_enabled": _bool_value(
                 values.get("email_verification_enabled"), True
             ),
+            "registration_email_domains": self.registration_domains(),
             "mail": self.mail.public_config(),
         }
 
     def update_admin_settings(self, payload: dict[str, Any], actor_id: int) -> dict[str, Any]:
+        if "registration_email_domains" in payload:
+            from app.core.email_policy import normalize_domains
+            try:
+                domains = normalize_domains(payload["registration_email_domains"])
+            except ValueError as error:
+                raise AccountError(str(error), 422) from None
+            self.admin.update_setting("registration_email_domains", domains, actor_id)
         if "registration_enabled" in payload:
             self.admin.update_setting(
                 "registration_enabled", bool(payload["registration_enabled"]), actor_id

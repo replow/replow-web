@@ -305,6 +305,11 @@ class OAuthService:
         if expires_at and expires_at < _utcnow():
             raise OAuthError("invalid_grant", "refresh_token_expired", 400)
 
+        from app.core.moderation import enforce
+        user = UserRepository(self.db).get_by_id(int(record["user_uid"]))
+        if not user or user.get("status") != "active":
+            raise OAuthError("invalid_grant", "account_unavailable", 401)
+        enforce(user)
         resolved_scope = str(record["scope"])
         if scope:
             requested = self._normalize_scope(scope)
@@ -344,6 +349,11 @@ class OAuthService:
         scope: str,
         created_ip: Optional[str] = None,
     ) -> dict[str, Any]:
+        from app.core.moderation import enforce
+        user = UserRepository(self.db).get_by_id(user_uid)
+        if not user or user.get("status") != "active":
+            raise OAuthError("invalid_grant", "account_unavailable", 401)
+        enforce(user)
         access_token = _random_token("scat_", 48)
         refresh_token = _random_token("scrt_", 48)
         self.repo.create_token(
@@ -383,6 +393,8 @@ class OAuthService:
         if not user or user["status"] != "active":
             raise OAuthError("invalid_token", "account_unavailable", 401)
 
+        from app.core.moderation import enforce
+        enforce(user)
         scopes = set(str(record["scope"]).split())
         payload: dict[str, Any] = {
             "sub": str(user["uid"]),

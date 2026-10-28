@@ -35,22 +35,24 @@ class AuditRepository:
     def __init__(self, db):
         self.db = db
 
-    def record(self, actor, method, resource, target, changes, status_code, ip):
+    def record(self, actor, method, resource, target, changes, status_code, ip, details=None, target_name=""):
         self.db.execute(text(
             "INSERT INTO admin_audit_logs (actor_uid,actor_name,action,resource,target_id,"
-            "changes,status_code,ip_address,created_at) VALUES "
-            "(:uid,:name,:action,:resource,:target,:changes,:status,:ip,:now)"
+            "changes,status_code,ip_address,created_at,request_details,target_name) VALUES "
+            "(:uid,:name,:action,:resource,:target,:changes,:status,:ip,:now,:details,:target_name)"
         ), {"uid": str(actor["uid"]) if actor else None,
             "name": str(actor.get("username") or "")[:80] if actor else "",
             "action": method, "resource": resource[:160], "target": target[:80],
             "changes": json.dumps(changes, ensure_ascii=False), "status": status_code,
-            "ip": ip[:45], "now": datetime.utcnow()})
+            "ip": ip[:45], "now": datetime.utcnow(),
+            "details": json.dumps(details, ensure_ascii=False) if details else None,
+            "target_name": target_name[:500]})
         self.db.commit()
 
     def list(self, limit, offset, search="", outcome=""):
         where, params = " WHERE 1=1", {"limit": limit, "offset": offset}
         if search:
-            where += " AND (actor_uid=:search OR actor_name LIKE :like OR resource LIKE :like OR target_id=:search)"
+            where += " AND (actor_uid=:search OR actor_name LIKE :like OR resource LIKE :like OR target_id=:search OR target_name LIKE :like)"
             params.update(search=search, like="%" + search + "%")
         if outcome == "success":
             where += " AND status_code < 400"
@@ -64,5 +66,11 @@ class AuditRepository:
             item = dict(row)
             if isinstance(item["changes"], str):
                 item["changes"] = json.loads(item["changes"])
+            if isinstance(item.get("request_details"), str):
+                item["request_details"] = json.loads(item["request_details"])
+            from app.core.audit_details import operation, target_name
+            item["description"] = operation(item["action"], item["resource"], (item.get("request_details") or {}).get("path", ""))
+            if not item.get("target_name"):
+                item["target_name"] = target_name(self.db, item["resource"], item["target_id"])
             items.append(item)
         return {"items": items, "total": count}

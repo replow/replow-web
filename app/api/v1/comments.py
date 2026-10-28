@@ -58,6 +58,8 @@ def discussion(article_id: int, limit: int = Query(100, ge=1, le=200),
 
 @router.post("/account/comments", status_code=201)
 def create_comment(payload: CommentCreate, user: dict = Depends(current_user), db: Session = Depends(get_db)):
+    from app.core.moderation import require_comment
+    require_comment(user)
     uid = int(user["uid"])
     body = payload.body_markdown.strip()
     if not body:
@@ -98,6 +100,8 @@ def create_comment(payload: CommentCreate, user: dict = Depends(current_user), d
 @router.post("/account/comments/images", status_code=201)
 def upload_comment_image(file: UploadFile = File(...), user: dict = Depends(current_user),
                          db: Session = Depends(get_db)):
+    from app.core.moderation import require_comment
+    require_comment(user)
     uid = int(user["uid"])
     if image_limit(db, uid) == 0:
         raise HTTPException(403, "comment_images_disabled")

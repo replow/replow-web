@@ -18,6 +18,17 @@ from app.fq.admin import router as fq_admin_router
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name, version="0.1.0", debug=settings.app_debug)
+
+
+@app.exception_handler(HTTPException)
+async def account_restriction_error(request: Request, error: HTTPException):
+    response = JSONResponse(status_code=error.status_code, content={"detail": error.detail}, headers=error.headers)
+    if error.status_code == 401 and isinstance(error.detail, str) and error.detail.startswith("账号封禁："):
+        from app.api.v1.auth import _clear_session_cookie
+        _clear_session_cookie(response, request)
+    return response
+
+
 _STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "static")
 app.add_middleware(
     CORSMiddleware,

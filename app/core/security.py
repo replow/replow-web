@@ -116,6 +116,8 @@ def current_user(
     user = UserRepository(db).get_by_id(int(payload["sub"]))
     if not user or user["status"] != "active":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="account_unavailable")
+    from app.core.moderation import enforce
+    enforce(user)
     token_version = int(payload.get("sv") or 0)
     if token_version != int(user.get("session_version") or 0):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="session_revoked")
@@ -126,7 +128,8 @@ def current_user(
             raise HTTPException(status_code=401, detail="session_revoked")
         sessions.touch(sid)
     user["_session_id"] = sid
-    request.state.audit_actor = {"uid": user["uid"], "username": user["username"]}
+    request.state.audit_actor = {"uid": str(user["uid"]), "username": user["username"],
+                                 "display_name": user.get("display_name") or user["username"], "email": user["email"]}
     return user
 
 

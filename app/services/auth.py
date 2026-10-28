@@ -21,9 +21,12 @@ class AuthService:
         user = self.repository.find_by_identity(identity)
         if (
             not user
-            or user.get("status") != "active"
             or not verify_password(password, str(user.get("password_hash") or ""))
         ):
+            return None
+        from app.core.moderation import enforce
+        enforce(user)
+        if user.get("status") != "active":
             return None
         self.repository.mark_login(int(user["uid"]))
         return user
@@ -43,6 +46,8 @@ class AuthService:
         user = self.repository.get_by_id(int(claims["sub"]))
         if not user or user.get("status") != "active":
             return {}, "", "", None
+        from app.core.moderation import enforce
+        enforce(user)
         session_version = int(user.get("session_version") or 0)
         if int(claims.get("sv") or 0) != session_version:
             return {}, "", "", None

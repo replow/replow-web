@@ -13,6 +13,7 @@ from app.api.v1.validation import (
     url_field,
 )
 from app.core.security import current_user
+from app.core.moderation import restrictions
 from app.db.session import get_db
 from app.repositories.account import AccountRepository
 from app.services.account import AccountError, AccountService
@@ -45,6 +46,11 @@ def _account_article_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+@router.get("/restrictions")
+def my_restrictions(user: dict = Depends(current_user)):
+    return {"items": restrictions(user)}
+
+
 @router.get("/overview")
 def overview(
     user: dict = Depends(current_user),
@@ -54,6 +60,7 @@ def overview(
     return {
         "data": {
             "profile": repository.profile(int(user["uid"])),
+            "restrictions": restrictions(user),
             "counts": repository.overview(int(user["uid"])),
             "notifications": repository.notifications(int(user["uid"]), 6),
         }
@@ -295,6 +302,8 @@ def create_article(
     user: dict = Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    from app.core.moderation import require_publish
+    require_publish(user)
     try:
         data = AdminService(db).create_article(
             _account_article_payload(payload), int(user["uid"])
@@ -323,6 +332,8 @@ def update_article(
     user: dict = Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    from app.core.moderation import require_publish
+    require_publish(user)
     repository = AccountRepository(db)
     if not repository.get_article(int(user["uid"]), article_id):
         raise HTTPException(status_code=404, detail="article_not_found")
@@ -371,6 +382,8 @@ def update_comment(
     user: dict = Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    from app.core.moderation import require_comment
+    require_comment(user)
     body = _text(
         payload.get("body_markdown"),
         field="comment_body",

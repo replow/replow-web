@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
+from fastapi import BackgroundTasks, APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
 from sqlalchemy.orm import Session
 
 from app.api.v1.auth import _set_session_cookie
@@ -45,6 +45,8 @@ def admin_articles(
 
 @router.post("/articles")
 def create_article(payload: dict[str, Any], user: dict = Depends(require_admin), db: Session = Depends(get_db)):
+    from app.core.moderation import require_publish
+    require_publish(user)
     try:
         return {"data": AdminService(db).create_article(payload, int(user["uid"]))}
     except AdminError as error:
@@ -61,6 +63,8 @@ def get_admin_article(article_id: int, _: dict = Depends(require_admin), db: Ses
 
 @router.put("/articles/{article_id}")
 def update_article(article_id: int, payload: dict[str, Any], user: dict = Depends(require_admin), db: Session = Depends(get_db)):
+    from app.core.moderation import require_publish
+    require_publish(user)
     try:
         article = AdminService(db).update_article(article_id, payload, int(user["uid"]))
     except AdminError as error:
@@ -389,6 +393,19 @@ def create_user(payload: dict[str, Any], _: dict = Depends(require_admin), db: S
         return {"data": AdminService(db).create_user(payload)}
     except (AdminError, AccountError) as error:
         _raise_admin_error(error)
+
+
+@router.put("/users/{user_id}/restrictions")
+def moderate_user(user_id: int, payload: dict, request: Request,
+                  tasks: BackgroundTasks,
+                  user: dict = Depends(require_admin), db: Session = Depends(get_db)):
+    from app.services.moderation import change_restriction, deliver_pending
+    from app.core.moderation import restrictions
+    result = change_restriction(db, user_id, user, payload)
+    request.state.audit_changes = [{"field": "restriction", "before": "", "after": result["message"]}]
+    tasks.add_task(deliver_pending)
+    result["restrictions"] = restrictions(UserRepository(db).get_by_id(user_id) or {})
+    return result
 
 
 @router.put("/users/{user_id}")

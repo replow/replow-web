@@ -26,6 +26,8 @@ class SessionService:
         return {}
 
     def issue(self, user, session_id=None, previous_version=None, new_session=False):
+        from app.core.moderation import enforce
+        enforce(user)
         uid, version = int(user["uid"]), int(user.get("session_version") or 0)
         # Serialize refresh/issue with revocation to avoid resurrecting a device.
         live_version = self.db.execute(text(
