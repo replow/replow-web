@@ -186,6 +186,10 @@ async def session_request_metadata(request: Request, call_next):
 @app.middleware("http")
 async def public_content_cache_control(request: Request, call_next):
     response = await call_next(request)
+    if request.url.path.startswith(("/v1/admin/", "/api/v1/admin/")):
+        response.headers["Cache-Control"] = "private, no-store, max-age=0"
+        response.headers["CDN-Cache-Control"] = "no-store"
+        response.headers["Cloudflare-CDN-Cache-Control"] = "no-store"
     if re.fullmatch(r"/(?:api/)?v1/(?:public/(?:comments|articles/[^/]+/discussion)|account(?:/.*)?)", request.url.path) or request.url.path == "/fq" or request.url.path.startswith("/fq/") or re.fullmatch(r"/(?:api/)?v1/admin/fq(?:/.*)?", request.url.path) or re.fullmatch(r"/(?:api/)?v1/public/(?:albums|dynamics)(?:/[^/]*)?", request.url.path):
         response.headers["Cache-Control"] = "no-store, max-age=0"
         response.headers["CDN-Cache-Control"] = "no-store"
