@@ -1,6 +1,6 @@
 import type { Book } from './types';
 
-const API = 'https://api.example.com/fq';
+const API = 'https://api.4z.ink/fq';
 interface Grant { uid: number; grant_id: string; signing_key: string; server_time: number; expires_at: number }
 interface Token { token: string; expires_in: number }
 interface Envelope<T> { data: T; detail?: string }

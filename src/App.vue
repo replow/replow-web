@@ -986,7 +986,14 @@ onBeforeUnmount(() => {
           :class="{ active: section === item.key }"
           @click="selectSection(item.key)"
         >
-          <span class="nav-icon material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
+          <span v-if="item.key === 'media'" class="nav-icon" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+          </span>
+          <span v-else class="nav-icon material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
           <span>{{ item.label }}</span>
         </button>
       </div>
