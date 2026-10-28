@@ -130,7 +130,6 @@ export async function fetchMeting(server: string, type: string, id: string, apiU
   return songs;
 }
 
-
 interface EnhancedTrack {
   id: number | string;
   name: string;
@@ -179,7 +178,10 @@ function toMetingSong(track: EnhancedTrack): MetingSong {
   const artists = track.ar ?? track.artists ?? [];
   return {
     name: track.name,
-    artist: artists.map((artist) => artist.name).filter(Boolean).join(' / '),
+    artist: artists
+      .map((artist) => artist.name)
+      .filter(Boolean)
+      .join(' / '),
     url: audio.href,
     pic: track.al?.picUrl ?? track.album?.picUrl ?? '',
     lrc: lyrics.href,
@@ -205,9 +207,7 @@ export async function fetchNeteaseEnhanced(type: string, id: string): Promise<Me
     if (!playlist) throw new Error('NetEase playlist response has no playlist');
 
     // Unauthenticated playlist responses may omit tracks, while trackIds remains complete.
-    const byId = new Map(
-      (playlist.tracks ?? []).filter(isEnhancedTrack).map((track) => [String(track.id), track] as const),
-    );
+    const byId = new Map((playlist.tracks ?? []).filter(isEnhancedTrack).map((track) => [String(track.id), track] as const));
     const ids = (playlist.trackIds ?? []).map((entry) => String(entry.id));
     if (ids.length === 0) ids.push(...byId.keys());
 
