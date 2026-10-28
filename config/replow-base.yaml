@@ -807,7 +807,7 @@ seo:
 # =============================================================================
 bgm:
   enabled: true  # (有 audio 时自动启用，显式 false 可禁用)
-  # metingApi: https://163.hyc.moe/  # Meting API 地址，默认为 https://163.hyc.moe/，推荐自部署
+  # metingApi: https://163.hyc.moe/  # 可选 Meting 覆盖地址；网易云默认使用 api.replow.org，QQ 音乐默认使用 163.hyc.moe
   audio:
     - title: 最爱山山
       list:
