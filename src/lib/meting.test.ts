@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test, { type TestContext } from 'node:test';
-import { fetchMeting, fetchNeteaseEnhanced, resolvePlaylist, type MetingSong } from './meting';
+import { fetchMeting, fetchNeteaseEnhanced, type MetingSong, resolvePlaylist } from './meting';
 
 const song: MetingSong = {
   name: 'Test song',
@@ -76,7 +76,6 @@ test('inline lyrics, relative assets, and absent lyrics remain unchanged', async
   assert.deepEqual(resolved, [inline, noLyrics]);
 });
 
-
 test('custom Meting URLs preserve configured backend query parameters', async (t) => {
   const { fetch } = mockMeting(t, [song]);
   await fetchMeting('netease', 'song', '42', 'https://music.example/api/?cookie=default');
@@ -111,7 +110,10 @@ test('Enhanced playlist fills missing metadata and requests exhigh streams witho
   });
 
   const songs = await fetchNeteaseEnhanced('playlist', '42');
-  assert.deepEqual(songs.map((entry) => entry.name), ['First', 'Second']);
+  assert.deepEqual(
+    songs.map((entry) => entry.name),
+    ['First', 'Second'],
+  );
   assert.equal(songs[0].artist, 'Artist A');
   assert.equal(songs[1].pic, 'https://img.example/8.jpg');
   assert.equal(calls[0].url.searchParams.get('id'), '42');
@@ -144,8 +146,5 @@ test('default NetEase URL resolution uses Enhanced while custom Meting remains s
 
 test('Enhanced API errors are propagated instead of returning an empty playlist', async (t) => {
   t.mock.method(globalThis, 'fetch', async () => Response.json({ code: 401 }));
-  await assert.rejects(
-    resolvePlaylist(['https://music.163.com/#/song?id=31415926']),
-    /NetEase API error: 401/,
-  );
+  await assert.rejects(resolvePlaylist(['https://music.163.com/#/song?id=31415926']), /NetEase API error: 401/);
 });
