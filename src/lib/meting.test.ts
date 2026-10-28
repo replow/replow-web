@@ -89,7 +89,7 @@ test('custom Meting URLs preserve configured backend query parameters', async (t
 
 test('Enhanced playlist fills missing metadata and requests exhigh streams without browser Cookies', async (t) => {
   const calls: { url: URL; options?: RequestInit }[] = [];
-  t.mock.method(globalThis, 'fetch', async (input: URL, options?: RequestInit) => {
+  t.mock.method(globalThis, 'fetch', async (input: RequestInfo | URL, options?: RequestInit) => {
     const url = new URL(input.toString());
     calls.push({ url, options });
     if (url.pathname === '/playlist/detail') {
@@ -131,7 +131,7 @@ test('Enhanced playlist fills missing metadata and requests exhigh streams witho
 
 test('default NetEase URL resolution uses Enhanced while custom Meting remains supported', async (t) => {
   const requests: URL[] = [];
-  t.mock.method(globalThis, 'fetch', async (input: URL) => {
+  t.mock.method(globalThis, 'fetch', async (input: RequestInfo | URL) => {
     const url = new URL(input.toString());
     requests.push(url);
     return Response.json({ code: 200, songs: [{ id: 42, name: 'Test', ar: [{ name: 'Artist' }] }] });
