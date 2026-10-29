@@ -77,6 +77,9 @@ test('mapping groups header navigation and deduplicates preview account links', 
     mapped.navigation.find((item) => item.name === '文章')?.children?.map((item) => item.name),
     ['归档', '分类', '标签'],
   );
+  const music = findNavigationItem(mapped.navigation, '音乐');
+  assert.equal(music?.path, '/music');
+  assert.equal(music?.icon, 'ri:music-2-line');
   const status = findNavigationItem(mapped.navigation, 'Status');
   assert.equal(status?.path, 'https://status.4z.ink');
   assert.equal(status?.localeIndependent, true);

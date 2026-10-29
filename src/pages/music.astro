@@ -1,0 +1,118 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import MusicPagePlayer from '@components/music/MusicPagePlayer';
+import Cover from '@components/ui/cover/Cover.astro';
+import { bgmConfig, siteConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { defaultLocale } from '@/i18n';
+
+interface Props {
+  locale?: string;
+}
+
+const { locale = defaultLocale } = Astro.props;
+---
+
+<Layout locale={locale} title={`音乐播放器 | ${siteConfig.title}`} description="Silune 的在线音乐播放器，支持歌词、歌单切换与播放控制。" articleTools={false}>
+  <TwoColumnLayout showPostFooter={false}>
+    <Cover slot="cover" title="音乐" compact />
+    <HomeSider slot="sider" />
+    <section class="music-page-surface bg-gradient-start shadow-box flex min-w-0 flex-col">
+      <header class="music-page-header">
+        <div>
+          <h1>现在，听点喜欢的。</h1>
+          <p>让旋律慢下来，留一点时间给自己。</p>
+        </div>
+        <span class="music-page-quality">网易云音乐 · 默认请求极高音质</span>
+      </header>
+      {bgmConfig.audio.length > 0 ? (
+        <MusicPagePlayer client:load audioGroups={bgmConfig.audio} metingApi={bgmConfig.metingApi} />
+      ) : (
+        <p class="music-page-empty">还没有配置音乐，稍后再来听听吧。</p>
+      )}
+      <p class="music-page-note">实际可播放的音质与曲目取决于网易云音乐接口返回的资源。</p>
+    </section>
+  </TwoColumnLayout>
+</Layout>
+
+<style>
+  .music-page-surface {
+    width: 100%;
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+  }
+
+  .music-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .music-page-header h1 {
+    margin: 0;
+    color: hsl(var(--foreground));
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 750;
+    line-height: 1.25;
+  }
+
+  .music-page-header p {
+    margin: 0.65rem 0 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+    line-height: 1.75;
+  }
+
+  .music-page-quality {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0.25rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid hsl(var(--primary) / 0.2);
+    border-radius: 999px;
+    background: hsl(var(--primary) / 0.08);
+    color: hsl(var(--primary));
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  .music-page-surface :global(.music-page-player.audio-player) {
+    width: 100%;
+    margin: 1.8rem 0 0;
+    border-radius: 1.25rem;
+  }
+
+  .music-page-surface :global(.music-page-player .audio-player-song-list) {
+    max-height: 360px;
+    min-height: 180px;
+  }
+
+  .music-page-note {
+    margin: 1rem 0 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    line-height: 1.75;
+  }
+
+  .music-page-empty {
+    margin: 2rem 0;
+    color: hsl(var(--muted-foreground));
+  }
+
+  @media (max-width: 600px) {
+    .music-page-surface {
+      padding: 1.1rem;
+    }
+
+    .music-page-quality {
+      margin-top: 0;
+    }
+
+    .music-page-surface :global(.music-page-player .audio-player-song-list) {
+      min-height: 140px;
+      max-height: 280px;
+    }
+  }
+</style>

@@ -114,6 +114,7 @@ export function makeSiteConfig(base, payload, friends) {
         ...(oldSite.pages?.dynamic !== false ? [{ name: '动态', path: '/dynamic', icon: 'ri:chat-3-line' }] : []),
         ...(oldSite.pages?.friends !== false ? [{ name: '友链', path: '/friends', icon: 'ri:links-line' }] : []),
         { name: '相册', path: '/gallery', icon: 'ri:gallery-line' },
+        { name: '音乐', path: '/music', icon: 'ri:music-2-line' },
       ],
     },
     {
