@@ -140,11 +140,7 @@ export function makeSiteConfig(base, payload, friends) {
         hasNavPath(item.children || [], path),
     );
   for (const link of f.navBarConfig?.links || []) {
-    if (
-      typeof link.url === 'string' &&
-      /^(https?:\/\/|\/(?!\/))/.test(link.url) &&
-      !hasNavPath(yaml.navigation, link.url)
-    ) {
+    if (typeof link.url === 'string' && /^(https?:\/\/|\/(?!\/))/.test(link.url) && !hasNavPath(yaml.navigation, link.url)) {
       yaml.navigation.push({
         name: link.name || link.url,
         path: link.url,
