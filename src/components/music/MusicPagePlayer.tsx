@@ -131,39 +131,6 @@ function MusicDiscovery() {
           搜索
         </button>
       </form>
-      <section aria-label="推荐歌单" aria-busy={recommendLoading}>
-        <div className="music-discovery-section-heading">
-          <h2>推荐歌单</h2>
-          <button
-            type="button"
-            onClick={() => {
-              void loadRecommendations();
-            }}
-            disabled={recommendLoading}
-          >
-            刷新歌单
-          </button>
-        </div>
-        {recommendLoading && <output>正在发现好歌单…</output>}
-        {recommendError && <p role="alert">{recommendError}</p>}
-        {!recommendLoading && !recommendError && !playlists.length && <p>暂时没有推荐歌单，试试搜索喜欢的歌曲。</p>}
-        <div className="music-discovery-playlists">
-          {playlists.map((playlist) => (
-            <button
-              type="button"
-              key={playlist.id}
-              onClick={() => {
-                void openPlaylist(playlist);
-              }}
-              aria-label={`查看歌单 ${playlist.name}`}
-            >
-              {playlist.cover && <img src={playlist.cover} alt="" loading="lazy" referrerPolicy="no-referrer" />}
-              <strong>{playlist.name}</strong>
-              <span>{playlist.count > 0 ? `${playlist.count} 首歌曲` : '查看歌单'}</span>
-            </button>
-          ))}
-        </div>
-      </section>
       <section className="music-discovery-results" aria-label="歌曲列表" aria-busy={loading}>
         <div className="music-discovery-section-heading">
           <h2>{heading}</h2>
@@ -183,7 +150,7 @@ function MusicDiscovery() {
         )}
         {loading && <output>正在加载歌曲…</output>}
         {!loading && !error && !songs.length && (
-          <p>{heading === '搜索音乐' ? '输入歌曲、歌手，或选择上方推荐歌单。' : '没有找到歌曲，换个关键词试试。'}</p>
+          <p>{heading === '搜索音乐' ? '输入歌曲、歌手，或选择下方推荐歌单。' : '没有找到歌曲，换个关键词试试。'}</p>
         )}
         <ol className="music-discovery-songs">
           {songs.map((song, index) => (
@@ -216,6 +183,39 @@ function MusicDiscovery() {
             加载更多
           </button>
         )}
+      </section>
+      <section aria-label="推荐歌单" aria-busy={recommendLoading}>
+        <div className="music-discovery-section-heading">
+          <h2>推荐歌单</h2>
+          <button
+            type="button"
+            onClick={() => {
+              void loadRecommendations();
+            }}
+            disabled={recommendLoading}
+          >
+            刷新歌单
+          </button>
+        </div>
+        {recommendLoading && <output>正在发现好歌单…</output>}
+        {recommendError && <p role="alert">{recommendError}</p>}
+        {!recommendLoading && !recommendError && !playlists.length && <p>暂时没有推荐歌单，试试搜索喜欢的歌曲。</p>}
+        <div className="music-discovery-playlists">
+          {playlists.map((playlist) => (
+            <button
+              type="button"
+              key={playlist.id}
+              onClick={() => {
+                void openPlaylist(playlist);
+              }}
+              aria-label={`查看歌单 ${playlist.name}`}
+            >
+              {playlist.cover && <img src={playlist.cover} alt="" loading="lazy" referrerPolicy="no-referrer" />}
+              <strong>{playlist.name}</strong>
+              <span>{playlist.count > 0 ? `${playlist.count} 首歌曲` : '查看歌单'}</span>
+            </button>
+          ))}
+        </div>
       </section>
       <p className="music-discovery-hint">选择歌曲后，使用右下角的小播放器控制播放。切换页面也能继续听。</p>
     </div>
