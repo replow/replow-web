@@ -84,3 +84,21 @@ test('mapping groups header navigation and deduplicates preview account links', 
   assert.equal(accountLinks.length, 1);
   assert.equal(accountLinks[0].path, 'https://account.replow.org/');
 });
+
+test('keeps the configured background music player when syncing public site data', () => {
+  const bgm = {
+    enabled: true,
+    audio: [{ title: 'Favorites', list: ['https://music.163.com/playlist?id=42'] }],
+  };
+  const mapped = makeSiteConfig(
+    { site: {}, content: {}, bgm },
+    {
+      site: { name: 'Example', url: 'https://example.com' },
+      profile: { name: 'Owner' },
+      firefly: {},
+    },
+    [],
+  );
+  assert.deepEqual(mapped.bgm, bgm);
+  assert.notStrictEqual(mapped.bgm, bgm);
+});
