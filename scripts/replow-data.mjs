@@ -181,7 +181,8 @@ export function makeSiteConfig(base, payload, friends) {
   yaml.editor = { enabled: false };
   yaml.christmas = { ...yaml.christmas, enabled: false };
   delete yaml.bangumi;
-  yaml.bgm = { enabled: false, audio: [] };
+  // Preserve the configured background music player and its playlists from replow-base.yaml.
+  // Clearing this here hides both the BGM button and the globally mounted player.
   yaml.comment = {};
   const comments = f.commentConfig || {};
   if (comments.type && comments.type !== 'none' && comments[comments.type]) {
