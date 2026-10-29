@@ -69,12 +69,14 @@ test('mapping groups header navigation and deduplicates preview account links', 
   assert.equal(mapped.content.postCardImagePosition, 'right');
   assert.deepEqual(mapped.featuredSeries, []);
   assert.deepEqual(mapped.friends.data, []);
-  assert.deepEqual(mapped.navigation.map((item) => item.name), ['主页', '文章', '阅读', '发现', '站点']);
-  assert.deepEqual(mapped.navigation.find((item) => item.name === '文章')?.children?.map((item) => item.name), [
-    '归档',
-    '分类',
-    '标签',
-  ]);
+  assert.deepEqual(
+    mapped.navigation.map((item) => item.name),
+    ['主页', '文章', '阅读', '发现', '站点'],
+  );
+  assert.deepEqual(
+    mapped.navigation.find((item) => item.name === '文章')?.children?.map((item) => item.name),
+    ['归档', '分类', '标签'],
+  );
   const status = findNavigationItem(mapped.navigation, 'Status');
   assert.equal(status?.path, 'https://status.4z.ink');
   assert.equal(status?.localeIndependent, true);
