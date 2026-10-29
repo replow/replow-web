@@ -52,7 +52,8 @@ export default function MusicPagePlayer({ audioGroups, metingApi }: MusicPagePla
       }
       setTracks(allTracks);
       setGroups(resolvedGroups);
-      setActiveTab(Math.max(0, resolvedGroups.findIndex((group) => group.count > 0)));
+      const firstAvailableGroup = resolvedGroups.findIndex((group) => group.count > 0);
+      setActiveTab(firstAvailableGroup < 0 ? 0 : firstAvailableGroup);
       setLoading(false);
     }
 
@@ -68,23 +69,23 @@ export default function MusicPagePlayer({ audioGroups, metingApi }: MusicPagePla
 
   if (loading) {
     return (
-      <div className="music-page-player audio-player audio-player-loading" role="status">
+      <output className="music-page-player audio-player audio-player-loading">
         <span className="audio-player-spinner" />
         <span>{t('audio.loading')}</span>
-      </div>
+      </output>
     );
   }
 
   if (error || tracks.length === 0) {
     return (
-      <div className="music-page-player audio-player audio-player-empty" role="status">
+      <output className="music-page-player audio-player audio-player-empty">
         <span>{error ? t('audio.loadError', { error }) : t('audio.empty')}</span>
         {error && (
           <button type="button" className="audio-player-btn" onClick={() => setRetryKey((key) => key + 1)}>
             {t('audio.retry')}
           </button>
         )}
-      </div>
+      </output>
     );
   }
 
