@@ -2,7 +2,7 @@
 import HomeSider from '@components/layout/HomeSider.astro';
 import MusicPagePlayer from '@components/music/MusicPagePlayer';
 import Cover from '@components/ui/cover/Cover.astro';
-import { bgmConfig, siteConfig } from '@constants/site-config';
+import { siteConfig } from '@constants/site-config';
 import Layout from '@layouts/Layout.astro';
 import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
 import { defaultLocale } from '@/i18n';
@@ -14,24 +14,20 @@ interface Props {
 const { locale = defaultLocale } = Astro.props;
 ---
 
-<Layout locale={locale} title={`音乐播放器 | ${siteConfig.title}`} description="Silune 的在线音乐播放器，支持歌词、歌单切换与播放控制。" articleTools={false}>
+<Layout locale={locale} title={`音乐 | ${siteConfig.title}`} description="搜索喜欢的音乐、浏览推荐歌单，在小播放器里继续聆听。" articleTools={false}>
   <TwoColumnLayout showPostFooter={false}>
     <Cover slot="cover" title="音乐" compact />
     <HomeSider slot="sider" />
     <section class="music-page-surface bg-gradient-start shadow-box flex min-w-0 flex-col">
       <header class="music-page-header">
         <div>
-          <h1>现在，听点喜欢的。</h1>
-          <p>让旋律慢下来，留一点时间给自己。</p>
+          <h1>发现，喜欢的旋律。</h1>
+          <p>搜索歌曲和歌手，或从推荐歌单开始。</p>
         </div>
-        <span class="music-page-quality">网易云音乐 · 默认请求极高音质</span>
+        <span class="music-page-quality">网易云音乐</span>
       </header>
-      {bgmConfig.audio.length > 0 ? (
-        <MusicPagePlayer client:load audioGroups={bgmConfig.audio} metingApi={bgmConfig.metingApi} />
-      ) : (
-        <p class="music-page-empty">还没有配置音乐，稍后再来听听吧。</p>
-      )}
-      <p class="music-page-note">实际可播放的音质与曲目取决于网易云音乐接口返回的资源。</p>
+      <MusicPagePlayer client:load />
+      <p class="music-page-note">音乐来自网易云音乐，实际可播放曲目以可用音源为准。</p>
     </section>
   </TwoColumnLayout>
 </Layout>
@@ -78,27 +74,11 @@ const { locale = defaultLocale } = Astro.props;
     font-weight: 600;
   }
 
-  .music-page-surface :global(.music-page-player.audio-player) {
-    width: 100%;
-    margin: 1.8rem 0 0;
-    border-radius: 1.25rem;
-  }
-
-  .music-page-surface :global(.music-page-player .audio-player-song-list) {
-    max-height: 360px;
-    min-height: 180px;
-  }
-
   .music-page-note {
     margin: 1rem 0 0;
     color: hsl(var(--muted-foreground));
     font-size: 0.75rem;
     line-height: 1.75;
-  }
-
-  .music-page-empty {
-    margin: 2rem 0;
-    color: hsl(var(--muted-foreground));
   }
 
   @media (max-width: 600px) {
@@ -110,9 +90,6 @@ const { locale = defaultLocale } = Astro.props;
       margin-top: 0;
     }
 
-    .music-page-surface :global(.music-page-player .audio-player-song-list) {
-      min-height: 140px;
-      max-height: 280px;
-    }
+
   }
 </style>

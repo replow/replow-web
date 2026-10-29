@@ -1,3 +1,4 @@
+import type { MetingSong } from '@lib/meting';
 import { atom } from 'nanostores';
 
 /**
@@ -21,4 +22,16 @@ export function toggleBgmPanel() {
 
 export function closeBgmPanel() {
   $bgmPanelOpen.set(false);
+}
+
+/** Last selection survives lazy hydration and Astro page transitions. */
+export const $bgmSelection = atom<{ tracks: MetingSong[]; index: number } | null>(null);
+
+export function playBgmTracks(tracks: MetingSong[], index: number) {
+  if (!tracks[index]) return;
+  const start = Math.max(0, index - 199);
+  $bgmSelection.set({ tracks: tracks.slice(start, start + 200), index: index - start });
+  $bgmPanelOpen.set(true);
+  // Also wake a closed island when the panel was already marked open.
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('koharu:bgm-open'));
 }

@@ -24,6 +24,7 @@ import { pageTransition } from '@constants/anim/page-transition';
 import { seoConfig } from '@constants/site-config';
 import LoadingIndicator from 'astro-loading-indicator/component';
 import { Tooltips } from 'astro-tooltips';
+import PreviewEnvironment from '@/components/replow/PreviewEnvironment.astro';
 import { getHtmlLang, getLocaleFromUrl, stripLocaleFromPath } from '@/i18n';
 import AppShell from './AppShell.astro';
 import BootScripts from './BootScripts.astro';
@@ -49,9 +50,12 @@ const isPostPage = stripLocaleFromPath(Astro.url.pathname).startsWith('/post/');
 ---
 
 <!doctype html>
-<html transition:name="root" transition:animate={pageTransition} lang={getHtmlLang(locale)}>
+<html data-preview={import.meta.env.PUBLIC_SITE_ENV === 'preview' ? 'true' : undefined} transition:name="root" transition:animate={pageTransition} lang={getHtmlLang(locale)}>
   <head>
     <HeadMeta meta={meta} />
+    <script is:inline>
+      if (/^([a-z0-9-]+\.)*preview\.replow\.org$/.test(location.hostname)) document.documentElement.dataset.preview = 'true';
+    </script>
 
     <ClientRouter />
     <UmamiAnalytics />
@@ -64,6 +68,7 @@ const isPostPage = stripLocaleFromPath(Astro.url.pathname).startsWith('/post/');
     <slot name="head" />
   </head>
   <body>
+    <PreviewEnvironment />
     <AppShell articleTools={articleTools} post={post} siderType={siderType} isPostPage={isPostPage}>
       <slot />
     </AppShell>

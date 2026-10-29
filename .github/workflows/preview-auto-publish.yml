@@ -26,6 +26,7 @@ jobs:
     timeout-minutes: 45
     env:
       API_BASE_URL: https://api.4z.ink
+      PUBLIC_SITE_ENV: preview
       REPLOW_RELEASE: v26.10.28-u${{ github.run_number }}
       NODE_OPTIONS: --max-old-space-size=4096
       GH_TOKEN: ${{ github.token }}
@@ -56,6 +57,7 @@ jobs:
           pnpm check
       - name: Run regression tests
         run: |
+          node --import tsx --test src/lib/music-discovery.test.ts src/lib/meting.test.ts
           pnpm test:replow
           pnpm test:gallery
           pnpm test:dynamics
@@ -69,6 +71,9 @@ jobs:
           for path in index.html reading/index.html fanqie/index.html friends/index.html pagefind/pagefind.js; do
             test -s "dist/$path"
           done
+          test -s dist/music/index.html
+          grep -q 'preview-environment-badge' dist/music/index.html
+          grep -q 'data-preview="true"' dist/index.html
           tar -C dist -czf preview-astro.tar.gz .
           sha256sum preview-astro.tar.gz > preview-astro.tar.gz.sha256
       - name: Publish preview artifact

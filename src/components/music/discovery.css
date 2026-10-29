@@ -1,0 +1,175 @@
+.music-discovery {
+  color: hsl(var(--foreground));
+}
+.music-discovery-search {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1.8rem 0 2rem;
+}
+.music-discovery-search input {
+  min-width: 0;
+  flex: 1;
+  padding: 0.9rem 1rem;
+  background: hsl(var(--background) / 0.7);
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.9rem;
+}
+.music-discovery button {
+  cursor: pointer;
+}
+.music-discovery button:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+.music-discovery button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.music-discovery-search button {
+  padding: 0.7rem 1.3rem;
+  border-radius: 0.9rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+.music-discovery-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.6rem 0 1rem;
+}
+.music-discovery h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.music-discovery-section-heading button,
+.music-discovery-more,
+.music-discovery [role="alert"] button {
+  color: hsl(var(--primary));
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.music-discovery-playlists {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+.music-discovery-playlists button {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  min-width: 0;
+  gap: 0.4rem;
+}
+.music-discovery-playlists img {
+  aspect-ratio: 1;
+  object-fit: cover;
+  width: 100%;
+  border-radius: 0.9rem;
+  transition: transform 0.25s;
+}
+.music-discovery-playlists button:hover img {
+  transform: translateY(-3px);
+}
+.music-discovery-playlists strong {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.music-discovery-playlists span,
+.music-discovery-results > p,
+.music-discovery output,
+.music-discovery-hint {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
+}
+.music-discovery-results {
+  margin-top: 2rem;
+}
+.music-discovery-songs {
+  list-style: none;
+  padding: 0;
+}
+.music-discovery-songs button {
+  display: flex;
+  width: 100%;
+  gap: 0.9rem;
+  align-items: center;
+  text-align: left;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+  border-radius: 0.6rem;
+}
+.music-discovery-songs button:hover {
+  background: hsl(var(--primary) / 0.06);
+}
+.music-discovery-number {
+  width: 1.4rem;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.music-discovery-songs img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+.music-discovery-song-copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.music-discovery-song-copy strong,
+.music-discovery-song-copy span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.music-discovery-song-copy strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.music-discovery-song-copy span {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+}
+.music-discovery-play {
+  color: hsl(var(--primary));
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.music-discovery-more {
+  display: block;
+  margin: 1rem auto;
+}
+.music-discovery-hint {
+  margin-top: 1.5rem;
+  line-height: 1.8;
+}
+@media (max-width: 600px) {
+  .music-discovery-playlists {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .music-discovery-search {
+    gap: 0.5rem;
+  }
+  .music-discovery-search button {
+    padding-inline: 0.9rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .music-discovery-playlists img {
+    transition: none;
+  }
+}

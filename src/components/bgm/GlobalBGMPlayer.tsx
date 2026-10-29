@@ -25,8 +25,8 @@ import { resolvePlaylist } from '@lib/meting';
 import { useStore } from '@nanostores/react';
 import { $isAnyModalOpen, $isDrawerOpen } from '@store/modal';
 import { AnimatePresence, m } from 'motion/react';
-import { useEffect, useState } from 'react';
-import { $bgmPanelOpen, closeBgmPanel } from '@/store/bgm';
+import { useEffect, useRef, useState } from 'react';
+import { $bgmPanelOpen, $bgmSelection, closeBgmPanel } from '@/store/bgm';
 
 interface GlobalBGMPlayerProps {
   audioGroups: BgmAudioGroup[];
@@ -37,6 +37,8 @@ export default function GlobalBGMPlayer({ audioGroups, metingApi }: GlobalBGMPla
   const { t } = useTranslation();
   const isMounted = useIsMounted();
   const panelOpen = useStore($bgmPanelOpen);
+  const selection = useStore($bgmSelection);
+  const playedSelection = useRef<typeof selection>(null);
   const isDrawerOpen = useStore($isDrawerOpen);
   const isAnyModalOpen = useStore($isAnyModalOpen);
   const isMobilePlayer = useMediaQuery('(max-width: 600px)');
@@ -58,7 +60,7 @@ export default function GlobalBGMPlayer({ audioGroups, metingApi }: GlobalBGMPla
   // Closing the UI must not cancel the first request and leave subsequent openings stuck loading.
   // biome-ignore lint/correctness/useExhaustiveDependencies: retryKey intentionally triggers another request.
   useEffect(() => {
-    if (!playlistRequested) return;
+    if (!playlistRequested || selection) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -91,11 +93,27 @@ export default function GlobalBGMPlayer({ audioGroups, metingApi }: GlobalBGMPla
     return () => {
       cancelled = true;
     };
-  }, [playlistRequested, audioGroups, retryKey, metingApi]);
+  }, [playlistRequested, audioGroups, retryKey, metingApi, selection]);
+
+  useEffect(() => {
+    if (!selection) return;
+    setTracks(selection.tracks);
+    setGroups([{ title: '发现音乐', startIndex: 0, count: selection.tracks.length }]);
+    setActiveTab(0);
+    setError(null);
+    setLoading(false);
+  }, [selection]);
 
   // Audio hook at top level — Audio element persists across panel open/close
   const player = useAudioPlayer(tracks);
   const currentTrack = tracks[player.state.currentIndex] ?? null;
+
+  // Wait for the tracks to commit before selecting their index in the existing player.
+  useEffect(() => {
+    if (!selection || tracks !== selection.tracks || playedSelection.current === selection) return;
+    playedSelection.current = selection;
+    player.play(selection.index);
+  }, [selection, tracks, player.play]);
 
   // Hide panel when drawer is open
   const isHidden = isDrawerOpen || isAnyModalOpen;
