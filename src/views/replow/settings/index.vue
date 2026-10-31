@@ -35,6 +35,7 @@ const form = reactive({
     subtitle: "",
     description: "",
     siteUrl: "",
+    iconUrl: "",
     keywords: "",
     lang: "zh_CN",
     hue: 270,
@@ -168,6 +169,8 @@ function loadForm(config: FireflyConfig) {
   form.site.subtitle = String(site.subtitle || "");
   form.site.description = String(site.description || "");
   form.site.siteUrl = String(site.site_url || "");
+  const favicon = Array.isArray(site.favicon) ? site.favicon[0] : undefined;
+  form.site.iconUrl = String(favicon?.src || "");
   form.site.keywords = Array.isArray(site.keywords)
     ? site.keywords.join(", ")
     : "";
@@ -254,6 +257,13 @@ function syncFormToConfig(config: FireflyConfig) {
   config.siteConfig.subtitle = form.site.subtitle;
   config.siteConfig.description = form.site.description;
   config.siteConfig.site_url = form.site.siteUrl;
+  const icons = Array.isArray(config.siteConfig.favicon)
+    ? config.siteConfig.favicon
+    : [];
+  const { type: _type, sizes: _sizes, ...icon } = icons[0] || {};
+  config.siteConfig.favicon = form.site.iconUrl.trim()
+    ? [{ ...icon, src: form.site.iconUrl.trim() }, ...icons.slice(1)]
+    : [];
   config.siteConfig.keywords = form.site.keywords
     .split(",")
     .map(item => item.trim())
@@ -697,6 +707,12 @@ onMounted(load);
                     class="full" /></el-form-item
               ></el-col>
             </el-row>
+            <el-form-item label="网站图标（浏览器标签页）">
+              <MediaPicker v-model="form.site.iconUrl" category="site-icon" />
+              <p class="text-sm text-gray-500">
+                支持上传、从媒体库选择或填写图片链接。保存后刷新主站即可生效。
+              </p>
+            </el-form-item>
             <el-form-item label="站点描述"
               ><el-input
                 v-model="form.site.description"
