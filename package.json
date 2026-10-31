@@ -67,7 +67,7 @@
     "acceptance": "pnpm build && node acceptance/scripts/run.mjs",
     "acceptance:report": "node acceptance/scripts/report.mjs",
     "acceptance:open": "node acceptance/scripts/report.mjs && node acceptance/scripts/open.mjs",
-    "test:replow": "node --test scripts/replow-data.test.mjs",
+    "test:replow": "node --test scripts/replow-data.test.mjs && tsx --test src/lib/replow/branding.test.ts",
     "test:gallery": "tsx --test src/lib/replow/gallery/data.test.ts",
     "test:dynamics": "tsx --test src/lib/replow/dynamics/data.test.ts"
   },

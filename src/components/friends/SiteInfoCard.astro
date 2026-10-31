@@ -1,12 +1,13 @@
 ---
-const siteInfo: Array<{ label: string; value: string; href?: string }> = [
-  { label: '站点', value: 'Silune的小站' },
-  { label: '链接', value: 'https://www.replow.org/', href: 'https://www.replow.org/' },
-  {
-    label: '头像',
-    value: 'https://cdn.replow.org/media/site/39567bb1b9474e869fb4ee1c4343a7e8.png',
-  },
-  { label: '介绍', value: 'SilverCode Nexus' },
+import snapshot from '@/data/replow.json';
+import { resolveBranding } from '@/lib/replow/branding';
+
+const branding = resolveBranding(snapshot);
+const siteInfo = [
+  { key: 'name', label: '站点', value: branding.name },
+  { key: 'url', label: '链接', value: branding.url, href: branding.url },
+  { key: 'avatar', label: '头像', value: branding.avatar },
+  { key: 'description', label: '介绍', value: branding.description },
 ];
 ---
 
@@ -19,8 +20,9 @@ const siteInfo: Array<{ label: string; value: string; href?: string }> = [
     </div>
     <img
       class="site-info-avatar"
-      src="https://cdn.replow.org/media/site/39567bb1b9474e869fb4ee1c4343a7e8.png"
-      alt="Silune的小站站点头像"
+      src={branding.avatar}
+      data-site-info-avatar
+      alt={branding.name + '站点头像'}
       width="68"
       height="68"
       loading="eager"
@@ -30,7 +32,7 @@ const siteInfo: Array<{ label: string; value: string; href?: string }> = [
 
   <dl class="site-info-fields">
     {siteInfo.map((item) => (
-      <div class="site-info-field">
+      <div class="site-info-field" data-site-info-field={item.key}>
         <dt class="site-info-label">{item.label}</dt>
         <dd class="site-info-value-wrap">
           {item.href ? (

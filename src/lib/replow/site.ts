@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify';
 import snapshot from '@/data/replow.json';
+import { applyBranding } from './branding';
 export type PublicSite = typeof snapshot;
 
 function releaseFooter(html: string): string {
@@ -32,6 +33,7 @@ export function updateUptime() {
 export function applySite(payload: PublicSite) {
   if (!payload?.site || !payload.profile || !payload.firefly) return;
   const config = payload.firefly;
+  applyBranding(payload);
   setText('.home-name, [data-runtime-profile-name]', payload.profile.name);
   setText('.home-description', payload.profile.intro);
   setText('[data-runtime-hero-title]', config.koharuConfig?.heroTitle || 'Silver Wolf');
