@@ -1,6 +1,8 @@
 ---
 import BootScripts from '@layouts/BootScripts.astro';
 import { colophonConfig } from '@lib/config/site';
+import snapshot from '@/data/replow.json';
+import { resolveBranding } from '@/lib/replow/branding';
 import { buildEditorColophon } from '../colophon-dictionary';
 import Editor from '../Editor';
 import '@styles/index.css';
@@ -18,11 +20,29 @@ const colophon = buildEditorColophon(colophonConfig);
     <meta name="robots" content="noindex" />
     <meta name="description" content="在浏览器中编辑 Markdown、管理本地草稿，并实时预览 Koharu 博客的文章排版。" />
     <title>写作室 · Koharu</title>
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href={resolveBranding(snapshot).icon} />
     <BootScripts />
   </head>
   <body class="editor-page">
     <Editor client:load ogEndpoint={ogEndpoint} colophon={colophon} />
+    <script>
+      import { fetchPublic } from '@/lib/replow/api';
+      import { applyBranding, type BrandingSource } from '@/lib/replow/branding';
+
+      let controller: AbortController | undefined;
+      function refreshIcon() {
+        controller?.abort();
+        controller = new AbortController();
+        const signal = controller.signal;
+        void fetchPublic<BrandingSource>('site', signal)
+          .then((site) => { if (!signal.aborted) applyBranding(site); })
+          .catch(() => { /* The build snapshot remains available when offline. */ });
+      }
+      if (document.readyState !== 'loading') refreshIcon();
+      else document.addEventListener('DOMContentLoaded', refreshIcon, { once: true });
+      document.addEventListener('astro:page-load', refreshIcon);
+      document.addEventListener('astro:before-swap', () => controller?.abort());
+    </script>
     <noscript>写作室需要 JavaScript 才能编辑和实时预览。</noscript>
   </body>
 </html>
